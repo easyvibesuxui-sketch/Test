@@ -567,7 +567,7 @@
 <main>
 
   <!-- ================= 01 · HERO ================= -->
-  <section class="panel panel--hero s-hero" id="hero" data-panel data-scene="cosmos" data-video="assets/videos/section-01.mp4">
+  <section class="panel panel--hero s-hero" id="hero" data-panel data-scene="cosmos" data-video="assets/videos/section-01.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171157_64bf9b23-7585-42ad-ae63-21aad6805b41.mp4">
     <div class="stage">
       <div class="media"><div class="media__inner">
         <canvas></canvas>
@@ -591,7 +591,7 @@
   </section>
 
   <!-- ================= 02 · PROGRAMS ================= -->
-  <section class="panel panel--tall s-programs" id="programs" data-panel data-scene="kintsugi" data-video="assets/videos/section-02.mp4">
+  <section class="panel panel--tall s-programs" id="programs" data-panel data-scene="kintsugi" data-video="assets/videos/section-02.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171448_0d273b2f-aaa6-46e5-8fda-cc4188d9023a.mp4">
     <div class="stage">
       <div class="media"><div class="media__inner">
         <canvas></canvas>
@@ -616,7 +616,7 @@
   </section>
 
   <!-- ================= 03 · ADMISSION ================= -->
-  <section class="panel panel--tall s-admission" id="admission" data-panel data-scene="golddust" data-video="assets/videos/section-03.mp4">
+  <section class="panel panel--tall s-admission" id="admission" data-panel data-scene="golddust" data-video="assets/videos/section-03.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171450_61616d0a-7225-4be9-9476-353c42e167e1.mp4">
     <div class="stage">
       <div class="media"><div class="media__inner">
         <canvas></canvas>
@@ -666,7 +666,7 @@
   </div>
 
   <!-- ================= 04 · FUNDING ================= -->
-  <section class="panel panel--tall s-funding" id="funding" data-panel data-scene="laurel" data-video="assets/videos/section-04.mp4">
+  <section class="panel panel--tall s-funding" id="funding" data-panel data-scene="laurel" data-video="assets/videos/section-04.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171220_5fe8fc6c-deab-4ccc-8296-cea3f64f3540.mp4">
     <div class="stage">
       <div class="media"><div class="media__inner">
         <canvas></canvas>
@@ -698,7 +698,7 @@
   </section>
 
   <!-- ================= 05 · APPLY ================= -->
-  <section class="panel panel--tall s-final" id="apply" data-panel data-scene="halo" data-video="assets/videos/section-05.mp4">
+  <section class="panel panel--tall s-final" id="apply" data-panel data-scene="halo" data-video="assets/videos/section-05.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171749_edbf948d-55ed-4be4-8ca4-16c13534ae12.mp4">
     <div class="stage">
       <div class="media"><div class="media__inner">
         <canvas></canvas>
@@ -1023,17 +1023,23 @@
              draw, p: 0, target: 0, visible: false, hasVideo: false };
   });
 
-  /* drop-in videos: fade in over the canvas when a real file exists */
+  /* background videos: local file first, then remote CDN copy,
+     canvas scene remains as the final fallback */
   for (const pn of panels) {
-    const src = pn.el.dataset.video;
-    if (!src) continue;
+    const sources = [pn.el.dataset.video, pn.el.dataset.videoRemote].filter(Boolean);
+    if (!sources.length) continue;
+    let si = 0;
+    const tryNext = () => {
+      if (si >= sources.length) { pn.video.remove(); return; }
+      pn.video.src = sources[si++];
+    };
     pn.video.addEventListener("canplay", () => {
       pn.hasVideo = true;
       pn.video.classList.add("is-live");
       pn.video.play().catch(() => {});
     }, { once: true });
-    pn.video.addEventListener("error", () => { pn.video.remove(); }, { once: true });
-    pn.video.src = src;
+    pn.video.addEventListener("error", tryNext);
+    tryNext();
   }
 
   function sizeCanvases() {
