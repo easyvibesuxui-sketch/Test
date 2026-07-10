@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLUEYARD — Design Study</title>
+<style>
+  :root {
+    --text: #ffffff;
+    --dim: rgba(255, 255, 255, 0.62);
+    --maxw: 1200px;
+    --pad: clamp(24px, 5vw, 72px);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, -apple-system, sans-serif;
+    color: var(--text);
+    background: #0b0b1e;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- animated background ---- */
+  #gl {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    display: block;
+  }
+
+  /* film grain over the gradient */
+  .grain {
+    position: fixed;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.055;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: grainShift 0.9s steps(4) infinite;
+  }
+  @keyframes grainShift {
+    0%   { transform: translate(0, 0); }
+    25%  { transform: translate(-2%, 3%); }
+    50%  { transform: translate(3%, -2%); }
+    75%  { transform: translate(-3%, -3%); }
+    100% { transform: translate(0, 0); }
+  }
+
+  /* ---- header ---- */
+  header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: clamp(20px, 3vw, 36px) var(--pad);
+    mix-blend-mode: difference;
+  }
+  .logo {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.34em;
+    text-decoration: none;
+    color: var(--text);
+  }
+  nav { display: flex; gap: clamp(16px, 2.6vw, 40px); }
+  nav a {
+    color: var(--text);
+    text-decoration: none;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    transition: opacity 0.3s ease;
+    position: relative;
+  }
+  nav a::after {
+    content: "";
+    position: absolute;
+    left: 0; bottom: -6px;
+    width: 100%; height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  nav a:hover { opacity: 1; }
+  nav a:hover::after { transform: scaleX(1); }
+
+  /* ---- content ---- */
+  main { position: relative; z-index: 2; }
+
+  section {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20vh var(--pad);
+  }
+  .inner { max-width: var(--maxw); width: 100%; margin: 0 auto; }
+
+  .kicker {
+    font-size: 12px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 28px;
+  }
+
+  h1, h2 {
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  h1 { font-size: clamp(2.1rem, 5.4vw, 4.6rem); line-height: 1.12; }
+  h2 { font-size: clamp(1.7rem, 4.2vw, 3.4rem); line-height: 1.16; }
+
+  .lede {
+    margin-top: 32px;
+    font-size: clamp(1rem, 1.5vw, 1.25rem);
+    line-height: 1.65;
+    max-width: 640px;
+    color: var(--dim);
+  }
+
+  /* reveal-on-scroll */
+  .reveal {
+    opacity: 0;
+    transform: translateY(46px);
+    transition: opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal.d1 { transition-delay: 0.12s; }
+  .reveal.d2 { transition-delay: 0.24s; }
+
+  /* scroll hint */
+  .scroll-hint {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--dim);
+    animation: bob 2.6s ease-in-out infinite;
+  }
+  @keyframes bob {
+    0%, 100% { transform: translate(-50%, 0); opacity: 0.55; }
+    50%      { transform: translate(-50%, 10px); opacity: 1; }
+  }
+
+  /* ---- portfolio ---- */
+  .portfolio-list {
+    list-style: none;
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 6px 48px;
+  }
+  .portfolio-list li a {
+    display: block;
+    padding: 14px 0;
+    color: var(--text);
+    text-decoration: none;
+    font-size: clamp(1.15rem, 2vw, 1.6rem);
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    transition: padding-left 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s;
+    opacity: 0.85;
+  }
+  .portfolio-list li a:hover { padding-left: 14px; opacity: 1; }
+  .portfolio-list li a span {
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-top: 4px;
+  }
+
+  /* ---- contact / footer ---- */
+  .contact a.mail {
+    display: inline-block;
+    margin-top: 36px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: clamp(1.3rem, 3vw, 2.2rem);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+    padding-bottom: 4px;
+    transition: border-color 0.3s;
+  }
+  .contact a.mail:hover { border-color: #fff; }
+
+  footer {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: space-between;
+    padding: 32px var(--pad) 44px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  footer a { color: var(--dim); text-decoration: none; }
+  footer a:hover { color: var(--text); }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .grain, .scroll-hint { animation: none; }
+    .reveal { transition: none; opacity: 1; transform: none; }
+  }
+  @media (max-width: 640px) {
+    nav a:not(:last-child) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="gl"></canvas>
+<div class="grain"></div>
+
+<header>
+  <a class="logo" href="#top">BLUEYARD</a>
+  <nav>
+    <a href="#thesis">Thesis</a>
+    <a href="#portfolio">Portfolio</a>
+    <a href="#contact">Contact</a>
+  </nav>
+</header>
+
+<main>
+  <section id="top" data-palette="0" style="position:relative">
+    <div class="inner">
+      <p class="kicker reveal">Venture Capital</p>
+      <h1 class="reveal d1">Backing founders building the next chapter of the internet — open, decentralized, and in the hands of its users.</h1>
+    </div>
+    <div class="scroll-hint">Scroll</div>
+  </section>
+
+  <section id="thesis" data-palette="1">
+    <div class="inner">
+      <p class="kicker reveal">Thesis · 01</p>
+      <h2 class="reveal d1">Liberating knowledge.</h2>
+      <p class="lede reveal d2">The world's information wants to be open. We invest in teams that unlock data, science, and learning from closed silos and put them to work for everyone.</p>
+    </div>
+  </section>
+
+  <section data-palette="2">
+    <div class="inner">
+      <p class="kicker reveal">Thesis · 02</p>
+      <h2 class="reveal d1">Decentralizing markets.</h2>
+      <p class="lede reveal d2">Networks that no single party controls can outcompete the platforms that came before them. We back protocols and products that push power to the edges.</p>
+    </div>
+  </section>
+
+  <section data-palette="3">
+    <div class="inner">
+      <p class="kicker reveal">Thesis · 03</p>
+      <h2 class="reveal d1">Engineering biology.</h2>
+      <p class="lede reveal d2">Biology is becoming a programmable medium. We support scientists and engineers turning cells, proteins, and materials into a new industrial base.</p>
+    </div>
+  </section>
+
+  <section data-palette="4">
+    <div class="inner">
+      <p class="kicker reveal">Thesis · 04</p>
+      <h2 class="reveal d1">Empowering users.</h2>
+      <p class="lede reveal d2">Software should serve the people who use it — private by default, interoperable by design. We fund tools that give individuals real agency over their digital lives.</p>
+    </div>
+  </section>
+
+  <section id="portfolio" data-palette="5">
+    <div class="inner">
+      <p class="kicker reveal">Portfolio</p>
+      <h2 class="reveal d1">Companies we work with.</h2>
+      <ul class="portfolio-list reveal d2">
+        <li><a href="#">Protocol Labs<span>Open networks</span></a></li>
+        <li><a href="#">Arweave<span>Permanent storage</span></a></li>
+        <li><a href="#">Dfinity<span>Decentralized compute</span></a></li>
+        <li><a href="#">Prisma<span>Developer tools</span></a></li>
+        <li><a href="#">Remix<span>Web framework</span></a></li>
+        <li><a href="#">Wire<span>Private messaging</span></a></li>
+        <li><a href="#">deepset<span>Applied AI</span></a></li>
+        <li><a href="#">Cradle<span>Protein design</span></a></li>
+        <li><a href="#">Solugen<span>Clean chemistry</span></a></li>
+        <li><a href="#">Gigs<span>Connectivity</span></a></li>
+        <li><a href="#">Anytype<span>Local-first software</span></a></li>
+        <li><a href="#">Delphia<span>Data ownership</span></a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="contact" class="contact" data-palette="6">
+    <div class="inner">
+      <p class="kicker reveal">Contact</p>
+      <h2 class="reveal d1">Building something that matters?</h2>
+      <a class="mail reveal d2" href="mailto:hello@example.com">hello@example.com</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>© 2026 — Design study, not affiliated with Blueyard Capital</span>
+  <span><a href="#top">Back to top ↑</a></span>
+</footer>
+
+<script>
+(() => {
+  "use strict";
+
+  const canvas = document.getElementById("gl");
+  const gl = canvas.getContext("webgl", { antialias: false, alpha: false });
+
+  // one palette (4 colors) per section; scroll blends between neighbours
+  const PALETTES = [
+    [[0.04, 0.07, 0.35], [0.10, 0.35, 0.95], [0.45, 0.20, 0.95], [0.05, 0.85, 0.95]], // hero: deep blue / violet / cyan
+    [[0.02, 0.20, 0.30], [0.05, 0.65, 0.65], [0.15, 0.90, 0.60], [0.10, 0.30, 0.90]], // knowledge: teal / green / blue
+    [[0.20, 0.03, 0.40], [0.65, 0.10, 0.90], [0.95, 0.25, 0.75], [0.15, 0.20, 0.85]], // markets: purple / magenta
+    [[0.02, 0.25, 0.12], [0.10, 0.70, 0.35], [0.75, 0.90, 0.25], [0.00, 0.45, 0.50]], // biology: greens
+    [[0.45, 0.08, 0.05], [0.95, 0.40, 0.10], [0.98, 0.75, 0.30], [0.85, 0.15, 0.45]], // users: orange / red / pink
+    [[0.05, 0.08, 0.45], [0.25, 0.45, 0.98], [0.90, 0.45, 0.85], [0.10, 0.75, 0.90]], // portfolio: indigo / pink
+    [[0.03, 0.03, 0.14], [0.15, 0.10, 0.45], [0.40, 0.25, 0.80], [0.08, 0.30, 0.60]]  // contact: night violet
+  ];
+
+  const vsSrc = `
+    attribute vec2 aPos;
+    void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
+  `;
+
+  const fsSrc = `
+    precision highp float;
+    uniform vec2  uRes;
+    uniform float uTime;
+    uniform vec2  uMouse;
+    uniform vec3  uC0, uC1, uC2, uC3;
+
+    // 2D simplex-style value noise with smooth interpolation
+    vec2 hash(vec2 p) {
+      p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+      return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+    }
+    float noise(vec2 p) {
+      vec2 i = floor(p);
+      vec2 f = fract(p);
+      vec2 u = f * f * (3.0 - 2.0 * f);
+      return mix(
+        mix(dot(hash(i + vec2(0.0, 0.0)), f - vec2(0.0, 0.0)),
+            dot(hash(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0)), u.x),
+        mix(dot(hash(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0)),
+            dot(hash(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0)), u.x),
+        u.y);
+    }
+    float fbm(vec2 p) {
+      float v = 0.0, a = 0.55;
+      mat2 rot = mat2(0.8, 0.6, -0.6, 0.8);
+      for (int i = 0; i < 4; i++) {
+        v += a * noise(p);
+        p = rot * p * 1.9;
+        a *= 0.55;
+      }
+      return v;
+    }
+
+    void main() {
+      vec2 uv = gl_FragCoord.xy / uRes.xy;
+      vec2 p = uv;
+      p.x *= uRes.x / uRes.y;
+
+      float t = uTime * 0.045;
+      vec2 m = (uMouse - 0.5) * 0.35;
+
+      // domain warping: three stacked fbm passes drive the fluid motion
+      vec2 q = vec2(fbm(p * 1.15 + t + m),
+                    fbm(p * 1.15 - t * 0.8 + vec2(5.2, 1.3)));
+      vec2 r = vec2(fbm(p * 1.15 + q * 1.6 + vec2(1.7, 9.2) + t * 0.6),
+                    fbm(p * 1.15 + q * 1.6 + vec2(8.3, 2.8) - t * 0.4));
+      float n = fbm(p * 1.15 + r * 1.8);
+
+      float n1 = smoothstep(-0.55, 0.6, n);
+      float n2 = smoothstep(-0.65, 0.45, q.x);
+      float n3 = smoothstep(-0.6, 0.5, r.y);
+
+      vec3 col = mix(uC0, uC1, n1);
+      col = mix(col, uC2, n2 * 0.85);
+      col = mix(col, uC3, n3 * 0.6);
+
+      // gentle vertical depth + vignette so text stays readable
+      col *= 0.82 + 0.18 * uv.y;
+      float vig = smoothstep(1.35, 0.35, length(uv - 0.5));
+      col *= mix(0.72, 1.0, vig);
+
+      // subtle banding-free dither
+      float dither = (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
+      gl_FragColor = vec4(col + dither, 1.0);
+    }
+  `;
+
+  function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      throw new Error(gl.getShaderInfoLog(s));
+    }
+    return s;
+  }
+
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, vsSrc));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fsSrc));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(prog, "aPos");
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  const U = {};
+  for (const name of ["uRes", "uTime", "uMouse", "uC0", "uC1", "uC2", "uC3"]) {
+    U[name] = gl.getUniformLocation(prog, name);
+  }
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    canvas.width = Math.floor(innerWidth * dpr);
+    canvas.height = Math.floor(innerHeight * dpr);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+  addEventListener("resize", resize);
+  resize();
+
+  // mouse with easing
+  const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
+  addEventListener("pointermove", (e) => {
+    mouse.tx = e.clientX / innerWidth;
+    mouse.ty = 1 - e.clientY / innerHeight;
+  });
+
+  // scroll → palette blending
+  const sections = [...document.querySelectorAll("section[data-palette]")];
+  const current = PALETTES[0].map((c) => [...c]); // eased live palette
+
+  function targetPalette() {
+    // find fractional section index from scroll position
+    const mid = scrollY + innerHeight * 0.5;
+    let idx = 0, frac = 0;
+    for (let i = 0; i < sections.length; i++) {
+      const top = sections[i].offsetTop;
+      const h = sections[i].offsetHeight;
+      if (mid >= top && mid < top + h) {
+        idx = i;
+        frac = (mid - top) / h;
+        break;
+      }
+      if (mid >= top + h) idx = i;
+    }
+    // blend toward the next palette in the second half of each section
+    const a = PALETTES[Math.min(idx, PALETTES.length - 1)];
+    const b = PALETTES[Math.min(idx + 1, PALETTES.length - 1)];
+    const k = Math.max(0, (frac - 0.5) * 2);
+    return a.map((ca, i) => ca.map((v, j) => v + (b[i][j] - v) * k));
+  }
+
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let start = performance.now();
+  let last = start;
+
+  function frame(now) {
+    const t = (now - start) / 1000;
+    const dt = Math.min((now - last) / 1000, 0.1);
+    last = now;
+
+    // time-based easing so transitions run at the same speed on any frame rate
+    const easeMouse = 1 - Math.exp(-dt * 2.5);
+    const easePal = 1 - Math.exp(-dt * 2.8);
+
+    mouse.x += (mouse.tx - mouse.x) * easeMouse;
+    mouse.y += (mouse.ty - mouse.y) * easeMouse;
+
+    const target = targetPalette();
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < 3; j++) {
+        current[i][j] += (target[i][j] - current[i][j]) * easePal;
+      }
+    }
+
+    gl.uniform2f(U.uRes, canvas.width, canvas.height);
+    gl.uniform1f(U.uTime, reduceMotion ? 12.0 : t);
+    gl.uniform2f(U.uMouse, mouse.x, mouse.y);
+    gl.uniform3fv(U.uC0, current[0]);
+    gl.uniform3fv(U.uC1, current[1]);
+    gl.uniform3fv(U.uC2, current[2]);
+    gl.uniform3fv(U.uC3, current[3]);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // reveal-on-scroll
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) {
+          e.target.classList.add("visible");
+          io.unobserve(e.target);
+        }
+      }
+    },
+    { threshold: 0.25 }
+  );
+  document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+})();
+</script>
+
+</body>
+</html>
