@@ -1,656 +1,1137 @@
 <!DOCTYPE html>
-<html lang="en" class="is-just-loaded">
+<html lang="ka" class="is-loading">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
-<title>BlueYard Capital — Design Study</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBSU — აბიტურიენტი · შავი ზღვის საერთაშორისო უნივერსიტეტი</title>
+<meta name="description" content="შენი მომავალი იწყება აქ — შავი ზღვის საერთაშორისო უნივერსიტეტი. პროგრამები, მიღება, დაფინანსება.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@300;400;500;600;700;800;900&family=Noto+Serif+Georgian:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --headerlogoheight: 48px;
-    --font-stack: "Avenir Next", "Avenir", "AvenirLTPro-Light", -apple-system, "Segoe UI",
-                  "Helvetica Neue", Helvetica, Arial, sans-serif;
-    --ease: cubic-bezier(0.4, 0, 0.6, 1);
+    --gold:       #c9a24b;
+    --gold-soft:  #d8b96e;
+    --gold-dim:   rgba(201, 162, 75, 0.34);
+    --bone:       #ece7db;
+    --bone-dim:   rgba(236, 231, 219, 0.55);
+    --ink:        #07080b;
+    --serif: "Noto Serif Georgian", Georgia, serif;
+    --sans:  "Noto Sans Georgian", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --ease:       cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-io:    cubic-bezier(0.65, 0, 0.35, 1);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  html, body {
-    height: 100%;
-    overflow: hidden;
-  }
+  html { scroll-behavior: smooth; }
+  html, body { background: var(--ink); }
+
   body {
-    font-family: var(--font-stack);
-    background-color: #011251;
-    color: #fff;
+    font-family: var(--sans);
+    color: var(--bone);
     -webkit-font-smoothing: antialiased;
-    user-select: none;
+    overflow-x: hidden;
   }
 
-  /* ---- movie: generative canvas standing in for the background films ---- */
-  .movie {
+  ::selection { background: var(--gold); color: var(--ink); }
+
+  /* ============ top progress bar ============ */
+  .progress {
     position: fixed;
-    inset: 0;
-    z-index: -1;
-    background-color: #011251;
-    overflow: hidden;
+    top: 0; left: 0;
+    height: 2px;
+    width: 100%;
+    z-index: 900;
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+    background: linear-gradient(90deg, var(--gold), var(--gold-soft));
   }
-  .movie canvas {
+
+  /* ============ header ============ */
+  .site-head {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 800;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px clamp(24px, 4vw, 64px);
+    mix-blend-mode: difference;
+    transition: opacity 1.2s var(--ease) 0.6s, transform 1.2s var(--ease) 0.6s;
+  }
+  .is-loading .site-head { opacity: 0; transform: translateY(-12px); }
+  .site-head__logo {
+    font-family: var(--serif);
+    font-weight: 900;
+    font-size: 22px;
+    letter-spacing: 0.14em;
+    color: #fff;
+    text-decoration: none;
+  }
+  .site-head__logo small {
+    display: block;
+    font-family: var(--sans);
+    font-weight: 400;
+    font-size: 9px;
+    letter-spacing: 0.32em;
+    opacity: 0.7;
+    margin-top: 2px;
+  }
+  .site-head__nav { display: flex; gap: clamp(14px, 2.4vw, 36px); }
+  .site-head__nav a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    opacity: 0.72;
+    transition: opacity 0.35s var(--ease);
+  }
+  .site-head__nav a:hover { opacity: 1; }
+  @media (max-width: 760px) { .site-head__nav { display: none; } }
+
+  /* ============ side dots ============ */
+  .waypoints {
+    position: fixed;
+    right: clamp(16px, 2.6vw, 40px);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 800;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    transition: opacity 1.2s var(--ease) 1s;
+  }
+  .is-loading .waypoints { opacity: 0; }
+  .waypoints button {
+    width: 30px; height: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+  }
+  .waypoints button::after {
+    content: "";
+    position: absolute;
+    inset: 3px 0;
+    background: var(--bone);
+    opacity: 0.22;
+    transition: opacity 0.4s var(--ease), background 0.4s var(--ease), transform 0.4s var(--ease);
+    transform: scaleX(0.55);
+    transform-origin: 100% 50%;
+  }
+  .waypoints button:hover::after { opacity: 0.6; }
+  .waypoints button.on::after {
+    opacity: 1;
+    background: var(--gold);
+    transform: scaleX(1);
+  }
+
+  /* ============ panels: sticky scroll stage ============ */
+  .panel { position: relative; }
+  .panel--tall  { height: 260vh; }
+  .panel--hero  { height: 230vh; }
+
+  .stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+    display: grid;
+  }
+
+  /* media stack: canvas fallback + drop-in video, scroll-zoomed by JS */
+  .media {
+    position: absolute;
+    inset: -6vh -6vw;               /* bleed so zoom-out never shows edges */
+    z-index: 0;
+    will-change: transform, opacity;
+  }
+  .media__inner {
+    position: absolute;
+    inset: 0;
+    animation: idleDrift 26s var(--ease-io) infinite alternate;
+    will-change: transform;
+  }
+  @keyframes idleDrift {
+    0%   { transform: scale(1.04) translate3d(-0.7%,  0.5%, 0); }
+    50%  { transform: scale(1.09) translate3d( 0.4%, -0.6%, 0); }
+    100% { transform: scale(1.05) translate3d( 0.9%,  0.4%, 0); }
+  }
+  .media canvas,
+  .media video {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
+    object-fit: cover;
     display: block;
   }
-  /* dark blue veil over the film, as on the original */
-  .movie::after {
-    pointer-events: none;
-    content: "";
-    position: fixed;
-    inset: 0;
-    background-color: #011251;
-    mix-blend-mode: darken;
-    opacity: 0.4;
-    z-index: 10;
-  }
-
-  /* ---- page banner ---- */
-  .page-banner {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%;
-    z-index: 400;
-    display: flex;
-    flex-flow: row nowrap;
-    align-items: center;
-    padding: 0 32px;
-    transition: opacity 0.5s 0.5s ease-in;
-  }
-  .is-just-loaded .page-banner { opacity: 0; transition: opacity 0s 0s linear !important; }
-  .page-banner__logo .logo {
-    display: flex;
-    align-items: center;
-    height: var(--headerlogoheight);
-    margin: 16px 0;
-    color: #fff;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 22px;
-    letter-spacing: 0.01em;
-  }
-  .page-banner__nav {
-    margin: 0 0 0 auto;
-    font-size: 18px;
-  }
-  .page-banner__nav li { display: inline-block; list-style: none; }
-  .page-banner__nav a {
-    display: block;
-    padding: 16px;
-    color: #fff;
-    text-decoration: none;
-    transition: all 0.3s var(--ease);
-  }
-  .page-banner__nav a:hover { opacity: 0.7; }
-
-  /* ---- qanda ---- */
-  .qanda {
-    z-index: 1;
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100vh;
-    color: #fff;
-    display: grid;
-    grid-template-areas: 'outer' 'nav' 'footer';
-    grid-template-rows: 1fr 64px 64px;
-    text-align: center;
-    transition: opacity 0.5s 0.5s ease-in;
-    transform: translateZ(0);
-  }
-  .is-just-loaded .qanda { opacity: 0; transition: opacity 0s 0s linear !important; }
-
-  .qanda__outer { grid-area: outer; align-self: center; margin: auto; }
-
-  .qanda__list {
-    position: relative;
-    list-style: none;
-    display: grid;
-    grid-template-areas: 'item';
-    place-items: center;
-    place-content: center;
-    padding: var(--headerlogoheight) 0 0 0;
-  }
-  .qanda__item {
-    grid-area: item;
-    max-width: 52.5em;
-    display: grid;
-    grid-template-rows: 7fr 7fr;
-    grid-template-areas: 'question' 'answer';
-    align-items: end;
-    pointer-events: none;
-  }
-  .qanda__item > * {
+  .media video {
     opacity: 0;
-    transition-property: opacity;
-    transition-timing-function: var(--ease);
-    transition-duration: 0.5s;
-    transition-delay: 0s;
+    transition: opacity 1.4s var(--ease);
   }
-  .qanda__item.current { pointer-events: all; }
-  .qanda__item.current > * { opacity: 1; }
-  /* the original's timing: question drifts in after 1s, companies after 3s */
-  .qanda__item.current .qanda__question { transition-duration: 1s; transition-delay: 1s; }
-  .qanda__item.current .qanda__answer   { transition-duration: 3s; transition-delay: 3s; }
-  .is-just-loaded .qanda__item > *,
-  .is-just-loaded .qanda__item.current > * { opacity: 0; transition-duration: 0s; transition-delay: 0s; }
+  .media video.is-live { opacity: 1; }
 
-  /* first slide has no answers: question sits centered across both rows */
-  .qanda__item:first-child .qanda__question {
-    grid-row-start: question-start;
-    grid-row-end: answer-end;
-    align-self: center;
-  }
-
-  .qanda__question {
-    grid-area: question;
-    font-size: 36px;
-    font-weight: 300;
-    line-height: 1.35;
-  }
-  .qanda__question a { color: inherit; text-decoration: none; }
-  .qanda__question span {
-    display: block;
-    max-width: 21em;
-    margin: 0 auto 16px;
-    padding: 0 32px;
-  }
-
-  .qanda__answer {
-    grid-area: answer;
-    align-self: start;
-    list-style: none;
-    max-width: 100%;
-    display: flex;
-    flex-flow: row wrap;
-    justify-content: center;
-    align-items: center;
-  }
-  .qanda__answer > li {
-    flex: 0 0 auto;
-    padding: 0.8vmin 1.6vmin;
-  }
-  /* white text wordmarks in place of the entity logos (which the site renders
-     all-white anyway via a CSS filter) */
-  .qanda__answer a {
-    display: block;
-    color: #fff;
-    text-decoration: none;
-    font-size: clamp(15px, 2.6vmin, 24px);
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-    transition: all 0.3s var(--ease);
-  }
-  .qanda__answer a:hover { opacity: 0.7; }
-  .qanda__answer .wm--caps  { text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; font-size: clamp(13px, 2.2vmin, 20px); }
-  .qanda__answer .wm--bold  { font-weight: 700; }
-  .qanda__answer .wm--light { font-weight: 300; letter-spacing: 0.08em; }
-  .qanda__answer .wm--mono  { font-family: Consolas, monospace; font-size: clamp(13px, 2.3vmin, 21px); }
-
-  /* ---- nav dashes ---- */
-  .qanda__nav {
-    grid-area: nav;
-    align-self: end;
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: center;
-  }
-  .qanda__nav-dot {
-    list-style: none;
-    width: calc(100% - 64px);
-    max-width: 42em;
-    display: flex;
-    flex-flow: row nowrap;
-  }
-  .qanda__nav-dot-item {
-    flex: 1 0 32px;
-    position: relative;
-    pointer-events: all;
-    cursor: pointer;
-    opacity: 0.2;
-    padding: 32px 8px;
-    transition: opacity 0.3s var(--ease);
-  }
-  .qanda__nav-dot-item::after {
-    display: block;
+  /* veil for text readability, blueyard-style */
+  .stage::after {
     content: "";
-    background-color: #fff;
-    height: 2px;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(7,8,11,0.62) 0%, rgba(7,8,11,0.18) 30%,
+                              rgba(7,8,11,0.18) 62%, rgba(7,8,11,0.72) 100%);
   }
-  .qanda__nav-dot-item.current { opacity: 1; cursor: default; }
-  .qanda__nav-dot-item:hover { opacity: 0.6; }
-  .qanda__nav-dot-item.current:hover { opacity: 1; }
 
-  /* ---- footer ---- */
-  .footer {
-    grid-area: footer;
-    padding: 32px;
+  /* ============ content layer ============ */
+  .content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    width: 100%;
+    max-width: 1560px;
+    margin: 0 auto;
+    padding: 0 clamp(24px, 5vw, 88px);
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    will-change: transform, opacity;
   }
-  .footer__legal { margin: 0 16px 0 auto; font-size: 12px; transition: font-size 0.3s var(--ease); }
-  .footer__legal:hover { font-size: 16px; }
-  .footer__legal a { color: #fff; opacity: 0.7; text-decoration: none; white-space: nowrap; }
-  .footer__legal a:hover { opacity: 1; }
-  .footer__note { font-size: 11px; opacity: 0.45; letter-spacing: 0.04em; }
 
-  @media (max-width: 700px) {
-    .qanda__question { font-size: 22px; }
-    .page-banner__nav { font-size: 14px; }
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: var(--gold-soft);
+    margin-bottom: clamp(20px, 3vh, 36px);
   }
+  .eyebrow::before {
+    content: "";
+    display: inline-block;
+    width: 44px; height: 1px;
+    background: var(--gold);
+    vertical-align: middle;
+    margin-right: 16px;
+  }
+
+  h1, h2 {
+    font-family: var(--serif);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+  }
+  .display-xl { font-size: clamp(42px, 7.6vw, 118px); font-weight: 900; }
+  .display-l  { font-size: clamp(34px, 5.4vw, 84px); }
+  .lede {
+    font-size: clamp(15px, 1.35vw, 20px);
+    font-weight: 300;
+    line-height: 1.75;
+    color: var(--bone-dim);
+    max-width: 34em;
+    margin-top: clamp(22px, 3.4vh, 40px);
+  }
+  .gold { color: var(--gold-soft); font-style: italic; }
+
+  /* line-mask reveal */
+  .rv { display: block; overflow: hidden; }
+  .rv > span {
+    display: block;
+    transform: translateY(115%);
+    transition: transform 1.25s var(--ease);
+  }
+  .in-view .rv > span { transform: translateY(0); }
+  .in-view .rv:nth-child(2) > span { transition-delay: 0.10s; }
+  .in-view .rv:nth-child(3) > span { transition-delay: 0.20s; }
+  .fd {
+    opacity: 0;
+    transform: translateY(34px);
+    transition: opacity 1.1s var(--ease), transform 1.1s var(--ease);
+  }
+  .in-view .fd { opacity: 1; transform: none; }
+  .in-view .fd.d1 { transition-delay: 0.28s; }
+  .in-view .fd.d2 { transition-delay: 0.42s; }
+  .in-view .fd.d3 { transition-delay: 0.56s; }
+  .in-view .fd.d4 { transition-delay: 0.70s; }
+  .in-view .fd.d5 { transition-delay: 0.84s; }
+
+  /* ============ hero specifics ============ */
+  .s-hero .content { align-items: center; text-align: center; }
+  .s-hero .eyebrow::before { display: none; }
+  .s-hero .lede { margin-left: auto; margin-right: auto; }
+
+  .cta-row {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: clamp(30px, 5vh, 54px);
+    justify-content: center;
+  }
+  .btn {
+    position: relative;
+    display: inline-block;
+    padding: 17px 38px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 999px;
+    overflow: hidden;
+    transition: color 0.45s var(--ease), border-color 0.45s var(--ease);
+  }
+  .btn--solid { color: var(--ink); background: var(--gold); }
+  .btn--ghost { color: var(--bone); border: 1px solid rgba(236,231,219,0.35); background: transparent; }
+  .btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--bone);
+    border-radius: inherit;
+    transform: translateY(102%);
+    transition: transform 0.5s var(--ease);
+    z-index: -1;
+  }
+  .btn--solid::after { background: var(--gold-soft); }
+  .btn:hover::after { transform: translateY(0); }
+  .btn--ghost:hover { color: var(--ink); border-color: var(--bone); z-index: 1; }
+  .btn--ghost:hover::after { z-index: -1; }
+  .btn--ghost { z-index: 0; }
+
+  .scroll-cue {
+    position: absolute;
+    bottom: 34px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    font-size: 10px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+  }
+  .scroll-cue::after {
+    content: "";
+    display: block;
+    width: 1px;
+    height: 52px;
+    margin: 12px auto 0;
+    background: linear-gradient(180deg, var(--gold), transparent);
+    animation: cueDrop 2.2s var(--ease-io) infinite;
+    transform-origin: top;
+  }
+  @keyframes cueDrop {
+    0%   { transform: scaleY(0); }
+    45%  { transform: scaleY(1); }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+
+  /* ============ section 2 — programs (left) ============ */
+  .s-programs .content { align-items: flex-start; text-align: left; }
+  .prog-list {
+    list-style: none;
+    width: 100%;
+    max-width: 860px;
+    margin-top: clamp(26px, 4.5vh, 52px);
+    counter-reset: prog;
+  }
+  .prog-list li { border-top: 1px solid rgba(236,231,219,0.14); }
+  .prog-list li:last-child { border-bottom: 1px solid rgba(236,231,219,0.14); }
+  .prog-list a {
+    counter-increment: prog;
+    display: flex;
+    align-items: baseline;
+    gap: clamp(16px, 3vw, 44px);
+    padding: clamp(12px, 1.9vh, 20px) 6px;
+    color: var(--bone);
+    text-decoration: none;
+    font-family: var(--serif);
+    font-size: clamp(19px, 2.5vw, 36px);
+    font-weight: 600;
+    transition: padding-left 0.5s var(--ease), color 0.5s var(--ease);
+  }
+  .prog-list a::before {
+    content: counter(prog, decimal-leading-zero);
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+  }
+  .prog-list a::after {
+    content: "→";
+    margin-left: auto;
+    font-family: var(--sans);
+    font-weight: 300;
+    opacity: 0;
+    transform: translateX(-14px);
+    transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
+    color: var(--gold-soft);
+  }
+  .prog-list a:hover { padding-left: 22px; color: var(--gold-soft); }
+  .prog-list a:hover::after { opacity: 1; transform: none; }
+
+  /* ============ section 3 — admission (right) ============ */
+  .s-admission .content { align-items: flex-end; text-align: right; }
+  .s-admission .lede { margin-left: auto; }
+  .steps {
+    list-style: none;
+    margin-top: clamp(28px, 5vh, 56px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(18px, 3vh, 30px);
+    max-width: 620px;
+  }
+  .steps li { display: flex; flex-direction: row-reverse; gap: 26px; align-items: flex-start; }
+  .steps__num {
+    flex: 0 0 auto;
+    font-family: var(--serif);
+    font-size: clamp(34px, 4vw, 60px);
+    font-weight: 900;
+    line-height: 0.9;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--gold);
+  }
+  .steps h3 {
+    font-family: var(--serif);
+    font-size: clamp(18px, 1.9vw, 27px);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .steps p {
+    font-size: clamp(13px, 1.05vw, 16px);
+    font-weight: 300;
+    line-height: 1.7;
+    color: var(--bone-dim);
+  }
+
+  /* ============ section 4 — funding (split left) ============ */
+  .s-funding .content { align-items: flex-start; }
+  .grants {
+    display: flex;
+    gap: clamp(26px, 5vw, 84px);
+    flex-wrap: wrap;
+    margin-top: clamp(30px, 5.5vh, 62px);
+  }
+  .grants__item { min-width: 180px; }
+  .grants__big {
+    font-family: var(--serif);
+    font-size: clamp(52px, 6.4vw, 108px);
+    font-weight: 900;
+    line-height: 1;
+    color: var(--gold);
+    letter-spacing: -0.02em;
+  }
+  .grants__big sup { font-size: 0.35em; color: var(--gold-soft); }
+  .grants__label {
+    margin-top: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    line-height: 1.8;
+  }
+  .grants__label b { display: block; color: var(--bone); font-weight: 700; }
+
+  /* ============ section 5 — final CTA (center) ============ */
+  .s-final .content { align-items: center; text-align: center; }
+  .s-final .display-xl { font-size: clamp(52px, 9.5vw, 150px); }
+  .contact-row {
+    margin-top: clamp(30px, 5vh, 56px);
+    display: flex;
+    gap: clamp(24px, 5vw, 80px);
+    flex-wrap: wrap;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    color: var(--bone-dim);
+    line-height: 2;
+  }
+  .contact-row b {
+    display: block;
+    font-weight: 600;
+    font-size: 10px;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--gold-soft);
+  }
+  .contact-row a { color: var(--bone); text-decoration: none; border-bottom: 1px solid var(--gold-dim); transition: border-color .4s var(--ease); }
+  .contact-row a:hover { border-color: var(--gold); }
+
+  .site-foot {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    z-index: 3;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 26px clamp(24px, 4vw, 64px);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(236,231,219,0.4);
+  }
+
+  /* ============ marquee divider ============ */
+  .ticker {
+    position: relative;
+    z-index: 5;
+    overflow: hidden;
+    padding: clamp(28px, 5vh, 56px) 0;
+    background: var(--ink);
+    border-top: 1px solid rgba(201,162,75,0.18);
+    border-bottom: 1px solid rgba(201,162,75,0.18);
+  }
+  .ticker__track {
+    display: flex;
+    width: max-content;
+    animation: tick 30s linear infinite;
+  }
+  .ticker span {
+    font-family: var(--serif);
+    font-size: clamp(26px, 3.6vw, 56px);
+    font-weight: 300;
+    white-space: nowrap;
+    padding: 0 clamp(22px, 3vw, 48px);
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(201,162,75,0.55);
+  }
+  .ticker span.fill { color: var(--bone); -webkit-text-stroke: 0; }
+  @keyframes tick { to { transform: translateX(-50%); } }
+
+  /* ============ intro curtain ============ */
+  .curtain {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: var(--ink);
+    display: grid;
+    place-items: center;
+    transition: opacity 1s var(--ease) 0.35s, visibility 0s 1.4s;
+  }
+  html:not(.is-loading) .curtain { opacity: 0; visibility: hidden; }
+  .curtain span {
+    font-family: var(--serif);
+    font-weight: 900;
+    letter-spacing: 0.3em;
+    font-size: clamp(22px, 3vw, 40px);
+    color: var(--gold);
+    animation: breathe 1.6s var(--ease-io) infinite alternate;
+  }
+  @keyframes breathe { from { opacity: 0.35; } to { opacity: 1; } }
+
+  @media (max-width: 760px) {
+    .panel--tall, .panel--hero { height: 200vh; }
+    .steps li { flex-direction: row; text-align: left; }
+    .s-admission .content { align-items: flex-start; text-align: left; }
+    .waypoints { display: none; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .qanda__item > *, .qanda__item.current > * { transition-duration: 0.2s !important; transition-delay: 0s !important; }
+    .media__inner, .ticker__track, .scroll-cue::after, .curtain span { animation: none !important; }
+    .rv > span, .fd { transition-duration: 0.01s !important; }
+    html { scroll-behavior: auto; }
   }
 </style>
 </head>
-<body id="blueyard" class="page body-index">
+<body>
 
-  <div class="page-banner">
-    <div class="page-banner__logo">
-      <a class="logo" href="#blueyard">BlueYard</a>
+<div class="curtain" aria-hidden="true"><span>IBSU</span></div>
+<div class="progress" id="progress"></div>
+
+<header class="site-head">
+  <a class="site-head__logo" href="#hero">IBSU<small>შავი ზღვის საერთაშორისო უნივერსიტეტი</small></a>
+  <nav class="site-head__nav">
+    <a href="#programs">პროგრამები</a>
+    <a href="#admission">მიღება</a>
+    <a href="#funding">დაფინანსება</a>
+    <a href="#apply">განაცხადი</a>
+  </nav>
+</header>
+
+<nav class="waypoints" id="waypoints" aria-label="სექციები">
+  <button data-to="hero" class="on" aria-label="მთავარი"></button>
+  <button data-to="programs" aria-label="პროგრამები"></button>
+  <button data-to="admission" aria-label="მიღება"></button>
+  <button data-to="funding" aria-label="დაფინანსება"></button>
+  <button data-to="apply" aria-label="განაცხადი"></button>
+</nav>
+
+<main>
+
+  <!-- ================= 01 · HERO ================= -->
+  <section class="panel panel--hero s-hero" id="hero" data-panel data-scene="cosmos" data-video="assets/videos/section-01.mp4">
+    <div class="stage">
+      <div class="media"><div class="media__inner">
+        <canvas></canvas>
+        <video muted loop playsinline autoplay preload="metadata"></video>
+      </div></div>
+      <div class="content" data-observe>
+        <p class="eyebrow fd">მიღება 2026 · თბილისი</p>
+        <h1 class="display-xl">
+          <span class="rv"><span>რა იქნება, თუ ცოდნა</span></span>
+          <span class="rv"><span>შენს ყველაზე <em class="gold">ძლიერ</em></span></span>
+          <span class="rv"><span>იარაღად იქცევა?</span></span>
+        </h1>
+        <p class="lede fd d2">შავი ზღვის საერთაშორისო უნივერსიტეტი — სივრცე, სადაც დიდი კითხვები დიდ მომავლად იქცევა. 1995 წლიდან.</p>
+        <div class="cta-row fd d3">
+          <a class="btn btn--solid" href="#apply">დაიწყე განაცხადი</a>
+          <a class="btn btn--ghost" href="#programs">პროგრამების ნახვა</a>
+        </div>
+      </div>
+      <div class="scroll-cue">დასქროლე</div>
     </div>
-    <nav class="page-banner__nav">
-      <ul>
-        <li><a href="https://medium.com/@BlueYard" target="_blank" rel="noopener">Updates</a></li>
-        <li><a href="https://twitter.com/blueyard" target="_blank" rel="noopener">Twitter</a></li>
-      </ul>
-    </nav>
+  </section>
+
+  <!-- ================= 02 · PROGRAMS ================= -->
+  <section class="panel panel--tall s-programs" id="programs" data-panel data-scene="kintsugi" data-video="assets/videos/section-02.mp4">
+    <div class="stage">
+      <div class="media"><div class="media__inner">
+        <canvas></canvas>
+        <video muted loop playsinline autoplay preload="metadata"></video>
+      </div></div>
+      <div class="content" data-observe>
+        <p class="eyebrow fd">02 · საბაკალავრო პროგრამები</p>
+        <h2 class="display-l">
+          <span class="rv"><span>აირჩიე შენი <em class="gold">გზა</em></span></span>
+        </h2>
+        <ul class="prog-list">
+          <li class="fd d1"><a href="https://ibsu.edu.ge/en/programs/bachelors/" target="_blank" rel="noopener">ბიზნესის ადმინისტრირება</a></li>
+          <li class="fd d1"><a href="https://ibsu.edu.ge/en/programs/bachelors/" target="_blank" rel="noopener">კომპიუტერული მეცნიერება</a></li>
+          <li class="fd d2"><a href="https://ibsu.edu.ge/en/programs/bachelors/" target="_blank" rel="noopener">სამართალი</a></li>
+          <li class="fd d2"><a href="https://ibsu.edu.ge/en/programs/bachelors/" target="_blank" rel="noopener">საერთაშორისო ურთიერთობები</a></li>
+          <li class="fd d3"><a href="https://ibsu.edu.ge/en/programs/bachelors/" target="_blank" rel="noopener">ინგლისური ფილოლოგია</a></li>
+          <li class="fd d3"><a href="https://ibsu.edu.ge/en/programs/bachelors/" target="_blank" rel="noopener">ეკონომიკა</a></li>
+          <li class="fd d4"><a href="https://ibsu.edu.ge/en/programs/bachelors/" target="_blank" rel="noopener">ჟურნალისტიკა</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 03 · ADMISSION ================= -->
+  <section class="panel panel--tall s-admission" id="admission" data-panel data-scene="golddust" data-video="assets/videos/section-03.mp4">
+    <div class="stage">
+      <div class="media"><div class="media__inner">
+        <canvas></canvas>
+        <video muted loop playsinline autoplay preload="metadata"></video>
+      </div></div>
+      <div class="content" data-observe>
+        <p class="eyebrow fd">03 · როგორ ჩავირიცხო</p>
+        <h2 class="display-l">
+          <span class="rv"><span>სამი ნაბიჯი</span></span>
+          <span class="rv"><span>შენს <em class="gold">ჩარიცხვამდე</em></span></span>
+        </h2>
+        <ol class="steps">
+          <li class="fd d2">
+            <span class="steps__num">01</span>
+            <div>
+              <h3>ეროვნული გამოცდები</h3>
+              <p>რეგისტრაციისას საგანმანათლებლო პროგრამების სიაში პრიორიტეტად მიუთითე IBSU.</p>
+            </div>
+          </li>
+          <li class="fd d3">
+            <span class="steps__num">02</span>
+            <div>
+              <h3>რეგისტრაცია და დოკუმენტები</h3>
+              <p>წარმოადგინე პირველკურსელთა საბუთები უნივერსიტეტში დადგენილ ვადებში.</p>
+            </div>
+          </li>
+          <li class="fd d4">
+            <span class="steps__num">03</span>
+            <div>
+              <h3>პირველი დღე კამპუსში</h3>
+              <p>გაიცანი შენი ჯგუფი, ლექტორები და დაიწყე გზა, რომელიც შენ აირჩიე.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ticker divider ================= -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker__track" id="ticker">
+      <span>ცოდნა</span><span class="fill">·</span><span>თავისუფლება</span><span class="fill">·</span>
+      <span>მომავალი</span><span class="fill">·</span><span>IBSU 1995</span><span class="fill">·</span>
+      <span>ცოდნა</span><span class="fill">·</span><span>თავისუფლება</span><span class="fill">·</span>
+      <span>მომავალი</span><span class="fill">·</span><span>IBSU 1995</span><span class="fill">·</span>
+    </div>
   </div>
 
-  <header class="page-header" id="page-header">
-
-    <div class="movie">
-      <canvas id="film"></canvas>
+  <!-- ================= 04 · FUNDING ================= -->
+  <section class="panel panel--tall s-funding" id="funding" data-panel data-scene="laurel" data-video="assets/videos/section-04.mp4">
+    <div class="stage">
+      <div class="media"><div class="media__inner">
+        <canvas></canvas>
+        <video muted loop playsinline autoplay preload="metadata"></video>
+      </div></div>
+      <div class="content" data-observe>
+        <p class="eyebrow fd">04 · სტიპენდიები და გრანტები</p>
+        <h2 class="display-l">
+          <span class="rv"><span>ცოდნა, რომელიც</span></span>
+          <span class="rv"><span><em class="gold">ფასდება</em></span></span>
+        </h2>
+        <p class="lede fd d1">სახელმწიფო გრანტს IBSU-ს შიდა გრანტი ემატება — შენი შედეგი პირდაპირ შენს დაფინანსებად იქცევა.</p>
+        <div class="grants">
+          <div class="grants__item fd d2">
+            <div class="grants__big" data-count="70">+0<sup>%</sup></div>
+            <div class="grants__label"><b>100% სახელმწიფო გრანტი</b>IBSU-ს დამატებითი გრანტი</div>
+          </div>
+          <div class="grants__item fd d3">
+            <div class="grants__big" data-count="50">+0<sup>%</sup></div>
+            <div class="grants__label"><b>70% სახელმწიფო გრანტი</b>IBSU-ს დამატებითი გრანტი</div>
+          </div>
+          <div class="grants__item fd d4">
+            <div class="grants__big" data-count="30">+0<sup>%</sup></div>
+            <div class="grants__label"><b>50% სახელმწიფო გრანტი</b>IBSU-ს დამატებითი გრანტი</div>
+          </div>
+        </div>
+      </div>
     </div>
+  </section>
 
-    <section class="qanda">
-      <div class="qanda__outer">
-        <ul id="qanda__list" class="qanda__list qanda-parent">
-
-          <li class="qanda__item current">
-            <h2 class="qanda__question">
-              <a href="https://medium.com/@BlueYard/blueyard-thesis-cac357725ee6" target="_blank" rel="noopener">
-                <span>Backing founders with transforming ideas — decentralizing markets and empowering humanity.</span>
-              </a>
-            </h2>
-            <ul class="qanda__answer"></ul>
-          </li>
-
-          <li class="qanda__item">
-            <h2 class="qanda__question"><span>What if nature became our most powerful technology?</span></h2>
-            <ul class="qanda__answer">
-              <li><a class="wm--bold"  href="http://meatable.com/" target="_blank" rel="noopener">meatable</a></li>
-              <li><a class="wm--mono"  href="http://bit.bio/" target="_blank" rel="noopener">bit.bio</a></li>
-              <li><a class="wm--caps"  href="http://seeqc.eu/" target="_blank" rel="noopener">SeeQC</a></li>
-              <li><a class="wm--light" href="http://positive.co/" target="_blank" rel="noopener">Positive</a></li>
-              <li><a class="wm--caps"  href="http://marvelfusion.io/" target="_blank" rel="noopener">Marvel Fusion</a></li>
-              <li><a class="wm--bold"  href="http://thinkhumm.com/" target="_blank" rel="noopener">humm</a></li>
-              <li><a class="wm--light" href="http://dance.co/" target="_blank" rel="noopener">Dance</a></li>
-            </ul>
-          </li>
-
-          <li class="qanda__item">
-            <h2 class="qanda__question"><span>What if the internet was reinvented for permissionless innovation?</span></h2>
-            <ul class="qanda__answer">
-              <li><a class="wm--caps"  href="http://protocol.ai/" target="_blank" rel="noopener">Protocol Labs</a></li>
-              <li><a class="wm--bold"  href="http://ipfs.io/" target="_blank" rel="noopener">IPFS</a></li>
-              <li><a class="wm--mono"  href="http://libp2p.io/" target="_blank" rel="noopener">libp2p</a></li>
-              <li><a class="wm--light" href="http://filecoin.io/" target="_blank" rel="noopener">Filecoin</a></li>
-              <li><a class="wm--caps"  href="http://zeppelin.solutions/" target="_blank" rel="noopener">Zeppelin</a></li>
-              <li><a class="wm--mono"  href="http://oscoin.io/" target="_blank" rel="noopener">oscoin</a></li>
-              <li><a class="wm--bold"  href="http://textile.io/" target="_blank" rel="noopener">Textile</a></li>
-            </ul>
-          </li>
-
-          <li class="qanda__item">
-            <h2 class="qanda__question"><span>What if software monopolies were untangled — and data set free?</span></h2>
-            <ul class="qanda__answer">
-              <li><a class="wm--bold"  href="http://pitch.com/" target="_blank" rel="noopener">Pitch</a></li>
-              <li><a class="wm--mono"  href="http://stdlib.com/" target="_blank" rel="noopener">stdlib</a></li>
-              <li><a class="wm--light" href="http://nextmatter.com/" target="_blank" rel="noopener">Next Matter</a></li>
-              <li><a class="wm--caps"  href="http://grid.is/" target="_blank" rel="noopener">GRID</a></li>
-              <li><a class="wm--bold"  href="http://vectary.com/" target="_blank" rel="noopener">VECTARY</a></li>
-              <li><a class="wm--caps"  href="http://spaceknow.com/" target="_blank" rel="noopener">SpaceKnow</a></li>
-            </ul>
-          </li>
-
-          <li class="qanda__item">
-            <h2 class="qanda__question"><span>What if state and money could be separated?</span></h2>
-            <ul class="qanda__answer">
-              <li><a class="wm--light" href="http://airtm.io/" target="_blank" rel="noopener">AirTM</a></li>
-              <li><a class="wm--bold"  href="http://decred.org/" target="_blank" rel="noopener">decred</a></li>
-              <li><a class="wm--caps"  href="http://centrifuge.io/" target="_blank" rel="noopener">Centrifuge</a></li>
-              <li><a class="wm--mono"  href="http://grin.mw/" target="_blank" rel="noopener">grin</a></li>
-              <li><a class="wm--light" href="http://gethaven.app/" target="_blank" rel="noopener">Haven</a></li>
-              <li><a class="wm--bold"  href="http://openbazaar.org/" target="_blank" rel="noopener">OB1</a></li>
-            </ul>
-          </li>
-
-        </ul>
+  <!-- ================= 05 · APPLY ================= -->
+  <section class="panel panel--tall s-final" id="apply" data-panel data-scene="halo" data-video="assets/videos/section-05.mp4">
+    <div class="stage">
+      <div class="media"><div class="media__inner">
+        <canvas></canvas>
+        <video muted loop playsinline autoplay preload="metadata"></video>
+      </div></div>
+      <div class="content" data-observe>
+        <p class="eyebrow fd">05 · შემოგვიერთდი</p>
+        <h2 class="display-xl">
+          <span class="rv"><span>მზად <em class="gold">ხარ?</em></span></span>
+        </h2>
+        <div class="cta-row fd d2">
+          <a class="btn btn--solid" href="https://ibsu.edu.ge/entrant/" target="_blank" rel="noopener">გახდი აბიტურიენტი</a>
+        </div>
+        <div class="contact-row fd d3">
+          <div><b>მისამართი</b>თბილისი, დავით აღმაშენებლის ხეივანი, 13 კმ</div>
+          <div><b>ვებგვერდი</b><a href="https://ibsu.edu.ge" target="_blank" rel="noopener">ibsu.edu.ge</a></div>
+          <div><b>მიღება</b>ერთიანი ეროვნული გამოცდებით</div>
+        </div>
       </div>
-
-      <div class="qanda__nav" id="qanda__nav">
-        <ul class="qanda__nav-dot qanda-parent">
-          <li class="qanda__nav-dot-item current"></li>
-          <li class="qanda__nav-dot-item"></li>
-          <li class="qanda__nav-dot-item"></li>
-          <li class="qanda__nav-dot-item"></li>
-          <li class="qanda__nav-dot-item"></li>
-        </ul>
-      </div>
-
-      <footer class="footer">
-        <span class="footer__note">Design study — not affiliated with BlueYard Capital</span>
-        <div class="footer__legal"><a href="#">Legal Notice</a></div>
+      <footer class="site-foot">
+        <span>© 2026 IBSU — დიზაინ-კონცეფცია</span>
+        <span>არაოფიციალური რედიზაინი · ინსპირაცია: blueyard.com</span>
       </footer>
-    </section>
+    </div>
+  </section>
 
-  </header>
+</main>
 
 <script>
 (() => {
   "use strict";
-
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const clamp01 = (v) => Math.min(1, Math.max(0, v));
+  const smooth = (e0, e1, x) => {
+    const t = clamp01((x - e0) / (e1 - e0));
+    return t * t * (3 - 2 * t);
+  };
+  const TAU = Math.PI * 2;
+  const GOLD = (a) => `rgba(208, 172, 90, ${a})`;
 
-  /* =========================================================
-     Generative "films" — one procedural scene per slide,
-     standing in for the original's five background videos:
-     0 ocean foam · 1 blue sun · 2 constellations ·
-     3 building facade · 4 crowd
-     ========================================================= */
-  const canvas = document.getElementById("film");
-  const gl = canvas.getContext("webgl", { antialias: false, alpha: false });
+  /* =====================================================
+     Procedural fallback scenes — one per section, themed
+     to the five source stills (statue/cosmos, kintsugi,
+     gold dust, laurel wisdom, halo). Each keeps animating
+     independently of scroll. A drop-in MP4 in
+     assets/videos/ takes over automatically when present.
+     ===================================================== */
+  const scenes = {
+    /* 01 — statue among the stars: milky way, gold orbits */
+    cosmos(seedR) {
+      const stars = Array.from({ length: 170 }, () => ({
+        x: seedR(), y: seedR(), r: 0.4 + seedR() * 1.5,
+        tw: 0.5 + seedR() * 2.4, ph: seedR() * TAU
+      }));
+      const dust = Array.from({ length: 46 }, () => ({
+        x: seedR(), y: seedR(), s: 0.6 + seedR() * 1.8,
+        vy: 0.006 + seedR() * 0.014, sw: seedR() * TAU
+      }));
+      return (ctx, t, w, h) => {
+        const g = ctx.createRadialGradient(w * 0.62, h * 0.30, 0, w * 0.62, h * 0.30, Math.max(w, h));
+        g.addColorStop(0, "#101321"); g.addColorStop(0.55, "#080a12"); g.addColorStop(1, "#04050a");
+        ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
 
-  const vsSrc = `
-    attribute vec2 aPos;
-    void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
-  `;
+        /* milky way band */
+        ctx.save();
+        ctx.translate(w * 0.62, h * 0.30);
+        ctx.rotate(-0.9 + Math.sin(t * 0.02) * 0.02);
+        ctx.globalCompositeOperation = "lighter";
+        for (let i = 0; i < 5; i++) {
+          const gg = ctx.createRadialGradient(0, 0, 0, 0, 0, w * (0.10 + i * 0.09));
+          gg.addColorStop(0, `rgba(215,190,175,${0.10 - i * 0.016})`);
+          gg.addColorStop(1, "rgba(215,190,175,0)");
+          ctx.fillStyle = gg;
+          ctx.save(); ctx.scale(1, 2.4); ctx.beginPath();
+          ctx.arc(0, 0, w * (0.10 + i * 0.09), 0, TAU); ctx.fill(); ctx.restore();
+        }
+        ctx.restore();
 
-  const fsSrc = `
-    precision highp float;
-    uniform vec2  uRes;
-    uniform float uTime;
-    uniform float uModeA, uModeB, uBlend;
+        /* stars */
+        ctx.globalCompositeOperation = "lighter";
+        for (const s of stars) {
+          const a = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(t * s.tw + s.ph));
+          ctx.fillStyle = `rgba(230,235,245,${a * 0.8})`;
+          ctx.beginPath(); ctx.arc(s.x * w, s.y * h, s.r, 0, TAU); ctx.fill();
+        }
+        /* gold astro-rings */
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 3; i++) {
+          ctx.strokeStyle = GOLD(0.16 - i * 0.035);
+          ctx.beginPath();
+          ctx.arc(w * 0.5, h * 0.34, h * (0.30 + i * 0.16),
+                  t * 0.03 * (i % 2 ? 1 : -1) + i,
+                  t * 0.03 * (i % 2 ? 1 : -1) + i + TAU * 0.82);
+          ctx.stroke();
+        }
+        /* rising gold dust */
+        for (const d of dust) {
+          d.y -= d.vy / 60;
+          if (d.y < -0.02) d.y = 1.02;
+          const x = d.x * w + Math.sin(t * 0.5 + d.sw) * 14;
+          ctx.fillStyle = GOLD(0.5);
+          ctx.beginPath(); ctx.arc(x, d.y * h, d.s, 0, TAU); ctx.fill();
+        }
+        ctx.globalCompositeOperation = "source-over";
+      };
+    },
 
-    float hash1(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
-    vec2 hash2(vec2 p) {
-      p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
-      return fract(sin(p) * 43758.5453123);
+    /* 02 — kintsugi: slate-blue stone, pulsing gold cracks */
+    kintsugi(seedR) {
+      const cracks = Array.from({ length: 15 }, () => {
+        const pts = [{ x: seedR(), y: seedR() }];
+        let ang = seedR() * TAU;
+        for (let i = 0; i < 9; i++) {
+          ang += (seedR() - 0.5) * 1.5;
+          const p = pts[pts.length - 1];
+          pts.push({ x: p.x + Math.cos(ang) * 0.05, y: p.y + Math.sin(ang) * 0.05 });
+        }
+        return { pts, ph: seedR() * TAU, sp: 0.3 + seedR() * 0.5 };
+      });
+      return (ctx, t, w, h) => {
+        const g = ctx.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0, "#1a2438"); g.addColorStop(1, "#0e1523");
+        ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+
+        /* broken gold halo behind */
+        ctx.save();
+        ctx.translate(w * 0.5, h * 0.44);
+        ctx.rotate(t * 0.015);
+        ctx.lineWidth = h * 0.05;
+        for (let i = 0; i < 4; i++) {
+          const a0 = i * (TAU / 4) + 0.16;
+          ctx.strokeStyle = GOLD(0.11);
+          ctx.beginPath(); ctx.arc(0, 0, h * 0.40, a0, a0 + TAU / 4 - 0.32); ctx.stroke();
+        }
+        ctx.restore();
+
+        /* cracks: gold veins with travelling shimmer */
+        for (const c of cracks) {
+          const pulse = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * c.sp + c.ph));
+          ctx.strokeStyle = GOLD(0.14 + 0.30 * pulse);
+          ctx.lineWidth = 1 + pulse;
+          ctx.shadowColor = GOLD(0.5 * pulse);
+          ctx.shadowBlur = 7 * pulse;
+          ctx.beginPath();
+          c.pts.forEach((p, i) => i ? ctx.lineTo(p.x * w, p.y * h) : ctx.moveTo(p.x * w, p.y * h));
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          /* bright spark travelling along the crack */
+          const k = (t * 0.12 * c.sp + c.ph) % 1;
+          const idx = Math.floor(k * (c.pts.length - 1));
+          const fr = k * (c.pts.length - 1) - idx;
+          const p0 = c.pts[idx], p1 = c.pts[Math.min(idx + 1, c.pts.length - 1)];
+          ctx.fillStyle = GOLD(0.75 * pulse);
+          ctx.beginPath();
+          ctx.arc(lerp(p0.x, p1.x, fr) * w, lerp(p0.y, p1.y, fr) * h, 1.6, 0, TAU);
+          ctx.fill();
+        }
+      };
+    },
+
+    /* 03 — black stone, drifting gold-leaf flakes */
+    golddust(seedR) {
+      const flakes = Array.from({ length: 110 }, () => ({
+        x: seedR(), y: seedR(), s: 0.5 + seedR() * 2.2,
+        vx: (seedR() - 0.5) * 0.012, vy: -0.004 - seedR() * 0.012,
+        tw: 0.4 + seedR() * 2, ph: seedR() * TAU
+      }));
+      const patches = Array.from({ length: 4 }, () => ({
+        x: seedR(), y: seedR(), r: 0.12 + seedR() * 0.2, sp: 0.1 + seedR() * 0.2, ph: seedR() * TAU
+      }));
+      return (ctx, t, w, h) => {
+        const g = ctx.createRadialGradient(w * 0.5, h * 0.42, 0, w * 0.5, h * 0.42, Math.max(w, h) * 0.8);
+        g.addColorStop(0, "#141416"); g.addColorStop(1, "#070708");
+        ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+        ctx.globalCompositeOperation = "lighter";
+        /* soft gold-leaf glows */
+        for (const p of patches) {
+          const a = 0.05 + 0.05 * Math.sin(t * p.sp + p.ph);
+          const gg = ctx.createRadialGradient(p.x * w, p.y * h, 0, p.x * w, p.y * h, p.r * w);
+          gg.addColorStop(0, GOLD(a)); gg.addColorStop(1, GOLD(0));
+          ctx.fillStyle = gg;
+          ctx.beginPath(); ctx.arc(p.x * w, p.y * h, p.r * w, 0, TAU); ctx.fill();
+        }
+        /* flakes */
+        for (const f of flakes) {
+          f.x += f.vx / 60; f.y += f.vy / 60;
+          if (f.y < -0.02) { f.y = 1.02; f.x = Math.random(); }
+          if (f.x < -0.02) f.x = 1.02; if (f.x > 1.02) f.x = -0.02;
+          const a = 0.25 + 0.55 * (0.5 + 0.5 * Math.sin(t * f.tw + f.ph));
+          ctx.fillStyle = GOLD(a);
+          ctx.beginPath(); ctx.arc(f.x * w, f.y * h, f.s, 0, TAU); ctx.fill();
+        }
+        ctx.globalCompositeOperation = "source-over";
+      };
+    },
+
+    /* 04 — navy wisdom: orbiting gold laurel leaves, engraved arcs */
+    laurel(seedR) {
+      const leaves = Array.from({ length: 26 }, (_, i) => ({
+        r: 0.30 + (i % 3) * 0.09 + seedR() * 0.03,
+        a: seedR() * TAU, sp: 0.05 + seedR() * 0.08,
+        s: 4 + seedR() * 7, dir: i % 2 ? 1 : -1
+      }));
+      const veins = Array.from({ length: 8 }, () => {
+        const pts = [{ x: seedR(), y: seedR() }];
+        let ang = seedR() * TAU;
+        for (let i = 0; i < 7; i++) {
+          ang += (seedR() - 0.5) * 1.4;
+          const p = pts[pts.length - 1];
+          pts.push({ x: p.x + Math.cos(ang) * 0.05, y: p.y + Math.sin(ang) * 0.05 });
+        }
+        return pts;
+      });
+      return (ctx, t, w, h) => {
+        const g = ctx.createLinearGradient(0, 0, w, h);
+        g.addColorStop(0, "#1b2946"); g.addColorStop(1, "#101a30");
+        ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+
+        /* faint kintsugi veins in the wall */
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = GOLD(0.10);
+        for (const v of veins) {
+          ctx.beginPath();
+          v.forEach((p, i) => i ? ctx.lineTo(p.x * w, p.y * h) : ctx.moveTo(p.x * w, p.y * h));
+          ctx.stroke();
+        }
+        const cx = w * 0.5, cy = h * 0.46;
+        /* engraved arcs */
+        for (let i = 0; i < 3; i++) {
+          ctx.strokeStyle = GOLD(0.14 - i * 0.03);
+          ctx.beginPath();
+          ctx.arc(cx, cy, h * (0.26 + i * 0.13),
+                  t * 0.02 * (i % 2 ? -1 : 1) + i * 2,
+                  t * 0.02 * (i % 2 ? -1 : 1) + i * 2 + TAU * 0.75);
+          ctx.stroke();
+        }
+        /* orbiting laurel leaves */
+        for (const L of leaves) {
+          const a = L.a + t * L.sp * L.dir;
+          const x = cx + Math.cos(a) * L.r * h * 1.15;
+          const y = cy + Math.sin(a) * L.r * h;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(a + Math.PI / 2);
+          ctx.fillStyle = GOLD(0.35 + 0.2 * Math.sin(t + L.a));
+          ctx.beginPath(); ctx.ellipse(0, 0, L.s * 0.32, L.s, 0, 0, TAU); ctx.fill();
+          ctx.restore();
+        }
+      };
+    },
+
+    /* 05 — grey stone, rotating gold halo rays */
+    halo(seedR) {
+      const rays = Array.from({ length: 72 }, (_, i) => ({
+        a: (i / 72) * TAU, len: 0.5 + seedR() * 0.5, tw: 0.3 + seedR() * 1.2, ph: seedR() * TAU
+      }));
+      const motes = Array.from({ length: 40 }, () => ({
+        x: seedR(), y: seedR(), s: 0.5 + seedR() * 1.4, vy: 0.004 + seedR() * 0.01, ph: seedR() * TAU
+      }));
+      return (ctx, t, w, h) => {
+        const g = ctx.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0, "#232833"); g.addColorStop(0.6, "#161a22"); g.addColorStop(1, "#0c0e13");
+        ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+
+        const cx = w * 0.5, cy = h * 0.40;
+        const rot = t * 0.02;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(rot);
+        ctx.globalCompositeOperation = "lighter";
+        for (const r of rays) {
+          const a = 0.10 + 0.16 * (0.5 + 0.5 * Math.sin(t * r.tw + r.ph));
+          const r0 = h * 0.30, r1 = r0 + h * 0.24 * r.len * (1 + 0.05 * Math.sin(t * 0.4 + r.ph));
+          ctx.strokeStyle = GOLD(a);
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(r.a) * r0, Math.sin(r.a) * r0);
+          ctx.lineTo(Math.cos(r.a) * r1, Math.sin(r.a) * r1);
+          ctx.stroke();
+        }
+        /* twin engraved circles */
+        for (const rr of [0.285, 0.30]) {
+          ctx.strokeStyle = GOLD(0.35);
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(0, 0, h * rr, 0, TAU); ctx.stroke();
+        }
+        ctx.restore();
+        /* floating motes */
+        ctx.globalCompositeOperation = "lighter";
+        for (const m of motes) {
+          m.y -= m.vy / 60;
+          if (m.y < -0.02) m.y = 1.02;
+          ctx.fillStyle = GOLD(0.3 + 0.2 * Math.sin(t + m.ph));
+          ctx.beginPath(); ctx.arc(m.x * w + Math.sin(t * 0.4 + m.ph) * 10, m.y * h, m.s, 0, TAU); ctx.fill();
+        }
+        ctx.globalCompositeOperation = "source-over";
+      };
     }
-    vec2 ghash(vec2 p) { return -1.0 + 2.0 * hash2(p); }
-    float noise(vec2 p) {
-      vec2 i = floor(p);
-      vec2 f = fract(p);
-      vec2 u = f * f * (3.0 - 2.0 * f);
-      return mix(
-        mix(dot(ghash(i + vec2(0.0, 0.0)), f - vec2(0.0, 0.0)),
-            dot(ghash(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0)), u.x),
-        mix(dot(ghash(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0)),
-            dot(ghash(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0)), u.x),
-        u.y);
-    }
-    float fbm(vec2 p) {
-      float v = 0.0, a = 0.55;
-      mat2 rot = mat2(0.8, 0.6, -0.6, 0.8);
-      for (int i = 0; i < 4; i++) {
-        v += a * noise(p);
-        p = rot * p * 1.9;
-        a *= 0.55;
-      }
-      return v;
-    }
+  };
 
-    // 0 — ocean from above: dark teal water, veiny white foam
-    vec3 sceneOcean(vec2 p, vec2 uv, float t) {
-      vec2 drift = vec2(0.0, t * 0.02);
-      float swell = fbm(p * 1.6 + drift);
-      float veins = fbm(p * 4.5 + swell * 1.8 - vec2(t * 0.015, 0.0));
-      float foam = smoothstep(0.80, 0.97, 1.0 - abs(veins) * 2.0);   // thin bright veins only
-      float spray = smoothstep(0.55, 0.85, fbm(p * 9.0 + drift * 3.0)) * foam;
-      vec3 water = mix(vec3(0.02, 0.08, 0.13), vec3(0.08, 0.24, 0.32), swell * 0.5 + 0.5);
-      vec3 col = mix(water, vec3(0.80, 0.88, 0.92), clamp(foam * 0.85 + spray * 0.4, 0.0, 1.0));
-      return col;
-    }
-
-    // 1 — churning blue sun with corona on black space
-    vec3 sceneSun(vec2 p, vec2 uv, float t, float aspect) {
-      vec2 c = p - vec2(aspect * 0.5, 0.42);
-      float d = length(c);
-      float R = 0.58;
-      float surf = fbm(c * 3.6 + fbm(c * 7.0 + t * 0.06) * 1.4 + vec2(0.0, t * 0.02));
-      vec3 fire = mix(vec3(0.10, 0.16, 0.45), vec3(0.80, 0.86, 1.0), smoothstep(-0.35, 0.55, surf));
-      float body = smoothstep(R, R - 0.015, d);
-      float limb = smoothstep(R, R * 0.25, d);          // limb darkening, brighter center
-      float corona = exp(-(d - R) * 5.5) * (1.0 - body);
-      float flare = 0.5 + 0.5 * fbm(vec2(atan(c.y, c.x) * 2.5, t * 0.1));
-      vec3 col = fire * body * (0.45 + 0.65 * limb);
-      col += vec3(0.45, 0.55, 0.95) * corona * flare * 0.8;
-      return col;
-    }
-
-    // 2 — slow constellation field on near-black navy
-    vec3 sceneStars(vec2 p, vec2 uv, float t) {
-      vec3 col = vec3(0.070, 0.085, 0.115);
-      for (int layer = 0; layer < 2; layer++) {
-        float fl = float(layer);
-        vec2 g = p * (10.0 + fl * 22.0) + vec2(t * (0.01 + fl * 0.012), fl * 7.3);
-        vec2 id = floor(g);
-        vec2 f = fract(g);
-        vec2 rp = hash2(id);
-        float keep = step(0.82 - fl * 0.12, hash1(id + 3.7));
-        float d = length(f - (0.2 + rp * 0.6));
-        float tw = 0.65 + 0.35 * sin(t * (0.8 + rp.x * 2.0) + rp.y * 6.28);
-        float star = smoothstep(0.10 - fl * 0.04, 0.0, d) * keep * tw;
-        col += vec3(0.85, 0.90, 1.0) * star * (0.9 - fl * 0.35);
-      }
-      return col;
-    }
-
-    // 3 — concrete facade: columns of tall windows, slow pan
-    vec3 sceneFacade(vec2 p, vec2 uv, float t) {
-      vec2 g = vec2(p.x * 9.0 + t * 0.03, uv.y * 7.0);
-      vec2 id = floor(g);
-      vec2 f = fract(g);
-      // window cell inside each bay
-      float winX = step(0.22, f.x) * step(f.x, 0.86);
-      float winY = step(0.12, f.y) * step(f.y, 0.92);
-      float win = winX * winY;
-      float h = hash1(id);
-      vec3 concrete = vec3(0.55, 0.49, 0.42) * (0.9 + 0.1 * hash1(id * 1.7));
-      vec3 glass = h < 0.14 ? vec3(0.04, 0.04, 0.05)
-                            : vec3(0.42, 0.46, 0.50) * (0.85 + 0.3 * h);
-      // mullion split down each window
-      float mullion = smoothstep(0.02, 0.0, abs(f.x - 0.54));
-      vec3 col = mix(concrete, glass, win);
-      col = mix(col, concrete, mullion * win);
-      // sky strip up top
-      col = mix(col, vec3(0.78, 0.79, 0.80), smoothstep(0.86, 0.90, uv.y));
-      col *= 0.9 + 0.1 * sin(p.x * 40.0);   // fine vertical ribbing
-      return col;
-    }
-
-    // 4 — a crowd from above: dense jostling specks, a few flags
-    vec3 sceneCrowd(vec2 p, vec2 uv, float t) {
-      vec3 col = vec3(0.10, 0.105, 0.10);   // asphalt
-      for (int layer = 0; layer < 2; layer++) {
-        float fl = float(layer);
-        vec2 g = p * (34.0 + fl * 21.0) + vec2(fl * 13.7, fl * 5.1);
-        vec2 id = floor(g);
-        vec2 f = fract(g);
-        vec2 rp = hash2(id);
-        vec2 jitter = 0.14 * vec2(sin(t * 0.7 + rp.x * 6.28), cos(t * 0.6 + rp.y * 6.28));
-        float d = length(f - (0.25 + rp * 0.5 + jitter));
-        float dot_ = smoothstep(0.30, 0.10, d);
-        float pick = hash1(id + 9.1);
-        vec3 tone = pick < 0.70 ? vec3(0.75, 0.74, 0.70) * (0.5 + 0.5 * rp.x)   // shirts, caps
-                  : pick < 0.82 ? vec3(0.75, 0.15, 0.12)                         // red
-                  : pick < 0.92 ? vec3(0.85, 0.72, 0.15)                         // yellow
-                                : vec3(0.15, 0.25, 0.60);                        // blue
-        col = mix(col, tone, dot_ * (0.85 - fl * 0.25));
-      }
-      return col;
-    }
-
-    vec3 scene(float mode, vec2 p, vec2 uv, float t, float aspect) {
-      if (mode < 0.5) return sceneOcean(p, uv, t);
-      if (mode < 1.5) return sceneSun(p, uv, t, aspect);
-      if (mode < 2.5) return sceneStars(p, uv, t);
-      if (mode < 3.5) return sceneFacade(p, uv, t);
-      return sceneCrowd(p, uv, t);
-    }
-
-    void main() {
-      vec2 uv = gl_FragCoord.xy / uRes.xy;
-      float aspect = uRes.x / uRes.y;
-      vec2 p = vec2(uv.x * aspect, uv.y);
-
-      vec3 col = scene(uModeA, p, uv, uTime, aspect);
-      if (uBlend > 0.001) {
-        vec3 colB = scene(uModeB, p, uv, uTime, aspect);
-        col = mix(col, colB, uBlend);
-      }
-
-      float vig = smoothstep(1.5, 0.4, length(uv - 0.5));
-      col *= mix(0.75, 1.0, vig);
-      float dither = (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
-      gl_FragColor = vec4(col + dither, 1.0);
-    }
-  `;
-
-  function compile(type, src) {
-    const s = gl.createShader(type);
-    gl.shaderSource(s, src);
-    gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-      throw new Error(gl.getShaderInfoLog(s));
-    }
-    return s;
+  /* deterministic per-scene rng */
+  function makeRng(seed) {
+    let s = seed >>> 0;
+    return () => {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      return s / 4294967296;
+    };
   }
 
-  const prog = gl.createProgram();
-  gl.attachShader(prog, compile(gl.VERTEX_SHADER, vsSrc));
-  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fsSrc));
-  gl.linkProgram(prog);
-  gl.useProgram(prog);
+  /* =====================================================
+     Panels: sticky stage + scroll choreography
+     approach → hold → pull back, with lerped smoothing
+     ===================================================== */
+  const panels = [...document.querySelectorAll("[data-panel]")].map((el, i) => {
+    const canvas = el.querySelector("canvas");
+    const video = el.querySelector("video");
+    const media = el.querySelector(".media");
+    const content = el.querySelector(".content");
+    const draw = scenes[el.dataset.scene](makeRng(0x1B50 + i * 7919 | 0));
+    return { el, canvas, ctx: canvas.getContext("2d"), video, media, content,
+             draw, p: 0, target: 0, visible: false, hasVideo: false };
+  });
 
-  const buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-  const aPos = gl.getAttribLocation(prog, "aPos");
-  gl.enableVertexAttribArray(aPos);
-  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-
-  const U = {};
-  for (const name of ["uRes", "uTime", "uModeA", "uModeB", "uBlend"]) {
-    U[name] = gl.getUniformLocation(prog, name);
+  /* drop-in videos: fade in over the canvas when a real file exists */
+  for (const pn of panels) {
+    const src = pn.el.dataset.video;
+    if (!src) continue;
+    pn.video.addEventListener("canplay", () => {
+      pn.hasVideo = true;
+      pn.video.classList.add("is-live");
+      pn.video.play().catch(() => {});
+    }, { once: true });
+    pn.video.addEventListener("error", () => { pn.video.remove(); }, { once: true });
+    pn.video.src = src;
   }
 
-  function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
-    canvas.width = Math.floor(innerWidth * dpr);
-    canvas.height = Math.floor(innerHeight * dpr);
-    gl.viewport(0, 0, canvas.width, canvas.height);
+  function sizeCanvases() {
+    const dpr = Math.min(devicePixelRatio || 1, 1.5);
+    for (const pn of panels) {
+      const r = pn.media.getBoundingClientRect();
+      pn.canvas.width = Math.round(r.width * dpr);
+      pn.canvas.height = Math.round(r.height * dpr);
+      pn.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      pn.cw = r.width; pn.ch = r.height;
+    }
   }
-  addEventListener("resize", resize);
-  resize();
+  addEventListener("resize", sizeCanvases);
+  sizeCanvases();
 
-  /* crossfade state: film A → film B over 1.2s (the original's timing) */
-  const FADE_MS = 1200;
-  let modeA = 0, modeB = 0, fadeStart = -1;
+  const progressBar = document.getElementById("progress");
+  const wpButtons = [...document.querySelectorAll("#waypoints button")];
+  wpButtons.forEach((b) => b.addEventListener("click", () =>
+    document.getElementById(b.dataset.to).scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" })));
 
-  function showFilm(mode) {
-    if (mode === modeB) return;
-    modeA = currentBlend() >= 1 ? modeB : modeA;   // settle where we are
-    modeB = mode;
-    fadeStart = performance.now();
-  }
-  function currentBlend() {
-    if (fadeStart < 0) return 1;
-    return Math.min((performance.now() - fadeStart) / FADE_MS, 1);
-  }
+  let vh = innerHeight;
+  addEventListener("resize", () => { vh = innerHeight; });
 
-  let running = true;
   const start = performance.now();
-
   function frame(now) {
     const t = (now - start) / 1000;
-    const blend = currentBlend();
-    if (blend >= 1 && modeA !== modeB) modeA = modeB;
+    const sy = scrollY;
+    const docH = document.documentElement.scrollHeight - vh;
+    progressBar.style.transform = `scaleX(${docH ? sy / docH : 0})`;
 
-    gl.uniform2f(U.uRes, canvas.width, canvas.height);
-    gl.uniform1f(U.uTime, reduceMotion ? 20.0 : t);
-    gl.uniform1f(U.uModeA, modeA);
-    gl.uniform1f(U.uModeB, modeB);
-    gl.uniform1f(U.uBlend, modeA === modeB ? 0 : blend);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    let active = 0, best = Infinity;
+    panels.forEach((pn, i) => {
+      const top = pn.el.offsetTop;
+      const range = pn.el.offsetHeight - vh;
+      pn.target = clamp01((sy - top) / (range || 1));
+      pn.p = reduceMotion ? pn.target : lerp(pn.p, pn.target, 0.085);
+      pn.visible = sy + vh > top - vh * 0.3 && sy < top + pn.el.offsetHeight + vh * 0.3;
 
-    if (running) requestAnimationFrame(frame);
+      const mid = Math.abs(sy + vh / 2 - (top + pn.el.offsetHeight / 2));
+      if (mid < best) { best = mid; active = i; }
+
+      if (!pn.visible) return;
+      const p = pn.p;
+
+      /* --- background: approach → hold → pull back --- */
+      const zin  = smooth(0.00, 0.38, p);      /* camera pushes in   */
+      const zout = smooth(0.62, 1.00, p);      /* camera pulls away  */
+      const scale = 1 + 0.24 * zin - 0.30 * zout;
+      const ty = (p - 0.5) * -5;               /* slow vertical parallax, in % */
+      pn.media.style.transform = `translate3d(0, ${ty}%, 0) scale(${scale})`;
+      pn.media.style.opacity = String(1 - 0.55 * zout);
+
+      /* --- content: counter-parallax + edge fades --- */
+      const cy = (0.5 - p) * 10;               /* drifts opposite, in vh */
+      const fadeOut = 1 - smooth(0.82, 1.00, p);
+      pn.content.style.transform = `translate3d(0, ${cy}vh, 0)`;
+      pn.content.style.opacity = String(fadeOut);
+
+      /* --- fallback scene keeps animating regardless of scroll --- */
+      if (!pn.hasVideo) pn.draw(pn.ctx, reduceMotion ? 30 : t, pn.cw, pn.ch);
+    });
+
+    wpButtons.forEach((b, i) => b.classList.toggle("on", i === active));
+    requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 
-  /* =========================================================
-     Q&A slideshow — same behavior as the original das.min.js:
-     10s auto-advance · arrows · swipe · dash click ·
-     pause on blur/hidden, resume on focus
-     ========================================================= */
-  const SLIDE_MS = 10000;
-  const slides = [...document.querySelectorAll(".qanda__item")];
-  const dots = [...document.querySelectorAll(".qanda__nav-dot-item")];
-  let index = 0;
-  let autoTimer = null;
+  /* =====================================================
+     Reveal-on-scroll + grant counters
+     ===================================================== */
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      e.target.classList.add("in-view");
+      e.target.querySelectorAll("[data-count]").forEach(runCounter);
+      io.unobserve(e.target);
+    }
+  }, { threshold: 0.25 });
+  document.querySelectorAll("[data-observe]").forEach((el) => io.observe(el));
 
-  function goTo(delta) {
-    if (!delta) return;
-    index = ((index + delta) % slides.length + slides.length) % slides.length;
-    slides.forEach((s, i) => s.classList.toggle("current", i === index));
-    dots.forEach((d, i) => d.classList.toggle("current", i === index));
-    showFilm(index);
-    armAuto();
+  function runCounter(el) {
+    if (el.dataset.done) return;
+    el.dataset.done = "1";
+    const end = +el.dataset.count;
+    const t0 = performance.now();
+    const dur = reduceMotion ? 1 : 1600;
+    (function tick(now) {
+      const k = clamp01((now - t0) / dur);
+      const eased = 1 - Math.pow(1 - k, 3);
+      el.innerHTML = `+${Math.round(end * eased)}<sup>%</sup>`;
+      if (k < 1) requestAnimationFrame(tick);
+    })(t0);
   }
 
-  function armAuto() {
-    clearTimeout(autoTimer);
-    autoTimer = setTimeout(() => goTo(1), SLIDE_MS);
-  }
-  function pauseAuto() { clearTimeout(autoTimer); }
-
-  // keyboard
-  document.addEventListener("keydown", (e) => {
-    if (e.keyCode === 37) { e.preventDefault(); goTo(-1); }
-    else if (e.keyCode === 39) { e.preventDefault(); goTo(1); }
-  });
-
-  // dash nav: jump by offset from the current slide
-  dots.forEach((dot, i) => {
-    dot.addEventListener("click", () => goTo(i - index));
-  });
-
-  // touch swipe (30px threshold, like the original)
-  let touchStartX = 0;
-  const zone = document.getElementById("page-header");
-  zone.addEventListener("touchstart", (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
-  zone.addEventListener("touchend", (e) => {
-    const dx = e.changedTouches[0].screenX - touchStartX;
-    if (Math.abs(dx) > 30) goTo(dx < 0 ? 1 : -1);
-  }, { passive: true });
-
-  // pause when the tab loses focus
-  addEventListener("blur", pauseAuto);
-  addEventListener("focus", armAuto);
-  document.onvisibilitychange = () => (document.hidden ? pauseAuto() : armAuto());
-
-  // load-in: everything fades up ~1s after load
-  setTimeout(() => document.documentElement.classList.remove("is-just-loaded"), 1000);
-  armAuto();
+  /* intro curtain */
+  addEventListener("load", () =>
+    setTimeout(() => document.documentElement.classList.remove("is-loading"), 450));
+  setTimeout(() => document.documentElement.classList.remove("is-loading"), 2200);
 })();
 </script>
 
