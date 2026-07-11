@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en" class="is-loading">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBSU — Entrant · v2</title>
+<meta name="description" content="Your future starts here — International Black Sea University.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:      #a9a8a3;               /* warm museum grey, from the reference */
+    --paper-hi:   #b5b4af;
+    --paper-lo:   #97968f;
+    --ink:        #2b2a27;               /* graphite */
+    --ink-dim:    rgba(43, 42, 39, 0.55);
+    --marble:     #e7e5df;
+    --brass:      #8a774f;               /* muted stone-brass accent */
+    --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+    --sans:  "Manrope", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --ease:    cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-io: cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { background: var(--paper); }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  ::selection { background: var(--ink); color: var(--marble); }
+
+  /* ============ header ============ */
+  .site-head {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 800;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 26px clamp(28px, 4.4vw, 64px);
+    transition: opacity 1.2s var(--ease) 0.5s;
+  }
+  .is-loading .site-head { opacity: 0; }
+  .site-head__logo {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 19px;
+    letter-spacing: 0.18em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .site-head__logo small {
+    display: block;
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: 7.5px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    opacity: 0.55;
+    margin-top: 3px;
+  }
+  .site-head__nav { display: flex; gap: clamp(14px, 2.4vw, 34px); }
+  .site-head__nav a {
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    transition: opacity 0.35s var(--ease);
+  }
+  .site-head__nav a:hover { opacity: 1; }
+  @media (max-width: 760px) { .site-head__nav { display: none; } }
+
+  /* ============ vertical progress rail ============ */
+  .rail {
+    position: fixed;
+    left: clamp(22px, 3vw, 44px);
+    top: 50%;
+    transform: translateY(-50%);
+    height: min(52vh, 460px);
+    z-index: 810;
+    transition: opacity 1.2s var(--ease) 0.9s;
+  }
+  .is-loading .rail { opacity: 0; }
+  .rail__line {
+    position: relative;
+    width: 1px;
+    height: 100%;
+    background: rgba(43, 42, 39, 0.18);
+  }
+  .rail__fill {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 0;
+    transform: scaleY(0);
+    background: linear-gradient(180deg, rgba(138,119,79,0.4), var(--brass));
+  }
+  .rail__drop {
+    position: absolute;
+    left: 50%; top: 0;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--brass);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 8px 2px rgba(138, 119, 79, 0.5);
+  }
+  .rail__ticks {
+    position: absolute;
+    left: 14px; top: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .rail__ticks button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: var(--sans);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink);
+    opacity: 0.3;
+    transition: opacity 0.4s var(--ease), color 0.4s var(--ease);
+    padding: 2px 0;
+    white-space: nowrap;
+  }
+  .rail__ticks button:hover { opacity: 0.7; }
+  .rail__ticks button.on { opacity: 1; color: var(--brass); }
+  @media (max-width: 900px) { .rail__ticks { display: none; } }
+
+  .counter {
+    position: fixed;
+    right: clamp(26px, 4vw, 60px);
+    bottom: clamp(24px, 4.4vh, 42px);
+    z-index: 810;
+    font-family: var(--serif);
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    color: var(--ink-dim);
+    transition: opacity 1.2s var(--ease) 0.9s;
+  }
+  .is-loading .counter { opacity: 0; }
+  .counter b { color: var(--brass); font-weight: 600; font-size: 17px; }
+
+  /* ============ tall sections with sticky stages ============ */
+  .sec { position: relative; height: 340vh; }
+  .stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+    display: grid;
+  }
+
+  .media {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  .media canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  /* scrubbed film: grey ground matches the page, so the sculpture
+     floats free; edges melt with crossed masks anyway */
+  .media video {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: clamp(560px, 62vw, 1120px);
+    max-width: 94%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    object-fit: cover;
+    display: block;
+    opacity: 0;
+    transition: opacity 1.2s var(--ease);
+    -webkit-mask-image:
+      linear-gradient(90deg,  transparent 0%, #000 20%, #000 80%, transparent 100%),
+      linear-gradient(180deg, transparent 0%, #000 20%, #000 80%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(90deg,  transparent 0%, #000 20%, #000 80%, transparent 100%),
+      linear-gradient(180deg, transparent 0%, #000 20%, #000 80%, transparent 100%);
+    mask-composite: intersect;
+  }
+  .media video.is-live { opacity: 1; }
+  @media (max-width: 900px) { .media video { width: 94vw; } }
+
+  /* ============ content ============ */
+  .content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    width: 100%;
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 0 clamp(36px, 9vw, 150px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    will-change: transform, opacity;
+    pointer-events: none;
+  }
+  .content a, .content button { pointer-events: auto; }
+
+  .eyebrow {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin-bottom: clamp(20px, 3.6vh, 40px);
+  }
+  .eyebrow::before {
+    content: "";
+    display: inline-block;
+    width: 42px; height: 1px;
+    background: var(--brass);
+    vertical-align: middle;
+    margin-right: 16px;
+  }
+
+  h1, h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: 0.005em;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .display-xl { font-size: clamp(32px, 4.6vw, 66px); font-weight: 700; }
+  .display-l  { font-size: clamp(25px, 3.3vw, 48px); }
+  .lede {
+    font-size: clamp(12px, 0.95vw, 14.5px);
+    font-weight: 400;
+    line-height: 2;
+    letter-spacing: 0.02em;
+    color: var(--ink-dim);
+    max-width: 32em;
+    margin-top: clamp(20px, 3.4vh, 38px);
+  }
+  .accent { color: var(--brass); font-style: italic; }
+
+  .rv { display: block; overflow: hidden; }
+  .rv > span {
+    display: block;
+    transform: translateY(115%);
+    transition: transform 1.4s var(--ease);
+  }
+  .in-view .rv > span { transform: translateY(0); }
+  .in-view .rv:nth-child(2) > span { transition-delay: 0.12s; }
+  .fd {
+    opacity: 0;
+    transform: translateY(34px);
+    transition: opacity 1.2s var(--ease), transform 1.2s var(--ease);
+  }
+  .in-view .fd { opacity: 1; transform: none; }
+  .in-view .fd.d1 { transition-delay: 0.3s; }
+  .in-view .fd.d2 { transition-delay: 0.45s; }
+  .in-view .fd.d3 { transition-delay: 0.6s; }
+  .in-view .fd.d4 { transition-delay: 0.75s; }
+
+  /* alignment variants */
+  .s-hero .content { align-items: center; text-align: center; }
+  .s-hero .eyebrow::before { display: none; }
+  .s-hero .lede { margin-left: auto; margin-right: auto; }
+  .s-programs .content { align-items: flex-start; text-align: left; }
+  .s-admission .content { align-items: flex-end; text-align: right; }
+  .s-admission .lede { margin-left: auto; }
+  .s-funding .content { align-items: flex-start; }
+  .s-final .content { align-items: center; text-align: center; }
+
+  .cta-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: clamp(26px, 4.6vh, 48px);
+    justify-content: center;
+  }
+  .btn {
+    position: relative;
+    display: inline-block;
+    padding: 14px 34px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 999px;
+    overflow: hidden;
+    z-index: 0;
+    transition: color 0.45s var(--ease), border-color 0.45s var(--ease);
+  }
+  .btn--solid { color: var(--marble); background: var(--ink); }
+  .btn--ghost { color: var(--ink); border: 1px solid rgba(43,42,39,0.3); background: transparent; }
+  .btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--brass);
+    border-radius: inherit;
+    transform: translateY(102%);
+    transition: transform 0.5s var(--ease);
+    z-index: -1;
+  }
+  .btn:hover::after { transform: translateY(0); }
+  .btn--ghost:hover { color: var(--marble); border-color: var(--brass); }
+  .btn--solid:hover { color: var(--marble); }
+
+  .prog-list {
+    list-style: none;
+    width: 100%;
+    max-width: 540px;
+    margin-top: clamp(24px, 4.4vh, 46px);
+    counter-reset: prog;
+  }
+  .prog-list li { border-top: 1px solid rgba(43,42,39,0.16); }
+  .prog-list li:last-child { border-bottom: 1px solid rgba(43,42,39,0.16); }
+  .prog-list a {
+    counter-increment: prog;
+    display: flex;
+    align-items: baseline;
+    gap: clamp(14px, 2.4vw, 34px);
+    padding: clamp(10px, 1.7vh, 16px) 6px;
+    color: var(--ink);
+    text-decoration: none;
+    font-family: var(--serif);
+    font-size: clamp(16px, 1.7vw, 24px);
+    font-weight: 600;
+    transition: padding-left 0.55s var(--ease), color 0.55s var(--ease);
+  }
+  .prog-list a::before {
+    content: counter(prog, decimal-leading-zero);
+    font-family: var(--sans);
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--brass);
+  }
+  .prog-list a::after {
+    content: "→";
+    margin-left: auto;
+    font-weight: 300;
+    font-family: var(--sans);
+    opacity: 0;
+    transform: translateX(-14px);
+    transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
+    color: var(--brass);
+  }
+  .prog-list a:hover { padding-left: 20px; color: var(--brass); }
+  .prog-list a:hover::after { opacity: 1; transform: none; }
+
+  .steps {
+    list-style: none;
+    margin-top: clamp(24px, 4.4vh, 46px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(18px, 3vh, 30px);
+    max-width: 480px;
+  }
+  .steps li { display: flex; flex-direction: row-reverse; gap: 22px; align-items: flex-start; }
+  .steps__num {
+    flex: 0 0 auto;
+    font-family: var(--serif);
+    font-size: clamp(24px, 2.7vw, 40px);
+    font-weight: 700;
+    line-height: 0.9;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--brass);
+  }
+  .steps h3 {
+    font-family: var(--serif);
+    font-size: clamp(15px, 1.4vw, 20px);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .steps p {
+    font-size: clamp(11px, 0.85vw, 13px);
+    font-weight: 400;
+    line-height: 1.9;
+    color: var(--ink-dim);
+  }
+
+  .grants {
+    display: flex;
+    gap: clamp(26px, 4.6vw, 76px);
+    flex-wrap: wrap;
+    margin-top: clamp(28px, 5vh, 54px);
+  }
+  .grants__item { min-width: 140px; }
+  .grants__big {
+    font-family: var(--serif);
+    font-size: clamp(36px, 4vw, 66px);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--brass);
+  }
+  .grants__big sup { font-size: 0.38em; }
+  .grants__label {
+    margin-top: 10px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    line-height: 2;
+  }
+  .grants__label b { display: block; color: var(--ink); font-weight: 800; }
+
+  .contact-row {
+    margin-top: clamp(26px, 4.6vh, 48px);
+    display: flex;
+    gap: clamp(24px, 4.6vw, 72px);
+    flex-wrap: wrap;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: var(--ink-dim);
+    line-height: 2.2;
+  }
+  .contact-row b {
+    display: block;
+    font-weight: 800;
+    font-size: 8px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--brass);
+  }
+  .contact-row a { color: var(--ink); text-decoration: none; border-bottom: 1px solid rgba(138,119,79,0.4); }
+
+  .site-foot {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    z-index: 3;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 22px clamp(28px, 4.4vw, 64px);
+    font-size: 8.5px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(43,42,39,0.4);
+  }
+
+  .curtain {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: var(--paper);
+    display: grid;
+    place-items: center;
+    transition: opacity 1s var(--ease) 0.3s, visibility 0s 1.3s;
+  }
+  html:not(.is-loading) .curtain { opacity: 0; visibility: hidden; }
+  .curtain span {
+    font-family: var(--serif);
+    font-weight: 700;
+    letter-spacing: 0.34em;
+    font-size: clamp(20px, 2.6vw, 34px);
+    color: var(--ink);
+    animation: breathe 1.6s var(--ease-io) infinite alternate;
+  }
+  @keyframes breathe { from { opacity: 0.3; } to { opacity: 1; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rv > span, .fd { transition-duration: 0.01s !important; }
+    .curtain span { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="curtain" aria-hidden="true"><span>IBSU</span></div>
+
+<header class="site-head">
+  <a class="site-head__logo" href="#hero">IBSU<small>International Black Sea University</small></a>
+  <nav class="site-head__nav">
+    <a href="#programs">Programs</a>
+    <a href="#admission">Admission</a>
+    <a href="#funding">Funding</a>
+    <a href="#apply">Apply</a>
+  </nav>
+</header>
+
+<div class="rail">
+  <div class="rail__line">
+    <div class="rail__fill" id="railFill"></div>
+    <div class="rail__drop" id="railDrop"></div>
+  </div>
+  <div class="rail__ticks" id="railTicks">
+    <button data-go="hero">01 Vision</button>
+    <button data-go="programs">02 Programs</button>
+    <button data-go="admission">03 Admission</button>
+    <button data-go="funding">04 Funding</button>
+    <button data-go="apply">05 Apply</button>
+  </div>
+</div>
+
+<div class="counter"><b id="counterNum">01</b> / 05</div>
+
+<main>
+
+  <!-- 01 · HERO -->
+  <section class="sec s-hero" id="hero" data-sec data-form="0" data-video="../assets/videos/v2-section-01.mp4" data-video-remote="">
+    <div class="stage">
+      <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
+      <div class="content" data-observe>
+        <p class="eyebrow fd">Admissions 2026 · Tbilisi</p>
+        <h1 class="display-xl">
+          <span class="rv"><span>What if knowledge became</span></span>
+          <span class="rv"><span>your <em class="accent">greatest</em> power?</span></span>
+        </h1>
+        <p class="lede fd d2">International Black Sea University — a space where big questions become big futures. Since 1995.</p>
+        <div class="cta-row fd d3">
+          <a class="btn btn--solid" href="#apply">Start your application</a>
+          <a class="btn btn--ghost" href="#programs">Explore programs</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 · PROGRAMS -->
+  <section class="sec s-programs" id="programs" data-sec data-form="1" data-cx="0.72" data-video="../assets/videos/v2-section-02.mp4" data-video-remote="">
+    <div class="stage">
+      <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
+      <div class="content" data-observe>
+        <p class="eyebrow fd">02 · Bachelor programs</p>
+        <h2 class="display-l"><span class="rv"><span>Choose your <em class="accent">path</em></span></span></h2>
+        <ul class="prog-list">
+          <li class="fd d1"><a href="https://ibsu.edu.ge/en/programs/bachelors/" target="_blank" rel="noopener">Business Administration</a></li>
+          <li class="fd d1"><a href="https://ibsu.edu.ge/en/programs/bachelors/" target="_blank" rel="noopener">Computer Science</a></li>
+          <li class="fd d2"><a href="https://ibsu.edu.ge/en/programs/bachelors/" target="_blank" rel="noopener">Law</a></li>
+          <li class="fd d2"><a href="https://ibsu.edu.ge/en/programs/bachelors/" target="_blank" rel="noopener">International Relations</a></li>
+          <li class="fd d3"><a href="https://ibsu.edu.ge/en/programs/bachelors/" target="_blank" rel="noopener">English Philology</a></li>
+          <li class="fd d3"><a href="https://ibsu.edu.ge/en/programs/bachelors/" target="_blank" rel="noopener">Economics</a></li>
+          <li class="fd d4"><a href="https://ibsu.edu.ge/en/programs/bachelors/" target="_blank" rel="noopener">Journalism</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 · ADMISSION -->
+  <section class="sec s-admission" id="admission" data-sec data-form="2" data-cx="0.28" data-video="../assets/videos/v2-section-03.mp4" data-video-remote="">
+    <div class="stage">
+      <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
+      <div class="content" data-observe>
+        <p class="eyebrow fd">03 · How to enroll</p>
+        <h2 class="display-l">
+          <span class="rv"><span>Three steps to</span></span>
+          <span class="rv"><span>your <em class="accent">enrollment</em></span></span>
+        </h2>
+        <ol class="steps">
+          <li class="fd d2"><span class="steps__num">01</span>
+            <div><h3>Unified National Exams</h3><p>List IBSU as your priority program when registering for the national exams.</p></div></li>
+          <li class="fd d3"><span class="steps__num">02</span>
+            <div><h3>Registration &amp; documents</h3><p>Submit your first-year documents within the university's deadlines.</p></div></li>
+          <li class="fd d4"><span class="steps__num">03</span>
+            <div><h3>First day on campus</h3><p>Meet your group and professors, and begin the path you chose.</p></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 · FUNDING -->
+  <section class="sec s-funding" id="funding" data-sec data-form="3" data-cx="0.72" data-video="../assets/videos/v2-section-04.mp4" data-video-remote="">
+    <div class="stage">
+      <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
+      <div class="content" data-observe>
+        <p class="eyebrow fd">04 · Scholarships &amp; grants</p>
+        <h2 class="display-l">
+          <span class="rv"><span>Knowledge that</span></span>
+          <span class="rv"><span><em class="accent">pays off</em></span></span>
+        </h2>
+        <p class="lede fd d1">Your state grant is matched by an additional IBSU grant — your results become your funding.</p>
+        <div class="grants">
+          <div class="grants__item fd d2"><div class="grants__big" data-count="70">+0<sup>%</sup></div>
+            <div class="grants__label"><b>100% state grant</b>additional IBSU grant</div></div>
+          <div class="grants__item fd d3"><div class="grants__big" data-count="50">+0<sup>%</sup></div>
+            <div class="grants__label"><b>70% state grant</b>additional IBSU grant</div></div>
+          <div class="grants__item fd d4"><div class="grants__big" data-count="30">+0<sup>%</sup></div>
+            <div class="grants__label"><b>50% state grant</b>additional IBSU grant</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 · APPLY -->
+  <section class="sec s-final" id="apply" data-sec data-form="4" data-video="../assets/videos/v2-section-05.mp4" data-video-remote="">
+    <div class="stage">
+      <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
+      <div class="content" data-observe>
+        <p class="eyebrow fd">05 · Join us</p>
+        <h2 class="display-xl"><span class="rv"><span>Are you <em class="accent">ready?</em></span></span></h2>
+        <div class="cta-row fd d2">
+          <a class="btn btn--solid" href="https://ibsu.edu.ge/entrant/" target="_blank" rel="noopener">Become an entrant</a>
+        </div>
+        <div class="contact-row fd d3">
+          <div><b>Address</b>Tbilisi, David Aghmashenebeli Alley, 13 km</div>
+          <div><b>Website</b><a href="https://ibsu.edu.ge" target="_blank" rel="noopener">ibsu.edu.ge</a></div>
+          <div><b>Admission</b>Via Unified National Exams</div>
+        </div>
+      </div>
+      <footer class="site-foot">
+        <span>© 2026 IBSU — design concept · v2</span>
+        <span>Unofficial redesign</span>
+      </footer>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(() => {
+  "use strict";
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const clamp01 = (v) => clamp(v, 0, 1);
+  const smooth = (e0, e1, x) => {
+    const t = clamp01((x - e0) / (e1 - e0));
+    return t * t * (3 - 2 * t);
+  };
+  const TAU = Math.PI * 2;
+
+  /* =====================================================
+     Stone-block engine — the reference concept, procedural:
+     scattered blocks assemble into a bust, the bust turns a
+     full 360°, then breaks apart into blocks again. The
+     scatter field of section N+1 equals the end-field of
+     section N, so the whole page reads as one material.
+     When a real film exists it is scrubbed by the same
+     progress instead.
+     ===================================================== */
+  function makeRng(seed) {
+    let s = seed >>> 0;
+    return () => {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      return s / 4294967296;
+    };
+  }
+
+  /* coarse bust silhouette (12 x 14): 1 = stone block */
+  const BUST = [
+    "000011110000",
+    "000111111000",
+    "001111111100",
+    "001111111100",
+    "011111111110",
+    "011111111110",
+    "011111111110",
+    "001111111100",
+    "001111111100",
+    "000111111000",
+    "000011110000",
+    "001111111100",
+    "011111111110",
+    "111111111111"
+  ];
+
+  /* pre-render a few marble / speckled-concrete tiles */
+  function makeTiles() {
+    const tiles = [];
+    const rng = makeRng(0xA11CE);
+    for (let k = 0; k < 6; k++) {
+      const c = document.createElement("canvas");
+      c.width = c.height = 96;
+      const g = c.getContext("2d");
+      const light = k < 4;      /* 4 marble, 2 dark speckle */
+      g.fillStyle = light ? `hsl(${44 + k * 3}, 7%, ${86 - k * 3}%)` : `hsl(40, 5%, ${30 + k * 2}%)`;
+      g.fillRect(0, 0, 96, 96);
+      if (light) {
+        g.strokeStyle = "rgba(60,58,52,0.45)";
+        for (let v = 0; v < 4; v++) {
+          g.lineWidth = 0.6 + rng() * 1.2;
+          g.beginPath();
+          let x = rng() * 96, y = rng() * 96;
+          g.moveTo(x, y);
+          for (let s = 0; s < 5; s++) {
+            x += (rng() - 0.5) * 50; y += (rng() - 0.5) * 50;
+            g.lineTo(x, y);
+          }
+          g.globalAlpha = 0.35 + rng() * 0.3;
+          g.stroke();
+          g.globalAlpha = 1;
+        }
+      } else {
+        for (let s = 0; s < 260; s++) {
+          g.fillStyle = `rgba(${10 + rng() * 30},${10 + rng() * 28},${8 + rng() * 24},${0.25 + rng() * 0.5})`;
+          const r = rng() * 2.4;
+          g.beginPath();
+          g.arc(rng() * 96, rng() * 96, r, 0, TAU);
+          g.fill();
+        }
+      }
+      /* bevel light */
+      const bl = g.createLinearGradient(0, 0, 96, 96);
+      bl.addColorStop(0, "rgba(255,255,255,0.16)");
+      bl.addColorStop(0.5, "rgba(255,255,255,0)");
+      bl.addColorStop(1, "rgba(0,0,0,0.14)");
+      g.fillStyle = bl;
+      g.fillRect(0, 0, 96, 96);
+      tiles.push(c);
+    }
+    return tiles;
+  }
+  const TILES = makeTiles();
+
+  /* scatter field i — shared border states between sections */
+  function scatterField(i, rng) {
+    return { x: rng() * 2 - 0.5, y: 1.25 + rng() * 0.5, r: (rng() - 0.5) * 2.4, s: 0.5 + rng() * 0.8 };
+  }
+
+  function buildBlocks(formIndex) {
+    const rows = BUST.length, cols = BUST[0].length;
+    const inRng = makeRng(0xB10C + formIndex * 733);
+    const outRng = makeRng(0xB10C + (formIndex + 1) * 733);
+    const jit = makeRng(0x9E37 + formIndex * 97);
+    const blocks = [];
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      if (BUST[r][c] !== "1") continue;
+      /* merge some cells into bigger slabs for the collage feel */
+      if (jit() < 0.22) continue;
+      const big = jit() < 0.18;
+      blocks.push({
+        gx: (c + 0.5) / cols, gy: (r + 0.5) / rows,
+        w: big ? 2 / cols : (0.72 + jit() * 0.5) / cols,
+        h: big ? 1.6 / rows : (0.72 + jit() * 0.5) / rows,
+        tile: TILES[(jit() * TILES.length) | 0],
+        depth: jit() * 2 - 1,                 /* -1..1, for the 360° turn */
+        in:  scatterField(formIndex, inRng),  /* where it flies in from  */
+        out: scatterField(formIndex + 1, outRng),
+        ph: jit() * TAU
+      });
+    }
+    return blocks;
+  }
+
+  function drawBlocks(ctx, blocks, p, t, w, h, cxr) {
+    /* phases: 0-.30 assemble · .30-.70 full 360° turn · .70-1 scatter */
+    const asm = smooth(0.02, 0.30, p);
+    const rot = smooth(0.30, 0.70, p) * TAU;
+    const brk = smooth(0.70, 0.99, p);
+    const cx = w * (cxr || 0.5), cy = h * 0.52;
+    const scaleBase = Math.min(w, h) * 0.85;
+
+    ctx.clearRect(0, 0, w, h);
+    /* soft ground shadow while assembled */
+    const solid = Math.min(asm, 1 - brk);
+    if (solid > 0.02) {
+      const sg = ctx.createRadialGradient(cx, cy + scaleBase * 0.52, 0, cx, cy + scaleBase * 0.52, scaleBase * 0.5);
+      sg.addColorStop(0, `rgba(40,38,34,${0.22 * solid})`);
+      sg.addColorStop(1, "rgba(40,38,34,0)");
+      ctx.fillStyle = sg;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + scaleBase * 0.52, scaleBase * 0.42, scaleBase * 0.09, 0, 0, TAU);
+      ctx.fill();
+    }
+
+    const order = [...blocks].sort((a, b) =>
+      Math.sin(rot + a.depth * 1.2) - Math.sin(rot + b.depth * 1.2));
+
+    for (const b of order) {
+      /* formation position with pseudo-3D turntable */
+      const ang = rot + b.depth * 1.2;
+      const spin = Math.cos(ang);
+      const fx = cx + ((b.gx - 0.5) * spin) * scaleBase * 0.72;
+      const fy = cy + (b.gy - 0.55) * scaleBase * 0.78;
+      const fs = 1 + Math.sin(ang) * 0.22;
+
+      /* blend: in-field → formation → out-field */
+      let x, y, rotZ, sc, alpha;
+      if (brk > 0) {
+        x = lerp(fx, b.out.x * w, brk);
+        y = lerp(fy, b.out.y * h, brk);
+        rotZ = lerp(0, b.out.r, brk);
+        sc = lerp(fs, b.out.s, brk);
+        alpha = 1 - smooth(0.75, 1, brk) * 0.35;
+      } else {
+        x = lerp(b.in.x * w, fx, asm);
+        y = lerp(b.in.y * h, fy, asm);
+        rotZ = lerp(b.in.r, 0, asm);
+        sc = lerp(b.in.s, fs, asm);
+        alpha = 0.35 + 0.65 * asm;
+      }
+      /* idle breathing so it never freezes */
+      if (!reduceMotion) {
+        x += Math.sin(t * 0.6 + b.ph) * 3;
+        y += Math.cos(t * 0.5 + b.ph) * 3;
+      }
+
+      const bw = b.w * scaleBase * 1.05 * sc;
+      const bh = b.h * scaleBase * 1.05 * sc;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotZ * 0.5);
+      ctx.globalAlpha = alpha;
+      /* slab side for a hint of volume */
+      ctx.fillStyle = "rgba(52,50,45,0.5)";
+      ctx.fillRect(-bw / 2 + 3, -bh / 2 + 4, bw, bh);
+      ctx.drawImage(b.tile, -bw / 2, -bh / 2, bw, bh);
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /* =====================================================
+     Sections: sticky stages, progress-driven film scrub or
+     procedural blocks
+     ===================================================== */
+  const secs = [...document.querySelectorAll("[data-sec]")].map((el) => {
+    const canvas = el.querySelector("canvas");
+    const video = el.querySelector("video");
+    const media = el.querySelector(".media");
+    const content = el.querySelector(".content");
+    const blocks = buildBlocks(+el.dataset.form);
+    const cxr = +(el.dataset.cx || 0.5);
+    return { el, canvas, ctx: canvas.getContext("2d"), video, media, content,
+             blocks, cxr, p: 0, hasVideo: false, revealed: false };
+  });
+
+  for (const s of secs) {
+    const sources = [s.el.dataset.video, s.el.dataset.videoRemote].filter((u) => u);
+    if (!sources.length) { s.video.remove(); continue; }
+    let si = 0;
+    const tryNext = () => {
+      if (si >= sources.length) { s.video.remove(); return; }
+      s.video.src = sources[si++];
+    };
+    s.video.addEventListener("loadeddata", () => {
+      s.hasVideo = true;
+      s.video.classList.add("is-live");
+      s.canvas.style.display = "none";
+    }, { once: true });
+    s.video.addEventListener("error", tryNext);
+    tryNext();
+  }
+
+  function sizeCanvases() {
+    const dpr = Math.min(devicePixelRatio || 1, 1.5);
+    for (const s of secs) {
+      const r = s.media.getBoundingClientRect();
+      s.canvas.width = Math.round(r.width * dpr);
+      s.canvas.height = Math.round(r.height * dpr);
+      s.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      s.cw = r.width; s.ch = r.height;
+    }
+  }
+  addEventListener("resize", sizeCanvases);
+  sizeCanvases();
+
+  const railFill = document.getElementById("railFill");
+  const railDrop = document.getElementById("railDrop");
+  const ticks = [...document.querySelectorAll("#railTicks button")];
+  const counterNum = document.getElementById("counterNum");
+  ticks.forEach((b) => b.addEventListener("click", () =>
+    document.getElementById(b.dataset.go).scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" })));
+
+  let vh = innerHeight;
+  addEventListener("resize", () => { vh = innerHeight; });
+
+  const start = performance.now();
+  function frame(now) {
+    const t = (now - start) / 1000;
+    const sy = scrollY;
+    const docH = document.documentElement.scrollHeight - vh;
+    const gp = docH ? sy / docH : 0;
+    railFill.style.transform = `scaleY(${gp})`;
+    railDrop.style.top = (gp * 100) + "%";
+
+    let active = 0, best = Infinity;
+    secs.forEach((s, i) => {
+      const top = s.el.offsetTop;
+      const range = s.el.offsetHeight - vh;
+      const target = clamp01((sy - top) / (range || 1));
+      s.p = reduceMotion ? target : lerp(s.p, target, 0.09);
+
+      const mid = Math.abs(sy + vh / 2 - (top + s.el.offsetHeight / 2));
+      if (mid < best) { best = mid; active = i; }
+
+      const visible = sy + vh > top - vh * 0.2 && sy < top + s.el.offsetHeight + vh * 0.2;
+      if (!visible) return;
+
+      /* content fades in for the rotation act, out for the break-up */
+      const cIn = smooth(0.16, 0.30, s.p);
+      const cOut = 1 - smooth(0.68, 0.84, s.p);
+      s.content.style.opacity = String(Math.min(cIn, cOut));
+      s.content.style.transform = `translate3d(0, ${(0.5 - s.p) * 6}vh, 0)`;
+
+      if (!s.revealed && s.p > 0.17) {
+        s.revealed = true;
+        s.content.classList.add("in-view");
+        s.content.querySelectorAll("[data-count]").forEach(runCounter);
+      }
+
+      if (s.hasVideo && s.video.duration) {
+        /* scrub the film with the section progress */
+        const target = s.p * Math.max(s.video.duration - 0.05, 0);
+        if (Math.abs(s.video.currentTime - target) > 0.055) {
+          try { s.video.currentTime = target; } catch (e) {}
+        }
+      } else {
+        drawBlocks(s.ctx, s.blocks, s.p, t, s.cw, s.ch, s.cxr);
+      }
+    });
+
+    ticks.forEach((b, i) => b.classList.toggle("on", i === active));
+    counterNum.textContent = String(active + 1).padStart(2, "0");
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  function runCounter(el) {
+    if (el.dataset.done) return;
+    el.dataset.done = "1";
+    const end = +el.dataset.count;
+    const t0 = performance.now();
+    const dur = reduceMotion ? 1 : 1600;
+    (function tick(now) {
+      const k = clamp01((now - t0) / dur);
+      const eased = 1 - Math.pow(1 - k, 3);
+      el.innerHTML = `+${Math.round(end * eased)}<sup>%</sup>`;
+      if (k < 1) requestAnimationFrame(tick);
+    })(t0);
+  }
+
+  addEventListener("load", () => {
+    sizeCanvases();
+    setTimeout(() => document.documentElement.classList.remove("is-loading"), 400);
+  });
+  setTimeout(() => document.documentElement.classList.remove("is-loading"), 2000);
+})();
+</script>
+
+</body>
+</html>
