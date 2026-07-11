@@ -10,13 +10,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --paper:      #a9a8a3;               /* warm museum grey, from the reference */
-    --paper-hi:   #b5b4af;
-    --paper-lo:   #97968f;
-    --ink:        #2b2a27;               /* graphite */
-    --ink-dim:    rgba(43, 42, 39, 0.55);
-    --marble:     #e7e5df;
-    --brass:      #8a774f;               /* muted stone-brass accent */
+    --paper:      #0b0a08;               /* warm black — the v1 ground */
+    --paper-hi:   #14120e;
+    --paper-lo:   #060505;
+    --ink:        #ece7db;               /* bone text */
+    --ink-dim:    rgba(236, 231, 219, 0.52);
+    --marble:     #0d0c0a;               /* dark fill for solid buttons  */
+    --brass:      #cfa85c;               /* champagne gold */
     --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
     --sans:  "Manrope", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
     --ease:    cubic-bezier(0.22, 1, 0.36, 1);
@@ -33,7 +33,7 @@
     overflow-x: hidden;
   }
 
-  ::selection { background: var(--ink); color: var(--marble); }
+  ::selection { background: var(--brass); color: var(--marble); }
 
   /* ============ header ============ */
   .site-head {
@@ -94,7 +94,7 @@
     position: relative;
     width: 1px;
     height: 100%;
-    background: rgba(43, 42, 39, 0.18);
+    background: rgba(236, 231, 219, 0.16);
   }
   .rail__fill {
     position: absolute;
@@ -308,7 +308,7 @@
     transition: color 0.45s var(--ease), border-color 0.45s var(--ease);
   }
   .btn--solid { color: var(--marble); background: var(--ink); }
-  .btn--ghost { color: var(--ink); border: 1px solid rgba(43,42,39,0.3); background: transparent; }
+  .btn--ghost { color: var(--ink); border: 1px solid rgba(236,231,219,0.3); background: transparent; }
   .btn::after {
     content: "";
     position: absolute;
@@ -330,8 +330,8 @@
     margin-top: clamp(24px, 4.4vh, 46px);
     counter-reset: prog;
   }
-  .prog-list li { border-top: 1px solid rgba(43,42,39,0.16); }
-  .prog-list li:last-child { border-bottom: 1px solid rgba(43,42,39,0.16); }
+  .prog-list li { border-top: 1px solid rgba(236,231,219,0.14); }
+  .prog-list li:last-child { border-bottom: 1px solid rgba(236,231,219,0.14); }
   .prog-list a {
     counter-increment: prog;
     display: flex;
@@ -457,7 +457,7 @@
     font-size: 8.5px;
     letter-spacing: 0.24em;
     text-transform: uppercase;
-    color: rgba(43,42,39,0.4);
+    color: rgba(236,231,219,0.38);
   }
 
   .curtain {
@@ -475,7 +475,7 @@
     font-weight: 700;
     letter-spacing: 0.34em;
     font-size: clamp(20px, 2.6vw, 34px);
-    color: var(--ink);
+    color: var(--brass);
     animation: breathe 1.6s var(--ease-io) infinite alternate;
   }
   @keyframes breathe { from { opacity: 0.3; } to { opacity: 1; } }
@@ -519,7 +519,7 @@
 <main>
 
   <!-- 01 · HERO -->
-  <section class="sec s-hero" id="hero" data-sec data-form="0" data-video="../assets/videos/v2-section-01.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260711_110610_d3196f38-ebeb-418e-9940-512cdb847c5a.mp4">
+  <section class="sec s-hero" id="hero" data-sec data-form="0" data-video="../assets/videos/v2-section-01.mp4" data-video-remote="">
     <div class="stage">
       <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
       <div class="content" data-observe>
@@ -675,7 +675,8 @@
     "111111111111"
   ];
 
-  /* pre-render a few marble / speckled-concrete tiles */
+  /* pre-render dark charcoal stone tiles: gold-veined kintsugi slabs
+     and gold-dusted speckle, matching the v1 black-and-gold statues */
   function makeTiles() {
     const tiles = [];
     const rng = makeRng(0xA11CE);
@@ -683,40 +684,40 @@
       const c = document.createElement("canvas");
       c.width = c.height = 96;
       const g = c.getContext("2d");
-      const light = k < 4;      /* 4 marble, 2 dark speckle */
-      g.fillStyle = light ? `hsl(${44 + k * 3}, 7%, ${86 - k * 3}%)` : `hsl(40, 5%, ${30 + k * 2}%)`;
+      const veined = k < 4;      /* 4 gold-veined stone, 2 gold-dust speckle */
+      g.fillStyle = `hsl(${38 + k * 2}, 7%, ${11 + k * 2.4}%)`;
       g.fillRect(0, 0, 96, 96);
-      if (light) {
-        g.strokeStyle = "rgba(60,58,52,0.45)";
-        for (let v = 0; v < 4; v++) {
-          g.lineWidth = 0.6 + rng() * 1.2;
+      if (veined) {
+        for (let v = 0; v < 3; v++) {
+          g.strokeStyle = `rgba(207,168,92,${0.4 + rng() * 0.35})`;
+          g.lineWidth = 0.6 + rng() * 1.1;
           g.beginPath();
           let x = rng() * 96, y = rng() * 96;
           g.moveTo(x, y);
           for (let s = 0; s < 5; s++) {
-            x += (rng() - 0.5) * 50; y += (rng() - 0.5) * 50;
+            x += (rng() - 0.5) * 52; y += (rng() - 0.5) * 52;
             g.lineTo(x, y);
           }
-          g.globalAlpha = 0.35 + rng() * 0.3;
           g.stroke();
-          g.globalAlpha = 1;
         }
       } else {
-        for (let s = 0; s < 260; s++) {
-          g.fillStyle = `rgba(${10 + rng() * 30},${10 + rng() * 28},${8 + rng() * 24},${0.25 + rng() * 0.5})`;
-          const r = rng() * 2.4;
+        for (let s = 0; s < 130; s++) {
+          g.fillStyle = `rgba(207,168,92,${0.12 + rng() * 0.4})`;
           g.beginPath();
-          g.arc(rng() * 96, rng() * 96, r, 0, TAU);
+          g.arc(rng() * 96, rng() * 96, rng() * 1.7, 0, TAU);
           g.fill();
         }
       }
-      /* bevel light */
+      /* bevel light + hairline gold edge */
       const bl = g.createLinearGradient(0, 0, 96, 96);
-      bl.addColorStop(0, "rgba(255,255,255,0.16)");
+      bl.addColorStop(0, "rgba(255,250,235,0.10)");
       bl.addColorStop(0.5, "rgba(255,255,255,0)");
-      bl.addColorStop(1, "rgba(0,0,0,0.14)");
+      bl.addColorStop(1, "rgba(0,0,0,0.35)");
       g.fillStyle = bl;
       g.fillRect(0, 0, 96, 96);
+      g.strokeStyle = "rgba(207,168,92,0.22)";
+      g.lineWidth = 1;
+      g.strokeRect(0.5, 0.5, 95, 95);
       tiles.push(c);
     }
     return tiles;
@@ -762,12 +763,12 @@
     const scaleBase = Math.min(w, h) * 0.85;
 
     ctx.clearRect(0, 0, w, h);
-    /* soft ground shadow while assembled */
+    /* soft gold under-glow while assembled */
     const solid = Math.min(asm, 1 - brk);
     if (solid > 0.02) {
       const sg = ctx.createRadialGradient(cx, cy + scaleBase * 0.52, 0, cx, cy + scaleBase * 0.52, scaleBase * 0.5);
-      sg.addColorStop(0, `rgba(40,38,34,${0.22 * solid})`);
-      sg.addColorStop(1, "rgba(40,38,34,0)");
+      sg.addColorStop(0, `rgba(207,168,92,${0.14 * solid})`);
+      sg.addColorStop(1, "rgba(207,168,92,0)");
       ctx.fillStyle = sg;
       ctx.beginPath();
       ctx.ellipse(cx, cy + scaleBase * 0.52, scaleBase * 0.42, scaleBase * 0.09, 0, 0, TAU);
@@ -813,7 +814,7 @@
       ctx.rotate(rotZ * 0.5);
       ctx.globalAlpha = alpha;
       /* slab side for a hint of volume */
-      ctx.fillStyle = "rgba(52,50,45,0.5)";
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
       ctx.fillRect(-bw / 2 + 3, -bh / 2 + 4, bw, bh);
       ctx.drawImage(b.tile, -bw / 2, -bh / 2, bw, bh);
       ctx.restore();

@@ -1,36 +1,31 @@
-# V2 — chained assembly videos (pending credits)
+# V2 — chained assembly videos (black & gold, pending credits)
 
-Concept: every film starts with scattered marble/concrete blocks that fly
-together into a 3D bust (deconstructed-collage style of the reference),
-the bust turns a full 360°, then breaks apart into small blocks again.
-Section N+1 begins from the same scattered-blocks state, so the whole
-page reads as one continuous material. Until the films exist, the same
-choreography runs procedurally on canvas, scrubbed by scroll.
+Concept: each film uses one of the ORIGINAL v1 black-and-gold statue
+stills. The statue is made of small dark stone blocks with gold veins:
+the blocks fly together and assemble the statue, it rotates a full 360°,
+then it breaks apart into small stones again. Section N+1 assembles from
+the same scattered stones. Background: the same pitch black as the site.
+The grey deconstructed image was only a motion reference.
 
-## Budget (Seedance 2.0 fast, 720p, 16:9, 10 s, silent)
-- 5 stills (nano_banana_pro): 5 × 2   = 10 credits
-- 5 videos (10 s):            5 × 35  = 175 credits
-- TOTAL ≈ 185 credits (current balance: 9)
-
-## Still prompts (shared style suffix for all five)
-"...deconstructed sculpture collage: a classical marble bust broken into
-floating rectangular marble and speckled-concrete blocks, hovering in
-mid-assembly against a flat warm-grey studio background (#a9a8a3), soft
-even museum lighting, monochrome grey palette, wide 16:9, generous empty
-space around the figure"
-
-1. Hero      — Zeus-like bearded philosopher head
-2. Programs  — young scholar head in profile
-3. Admission — laureled graduate head
-4. Funding   — Athena-like head with helmet
-5. Apply     — serene classical head, eyes closed
+## Start frames (already generated — no extra cost)
+1. Hero      — 15c7808f-86ac-4088-b031-fd47cb6cb227 (philosopher & galaxy)
+2. Programs  — 3fe41937-d8ce-437b-8830-c67b55de6efc (kintsugi bust)
+3. Admission — 03a902e0-c45e-4c61-a50c-6ca30806384d (gold-leaf face)
+4. Funding   — 7885061f-edaf-4cf4-b90c-6f0b37707d69 (Socrates)
+5. Apply     — 1c8de996-a721-4a1c-8358-8c79c740bf15 (raven-crown god)
 
 ## Video prompt (per section, start_image = its still)
-"Scattered stone blocks fly together and assemble into the sculpture,
-the assembled bust rotates a full 360 degrees, then breaks apart into
-small floating stone blocks that drift outward. Flat warm-grey studio
-background stays perfectly still, soft museum lighting, smooth constant
-motion, no cuts, no camera movement."
+"The statue crumbles backward in time: small dark stone blocks with
+glowing gold veins fly together and assemble into the complete statue,
+the assembled statue rotates a full 360 degrees, then breaks apart into
+small floating stone blocks that drift outward and scatter. Pitch-black
+background stays perfectly still, dramatic museum lighting with gold
+glints, smooth constant motion, no cuts, no camera movement."
+
+## Budget options (5 videos, stills free)
+- Economy:  480p / 4 s  → 5 × 6  = 30 credits
+- Balanced: 720p / 8 s  → 5 × 28 = 140 credits
+- Full:     720p / 10 s → 5 × 35 = 175 credits
 
 Files: assets/videos/v2-section-01.mp4 … v2-section-05.mp4
 (then fill the data-video-remote attributes in v2/index.html)
