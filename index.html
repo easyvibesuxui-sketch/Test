@@ -1137,6 +1137,33 @@
     my = (e.clientY / innerHeight - 0.5) * 2;
   });
 
+  /* magnetic snap: when input goes quiet, glide to the nearest panel so
+     film and content always come to rest perfectly aligned */
+  let lastInput = performance.now(), snapTarget = null;
+  for (const ev of ["wheel", "touchstart", "touchmove", "keydown", "pointerdown"])
+    addEventListener(ev, () => { lastInput = performance.now(); snapTarget = null; }, { passive: true });
+
+  function maybeSnap() {
+    if (reduceMotion || !maxX) return;
+    const idle = performance.now() - lastInput;
+    if (idle < 340) return;
+    if (snapTarget !== null) {
+      if (Math.abs(scrollY - snapTarget) <= 8) { snapTarget = null; lastInput = performance.now(); }
+      else if (idle > 2600) { snapTarget = null; lastInput = performance.now(); }
+      return;
+    }
+    let target = 0, bd = Infinity;
+    for (const pn of panels) {
+      const y = clamp(pn.left - (vw - pn.width) / 2, 0, maxX);
+      const d = Math.abs(scrollY - y);
+      if (d < bd) { bd = d; target = y; }
+    }
+    if (bd > 8) {
+      snapTarget = target;
+      scrollTo({ top: target, behavior: "smooth" });
+    }
+  }
+
   const start = performance.now();
   function frame(now) {
     const t = (now - start) / 1000;
@@ -1146,6 +1173,7 @@
     if (!reduceMotion) { smx = lerp(smx, mx, 0.045); smy = lerp(smy, my, 0.045); }
 
     crossfadeLoops();
+    maybeSnap();
 
     /* gold line: fills left → right with its droplet head */
     const prog = maxX ? x / maxX : 0;
