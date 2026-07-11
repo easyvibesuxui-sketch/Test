@@ -134,6 +134,8 @@
     mask-composite: intersect;
   }
   .media video.is-live { opacity: 1; }
+  /* once the crossfade loop takes over, opacity is driven per-frame */
+  .media video.xfade { transition: none; }
   @media (max-width: 900px) { .media video { width: 92vw; } }
 
   /* soft edge shadows: every panel melts into the same warm-black
@@ -1007,9 +1009,51 @@
       pn.hasVideo = true;
       pn.video.classList.add("is-live");
       pn.video.play().catch(() => {});
+      /* seamless loop: spawn a hidden twin and crossfade into it near
+         the end of every pass, so the first/last frame mismatch never
+         shows as a jump */
+      const twin = document.createElement("video");
+      twin.muted = true;
+      twin.playsInline = true;
+      twin.preload = "auto";
+      twin.src = pn.video.currentSrc || pn.video.src;
+      twin.className = "is-live xfade";
+      twin.style.opacity = "0";
+      pn.video.after(twin);
+      pn.twin = twin;
+      pn.flip = false;
+      setTimeout(() => {
+        pn.video.removeAttribute("loop");
+        pn.video.classList.add("xfade");
+      }, 1800);
     }, { once: true });
     pn.video.addEventListener("error", tryNext);
     tryNext();
+  }
+
+  const XFADE = 1.0;   /* seconds of overlap per loop */
+  function crossfadeLoops() {
+    for (const pn of panels) {
+      if (!pn.twin) continue;
+      const a = pn.flip ? pn.twin : pn.video;
+      const b = pn.flip ? pn.video : pn.twin;
+      const dur = a.duration;
+      if (!dur || isNaN(dur) || dur < 2 || a.paused && !a.ended) continue;
+      const rem = dur - a.currentTime;
+      if (rem < XFADE || a.ended) {
+        if (b.paused) {
+          try { b.currentTime = 0; } catch (e) {}
+          b.play().catch(() => {});
+        }
+        b.style.opacity = String(clamp01(1 - Math.max(rem, 0) / XFADE));
+        if (rem < 0.09 || a.ended) {
+          a.pause();
+          a.style.opacity = "0";
+          b.style.opacity = "1";
+          pn.flip = !pn.flip;
+        }
+      }
+    }
   }
 
   let vw = innerWidth, vh = innerHeight, maxX = 0;
@@ -1079,6 +1123,8 @@
     x = reduceMotion ? targetX : lerp(x, targetX, 0.06);   /* heavy easing */
     track.style.transform = `translate3d(${-x}px, 0, 0)`;
     if (!reduceMotion) { smx = lerp(smx, mx, 0.045); smy = lerp(smy, my, 0.045); }
+
+    crossfadeLoops();
 
     /* gold line: fills left → right with its droplet head */
     const prog = maxX ? x / maxX : 0;
