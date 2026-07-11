@@ -25,6 +25,8 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html, body { background: var(--ink); }
+  html { scrollbar-width: none; }
+  html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
   body {
     font-family: var(--sans);
     color: var(--bone);
@@ -66,7 +68,7 @@
   /* narrow typographic interludes — pure breathing room */
   .interlude {
     position: relative;
-    width: clamp(380px, 52vw, 900px);
+    width: clamp(180px, 20vw, 340px);
     height: 100%;
     flex: 0 0 auto;
     display: grid;
@@ -76,8 +78,8 @@
   .interlude span {
     font-family: var(--serif);
     font-weight: 500;
-    font-size: clamp(40px, 6.4vw, 110px);
-    letter-spacing: 0.22em;
+    font-size: clamp(20px, 2.8vw, 46px);
+    letter-spacing: 0.26em;
     text-transform: uppercase;
     color: transparent;
     -webkit-text-stroke: 1px rgba(207,168,92,0.4);
@@ -1110,14 +1112,56 @@
       scrollTo({ top: clamp(pn.left - (vw - pn.width) / 2, 0, maxX), behavior: reduceMotion ? "auto" : "smooth" });
     }));
 
+  /* ---- one gesture = one section ---- */
+  function panelY(i) {
+    const pn = panels[i];
+    return clamp(pn.left - (vw - pn.width) / 2, 0, maxX);
+  }
+  function nearestIndex() {
+    let bi = 0, bd = Infinity;
+    panels.forEach((pn, i) => {
+      const d = Math.abs(scrollY - panelY(i));
+      if (d < bd) { bd = d; bi = i; }
+    });
+    return bi;
+  }
+  let navLock = 0;
+  function goToIndex(i) {
+    i = clamp(i, 0, panels.length - 1);
+    const y = panelY(i);
+    lastInput = performance.now();
+    snapTarget = y;
+    scrollTo({ top: y, behavior: reduceMotion ? "auto" : "smooth" });
+  }
+  addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (Math.abs(d) < 8) return;
+    const now = performance.now();
+    if (now < navLock) return;
+    navLock = now + 1000;
+    goToIndex(nearestIndex() + (d > 0 ? 1 : -1));
+  }, { passive: false });
+
+  let tx0 = 0, ty0 = 0;
+  addEventListener("touchstart", (e) => {
+    tx0 = e.touches[0].clientX; ty0 = e.touches[0].clientY;
+  }, { passive: true });
+  addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
+  addEventListener("touchend", (e) => {
+    const dx = e.changedTouches[0].clientX - tx0;
+    const dy = e.changedTouches[0].clientY - ty0;
+    const d = Math.abs(dx) > Math.abs(dy) ? dx : dy;
+    if (Math.abs(d) < 42 || performance.now() < navLock) return;
+    navLock = performance.now() + 1000;
+    goToIndex(nearestIndex() + (d < 0 ? 1 : -1));
+  }, { passive: true });
+
   /* keyboard: ← → move one panel */
   document.addEventListener("keydown", (e) => {
     if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
     e.preventDefault();
-    const dir = e.key === "ArrowRight" ? 1 : -1;
-    const cur = activeIndex();
-    const next = clamp(cur + dir, 0, panels.length - 1);
-    scrollTo({ top: clamp(panels[next].left - (vw - panels[next].width) / 2, 0, maxX), behavior: reduceMotion ? "auto" : "smooth" });
+    goToIndex(nearestIndex() + (e.key === "ArrowRight" ? 1 : -1));
   });
 
   let x = 0;
@@ -1140,8 +1184,9 @@
   /* magnetic snap: when input goes quiet, glide to the nearest panel so
      film and content always come to rest perfectly aligned */
   let lastInput = performance.now(), snapTarget = null;
-  for (const ev of ["wheel", "touchstart", "touchmove", "keydown", "pointerdown"])
-    addEventListener(ev, () => { lastInput = performance.now(); snapTarget = null; }, { passive: true });
+  /* only raw pointer input clears a pending glide — wheel/touch/keys go
+     through goToIndex, which manages the target itself */
+  addEventListener("pointerdown", () => { lastInput = performance.now(); snapTarget = null; }, { passive: true });
 
   function maybeSnap() {
     if (reduceMotion || !maxX) return;
