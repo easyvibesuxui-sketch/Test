@@ -1,48 +1,23 @@
 # Background videos (drop-in)
 
-გვერდი ავტომატურად ჩართავს ვიდეოებს, როგორც კი ეს ფაილები აქ გამოჩნდება
-(მანამდე თითო სექციას თავისი ანიმირებული canvas-ფონი აქვს):
+The page plays these five orbit videos from the Higgsfield CDN
+(`data-video-remote`). To serve them locally instead, download each URL
+below into this folder with the matching filename — local files win.
 
-| ფაილი           | სექცია            | წყარო-სურათი (რეფერენსი)                         |
-|-----------------|-------------------|--------------------------------------------------|
-| `section-01.mp4`| Hero              | მარმარილოს ქანდაკება ირმის ნახტომის ფონზე, ოქროს ასტრო-წრეები |
-| `section-02.mp4`| პროგრამები        | ლურჯი kintsugi თავი ოქროს ბზარებით, კბილანები/ქვიშის საათი |
-| `section-03.mp4`| მიღება            | შავი ქვის სახე ოქროს ფურცლის ლაქებით (close-up)  |
-| `section-04.mp4`| დაფინანსება       | სოკრატე ლურჯ კედელზე — ბუ, სასწორი, დაფნის გვირგვინი |
-| `section-05.mp4`| განაცხადი / CTA   | რუხი ქვის სახე ოქროს შარავანდედის სხივებით       |
+Unified art direction: pitch-black void, charcoal stone, antique gold,
+270° 3D camera orbit, 720p 16:9, 5 s, silent, seamless loop.
 
-## რეკომენდაციები
-- 16:9, 1080p (ან 720p), H.264 MP4, 5–10 წმ, უხმო, seamless loop.
-- მოძრაობა: ძალიან ნელი — მცურავი მტვერი/ვარსკვლავები, ბზარების ციმციმი,
-  ღრუბლების დრეიფი, სინათლის სუნთქვა. კამერა თითქმის სტატიკური
-  (zoom-ს თავად გვერდი აკეთებს სქროლზე).
+| file | section | video URL |
+|---|---|---|
+| section-01.mp4 | Hero — philosopher & galaxy | https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260711_053743_fb754f14-3086-4e58-a6a6-1258ea2d7439.mp4 |
+| section-02.mp4 | Programs — kintsugi bust | https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260711_053745_5b988efc-7c65-47cf-9be8-4093d91859fe.mp4 |
+| section-03.mp4 | Admission — gold-leaf face | https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260711_054024_25336cd2-cd76-4543-b068-e240760b77e7.mp4 |
+| section-04.mp4 | Funding — Socrates | https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260711_054026_4df5820d-36dd-47fe-9cd2-704084125771.mp4 |
+| section-05.mp4 | Apply — raven-crown god | https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260711_054406_4e6c0197-9fb3-4336-922c-ebd0dbe38782.mp4 |
 
-## Higgsfield-ის image-to-video პრომპტები (როცა კრედიტები შეივსება)
-თითო წყარო-სურათი გამოიყენე `start_image`-ად (მოდელი: seedance_2_0 ან kling3_0_turbo,
-16:9, 5s, generate_audio: false) და პრომპტად:
-
-1. `Slow ambient cinemagraph: galaxy dust twinkles, gold astral rings rotate slowly, clouds drift, statue perfectly still. Seamless loop, no camera motion.`
-2. `Slow ambient cinemagraph: golden kintsugi cracks shimmer and pulse with light, hourglass sand glints, statue still. Seamless loop, no camera motion.`
-3. `Slow ambient cinemagraph: gold dust particles float and sparkle around the dark stone face, gold leaf glimmers. Seamless loop, no camera motion.`
-4. `Slow ambient cinemagraph: gold laurel leaves catch light, scales sway almost imperceptibly, gold veins glow softly. Seamless loop, no camera motion.`
-5. `Slow ambient cinemagraph: golden halo rays breathe with light behind the stone face, fine mist drifts. Seamless loop, no camera motion.`
-
----
-
-## ✅ დაგენერირებული ვიდეოები (Higgsfield, Seedance 2.0, 720p 16:9 5s)
-
-გვერდი უკვე იყენებს ამ CDN ბმულებს (`data-video-remote`). ლოკალური ასლებისთვის
-ჩამოტვირთე და გადაარქვი (მაშინ ისინი ჩაირთვება პირველ რიგში):
-
-- section-01.mp4 → https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171157_64bf9b23-7585-42ad-ae63-21aad6805b41.mp4
-- section-02.mp4 → https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171448_0d273b2f-aaa6-46e5-8fda-cc4188d9023a.mp4
-- section-03.mp4 → https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171450_61616d0a-7225-4be9-9476-353c42e167e1.mp4
-- section-04.mp4 → https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171220_5fe8fc6c-deab-4ccc-8296-cea3f64f3540.mp4
-- section-05.mp4 → https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171749_edbf948d-55ed-4be4-8ca4-16c13534ae12.mp4
-
-საწყისი კადრები (16:9 სტილები შენი ორიგინალი სურათებიდან):
+Start frames (16:9 stills):
 - https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171105_15c7808f-86ac-4088-b031-fd47cb6cb227.png
-- https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171119_d194843c-8312-4054-88ef-2210781a6d54.png
+- https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_183040_3fe41937-d8ce-437b-8830-c67b55de6efc.png
 - https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171122_03a902e0-c45e-4c61-a50c-6ca30806384d.png
-- https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171125_ad348f9f-cef2-4b56-89ba-76df381d7530.png
-- https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171128_d9e0cc40-ae2a-4214-9213-5ab6a57e6ff7.png
+- https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_183043_7885061f-edaf-4cf4-b90c-6f0b37707d69.png
+- https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_183045_1c8de996-a721-4a1c-8358-8c79c740bf15.png
