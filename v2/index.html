@@ -521,7 +521,7 @@
 <main>
 
   <!-- 01 · HERO -->
-  <section class="sec s-hero" id="hero" data-sec data-form="0" data-video="../assets/videos/v2-section-01.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_051724_f0543a09-38de-41b3-97f5-c4f07c8690cd.mp4">
+  <section class="sec s-hero" id="hero" data-sec data-form="0" data-rest="0.40" data-video="../assets/videos/v2-section-01.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_051724_f0543a09-38de-41b3-97f5-c4f07c8690cd.mp4">
     <div class="stage">
       <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
       <div class="content" data-observe>
@@ -540,7 +540,7 @@
   </section>
 
   <!-- 02 · PROGRAMS -->
-  <section class="sec s-programs" id="programs" data-sec data-form="1" data-cx="0.72" data-video="../assets/videos/v2-section-02.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_051727_5a1d642b-d996-42d4-891b-315083c2c5f1.mp4">
+  <section class="sec s-programs" id="programs" data-sec data-form="1" data-rest="0.50" data-cx="0.72" data-video="../assets/videos/v2-section-02.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_051727_5a1d642b-d996-42d4-891b-315083c2c5f1.mp4">
     <div class="stage">
       <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
       <div class="content" data-observe>
@@ -560,7 +560,7 @@
   </section>
 
   <!-- 03 · ADMISSION -->
-  <section class="sec s-admission" id="admission" data-sec data-form="2" data-cx="0.28" data-video="../assets/videos/v2-section-03.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_052104_77acd0b5-ebb1-47a4-adc5-3222ab0ba88d.mp4">
+  <section class="sec s-admission" id="admission" data-sec data-form="2" data-rest="0.52" data-cx="0.28" data-video="../assets/videos/v2-section-03.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_052104_77acd0b5-ebb1-47a4-adc5-3222ab0ba88d.mp4">
     <div class="stage">
       <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
       <div class="content" data-observe>
@@ -582,7 +582,7 @@
   </section>
 
   <!-- 04 · FUNDING -->
-  <section class="sec s-funding" id="funding" data-sec data-form="3" data-cx="0.72" data-video="../assets/videos/v2-section-04.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_052108_4e6c9d87-7693-4950-86cf-90e43c536871.mp4">
+  <section class="sec s-funding" id="funding" data-sec data-form="3" data-rest="0.85" data-cx="0.72" data-video="../assets/videos/v2-section-04.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_052108_4e6c9d87-7693-4950-86cf-90e43c536871.mp4">
     <div class="stage">
       <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
       <div class="content" data-observe>
@@ -605,7 +605,7 @@
   </section>
 
   <!-- 05 · APPLY -->
-  <section class="sec s-final" id="apply" data-sec data-form="4" data-video="../assets/videos/v2-section-05.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_052456_e9a67888-7c3c-4665-9479-dcbafff802a8.mp4">
+  <section class="sec s-final" id="apply" data-sec data-form="4" data-rest="0.52" data-video="../assets/videos/v2-section-05.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_052456_e9a67888-7c3c-4665-9479-dcbafff802a8.mp4">
     <div class="stage">
       <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
       <div class="content" data-observe>
@@ -835,8 +835,9 @@
     const content = el.querySelector(".content");
     const blocks = buildBlocks(+el.dataset.form);
     const cxr = +(el.dataset.cx || 0.5);
+    const rest = +(el.dataset.rest || 0.45);   /* where this film stands assembled */
     return { el, canvas, ctx: canvas.getContext("2d"), video, media, content,
-             blocks, cxr, p: 0, hasVideo: false, revealed: false };
+             blocks, cxr, rest, p: 0, hasVideo: false, revealed: false };
   });
 
   for (const s of secs) {
@@ -884,10 +885,9 @@
      the break-up of one statue and the assembly of the
      next along the way.
      ===================================================== */
-  const REST = 0.45;
   function restY(i) {
-    const el = secs[i].el;
-    return Math.round(el.offsetTop + (el.offsetHeight - vh) * REST);
+    const s = secs[i];
+    return Math.round(s.el.offsetTop + (s.el.offsetHeight - vh) * s.rest);
   }
   function nearestSec() {
     let bi = 0, bd = Infinity;
@@ -971,13 +971,13 @@
       const visible = sy + vh > top - vh * 0.2 && sy < top + s.el.offsetHeight + vh * 0.2;
       if (!visible) return;
 
-      /* content fades in for the rotation act, out for the break-up */
-      const cIn = smooth(0.16, 0.30, s.p);
-      const cOut = 1 - smooth(0.68, 0.84, s.p);
+      /* content appears around this film's assembled rest point */
+      const cIn = smooth(s.rest - 0.24, s.rest - 0.08, s.p);
+      const cOut = 1 - smooth(s.rest + 0.10, s.rest + 0.26, s.p);
       s.content.style.opacity = String(Math.min(cIn, cOut));
-      s.content.style.transform = `translate3d(0, ${(0.5 - s.p) * 6}vh, 0)`;
+      s.content.style.transform = `translate3d(0, ${(s.rest - s.p) * 12}vh, 0)`;
 
-      if (!s.revealed && s.p > 0.17) {
+      if (!s.revealed && s.p > s.rest - 0.22) {
         s.revealed = true;
         s.content.classList.add("in-view");
         s.content.querySelectorAll("[data-count]").forEach(runCounter);
