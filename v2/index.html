@@ -155,7 +155,7 @@
   .counter b { color: var(--brass); font-weight: 600; font-size: 17px; }
 
   /* ============ tall sections with sticky stages ============ */
-  .sec { position: relative; height: 340vh; }
+  .sec { position: relative; height: 420vh; }
   .stage {
     position: sticky;
     top: 0;
@@ -859,17 +859,18 @@
      assembly first, holds on the assembled figure, then the break-up —
      regardless of where those beats live inside the raw footage. */
   const SEGS = [
-    { asm: [0.0, 3.0], hold: [3.0, 6.0], brk: [6.0, 9.5] },   /* hero      */
-    { asm: [1.0, 4.0], hold: [4.0, 7.0], brk: [7.0, 9.8] },   /* programs  */
-    { asm: [0.0, 4.0], hold: [4.0, 7.0], brk: [7.0, 9.3] },   /* admission */
-    { asm: [7.0, 9.6], hold: [0.0, 4.0], brk: [4.0, 7.0] },   /* funding: its assembly lives at the end */
-    { asm: [0.0, 4.0], hold: [4.0, 7.0], brk: [7.0, 9.3] }    /* apply     */
+    { asm: [0.0, 3.0],  hold: [3.0, 6.0],  brk: [6.0, 9.5] },  /* hero      */
+    { asm: [1.0, 4.0],  hold: [4.0, 7.0],  brk: [7.0, 9.8] },  /* programs  */
+    { asm: [0.0, 4.0],  hold: [4.0, 7.0],  brk: [7.0, 9.3] },  /* admission */
+    { asm: [7.0, 9.85], hold: [0.05, 4.0], brk: [4.0, 7.0] },  /* funding: its assembly lives at the end */
+    { asm: [0.0, 4.0],  hold: [4.0, 7.0],  brk: [7.0, 9.3] }   /* apply     */
   ];
+  /* strictly linear inside each phase — constant flow, no easing kinks */
   function videoTime(form, p) {
     const g = SEGS[form] || SEGS[0];
-    if (p < 0.38) return lerp(g.asm[0], g.asm[1], smooth(0, 0.38, p));
+    if (p < 0.38) return lerp(g.asm[0], g.asm[1], p / 0.38);
     if (p < 0.62) return lerp(g.hold[0], g.hold[1], (p - 0.38) / 0.24);
-    return lerp(g.brk[0], g.brk[1], smooth(0.62, 1, p));
+    return lerp(g.brk[0], g.brk[1], (p - 0.62) / 0.38);
   }
 
   function sizeCanvases() {
@@ -949,11 +950,19 @@
       }
 
       if (s.hasVideo && s.video.duration) {
-        /* scrub through remapped segments so every section reads the
-           same way: assemble -> stand assembled -> break apart */
+        /* the film time CHASES the scroll target in small capped steps,
+           so motion always flows instead of snapping between frames */
         const target = clamp(videoTime(s.form, s.p), 0, s.video.duration - 0.05);
-        if (Math.abs(s.video.currentTime - target) > 0.055) {
-          try { s.video.currentTime = target; } catch (e) {}
+        if (s.vt === undefined) s.vt = target;
+        if (Math.abs(target - s.vt) > 2.5) {
+          s.vt = target;               /* seam jump (funding), never chased */
+        } else {
+          let step = (target - s.vt) * 0.10;
+          step = clamp(step, -0.12, 0.12);
+          s.vt += step;
+        }
+        if (Math.abs(s.video.currentTime - s.vt) > 0.02) {
+          try { s.video.currentTime = s.vt; } catch (e) {}
         }
       } else {
         drawBlocks(s.ctx, s.blocks, s.p, t, s.cw, s.ch, s.cxr);
