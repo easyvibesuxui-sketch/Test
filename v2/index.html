@@ -903,11 +903,13 @@
     const from = scrollY, to = restY(i);
     if (Math.abs(to - from) < 4) return;
     animating = true;
-    const dur = reduceMotion ? 0 : clamp(Math.abs(to - from) * 1.15, 1400, 3400);
+    /* lazy glide: long enough that the full break-up of one statue and
+       the full assembly of the next play out on screen (~10s footage) */
+    const dur = reduceMotion ? 0 : clamp(Math.abs(to - from) * 2.8, 2200, 9000);
     const t0 = performance.now();
     (function step(now) {
       const k = dur ? clamp01((now - t0) / dur) : 1;
-      const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      const e = -(Math.cos(Math.PI * k) - 1) / 2;   /* even, unhurried ease */
       scrollTo(0, from + (to - from) * e);
       if (k < 1) requestAnimationFrame(step);
       else { animating = false; coolUntil = performance.now() + 380; }
