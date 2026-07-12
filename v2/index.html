@@ -950,19 +950,11 @@
       }
 
       if (s.hasVideo && s.video.duration) {
-        /* the film time CHASES the scroll target in small capped steps,
-           so motion always flows instead of snapping between frames */
+        /* direct scrub: the smoothed scroll progress (s.p) already eases
+           the motion, and the film always reaches its exact frame */
         const target = clamp(videoTime(s.form, s.p), 0, s.video.duration - 0.05);
-        if (s.vt === undefined) s.vt = target;
-        if (Math.abs(target - s.vt) > 2.5) {
-          s.vt = target;               /* seam jump (funding), never chased */
-        } else {
-          let step = (target - s.vt) * 0.10;
-          step = clamp(step, -0.12, 0.12);
-          s.vt += step;
-        }
-        if (Math.abs(s.video.currentTime - s.vt) > 0.02) {
-          try { s.video.currentTime = s.vt; } catch (e) {}
+        if (Math.abs(s.video.currentTime - target) > 0.05) {
+          try { s.video.currentTime = target; } catch (e) {}
         }
       } else {
         drawBlocks(s.ctx, s.blocks, s.p, t, s.cw, s.ch, s.cxr);
