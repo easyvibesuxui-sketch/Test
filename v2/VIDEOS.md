@@ -29,3 +29,12 @@ glints, smooth constant motion, no cuts, no camera movement."
 
 Files: assets/videos/v2-section-01.mp4 … v2-section-05.mp4
 (then fill the data-video-remote attributes in v2/index.html)
+
+---
+
+## ✅ Generated (Full option: 720p / 10 s / Seedance 2.0)
+- v2-section-01.mp4 → https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_051724_f0543a09-38de-41b3-97f5-c4f07c8690cd.mp4
+- v2-section-02.mp4 → https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_051727_5a1d642b-d996-42d4-891b-315083c2c5f1.mp4
+- v2-section-03.mp4 → https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_052104_77acd0b5-ebb1-47a4-adc5-3222ab0ba88d.mp4
+- v2-section-04.mp4 → https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_052108_4e6c9d87-7693-4950-86cf-90e43c536871.mp4
+- v2-section-05.mp4 → https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_052456_e9a67888-7c3c-4665-9479-dcbafff802a8.mp4
