@@ -26,6 +26,8 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html, body { background: var(--paper); }
+  html { scrollbar-width: none; }
+  html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
   body {
     font-family: var(--sans);
     color: var(--ink);
@@ -871,11 +873,79 @@
   const railDrop = document.getElementById("railDrop");
   const ticks = [...document.querySelectorAll("#railTicks button")];
   const counterNum = document.getElementById("counterNum");
-  ticks.forEach((b) => b.addEventListener("click", () =>
-    document.getElementById(b.dataset.go).scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" })));
 
   let vh = innerHeight;
   addEventListener("resize", () => { vh = innerHeight; });
+
+  /* =====================================================
+     One gesture = one section. Rest points sit mid-section
+     where the statue stands assembled and rotating; each
+     gesture glides slowly to the next rest point, playing
+     the break-up of one statue and the assembly of the
+     next along the way.
+     ===================================================== */
+  const REST = 0.45;
+  function restY(i) {
+    const el = secs[i].el;
+    return Math.round(el.offsetTop + (el.offsetHeight - vh) * REST);
+  }
+  function nearestSec() {
+    let bi = 0, bd = Infinity;
+    secs.forEach((s, i) => {
+      const d = Math.abs(scrollY - restY(i));
+      if (d < bd) { bd = d; bi = i; }
+    });
+    return bi;
+  }
+  let animating = false, coolUntil = 0;
+  function glideTo(i) {
+    i = clamp(i, 0, secs.length - 1);
+    const from = scrollY, to = restY(i);
+    if (Math.abs(to - from) < 4) return;
+    animating = true;
+    const dur = reduceMotion ? 0 : clamp(Math.abs(to - from) * 1.15, 1400, 3400);
+    const t0 = performance.now();
+    (function step(now) {
+      const k = dur ? clamp01((now - t0) / dur) : 1;
+      const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      scrollTo(0, from + (to - from) * e);
+      if (k < 1) requestAnimationFrame(step);
+      else { animating = false; coolUntil = performance.now() + 380; }
+    })(t0);
+  }
+  addEventListener("wheel", (e) => {
+    e.preventDefault();
+    if (animating || performance.now() < coolUntil || Math.abs(e.deltaY) < 8) return;
+    glideTo(nearestSec() + (e.deltaY > 0 ? 1 : -1));
+  }, { passive: false });
+  let ty0 = 0;
+  addEventListener("touchstart", (e) => { ty0 = e.touches[0].clientY; }, { passive: true });
+  addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
+  addEventListener("touchend", (e) => {
+    const dy = e.changedTouches[0].clientY - ty0;
+    if (animating || performance.now() < coolUntil || Math.abs(dy) < 42) return;
+    glideTo(nearestSec() + (dy < 0 ? 1 : -1));
+  }, { passive: true });
+  document.addEventListener("keydown", (e) => {
+    const down = ["ArrowDown", "PageDown", " "].includes(e.key);
+    const up = ["ArrowUp", "PageUp"].includes(e.key);
+    if (!down && !up) return;
+    e.preventDefault();
+    if (!animating) glideTo(nearestSec() + (down ? 1 : -1));
+  });
+  const idByGo = {};
+  secs.forEach((s, i) => { idByGo[s.el.id] = i; });
+  ticks.forEach((b) => b.addEventListener("click", () => glideTo(idByGo[b.dataset.go] ?? 0)));
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    const i = idByGo[a.getAttribute("href").slice(1)];
+    if (i === undefined) return;
+    e.preventDefault();
+    glideTo(i);
+  });
+  /* opening moment: glide into the hero's assembled state */
+  setTimeout(() => { if (scrollY < 10 && !animating) glideTo(0); }, reduceMotion ? 100 : 1600);
 
   const start = performance.now();
   function frame(now) {
