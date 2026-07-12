@@ -835,9 +835,9 @@
     const content = el.querySelector(".content");
     const blocks = buildBlocks(+el.dataset.form);
     const cxr = +(el.dataset.cx || 0.5);
-    const rest = +(el.dataset.rest || 0.45);   /* where this film stands assembled */
     return { el, canvas, ctx: canvas.getContext("2d"), video, media, content,
-             blocks, cxr, rest, p: 0, hasVideo: false, revealed: false };
+             blocks, cxr, form: +el.dataset.form, rest: 0.5,
+             p: 0, hasVideo: false, revealed: false };
   });
 
   for (const s of secs) {
@@ -855,6 +855,23 @@
     }, { once: true });
     s.video.addEventListener("error", tryNext);
     tryNext();
+  }
+
+  /* Per-film time segments (from scene analysis), so each section plays
+     assembly first, holds on the assembled figure, then the break-up —
+     regardless of where those beats live inside the raw footage. */
+  const SEGS = [
+    { asm: [0.0, 3.0], hold: [3.0, 6.0], brk: [6.0, 9.5] },   /* hero      */
+    { asm: [1.0, 4.0], hold: [4.0, 7.0], brk: [7.0, 9.8] },   /* programs  */
+    { asm: [0.0, 4.0], hold: [4.0, 7.0], brk: [7.0, 9.3] },   /* admission */
+    { asm: [7.0, 9.6], hold: [0.0, 4.0], brk: [4.0, 7.0] },   /* funding: its assembly lives at the end */
+    { asm: [0.0, 4.0], hold: [4.0, 7.0], brk: [7.0, 9.3] }    /* apply     */
+  ];
+  function videoTime(form, p) {
+    const g = SEGS[form] || SEGS[0];
+    if (p < 0.38) return lerp(g.asm[0], g.asm[1], smooth(0, 0.38, p));
+    if (p < 0.62) return lerp(g.hold[0], g.hold[1], (p - 0.38) / 0.24);
+    return lerp(g.brk[0], g.brk[1], smooth(0.62, 1, p));
   }
 
   function sizeCanvases() {
@@ -971,21 +988,22 @@
       const visible = sy + vh > top - vh * 0.2 && sy < top + s.el.offsetHeight + vh * 0.2;
       if (!visible) return;
 
-      /* content appears around this film's assembled rest point */
-      const cIn = smooth(s.rest - 0.24, s.rest - 0.08, s.p);
-      const cOut = 1 - smooth(s.rest + 0.10, s.rest + 0.26, s.p);
+      /* content fills the section while the figure stands assembled */
+      const cIn = smooth(0.30, 0.42, s.p);
+      const cOut = 1 - smooth(0.60, 0.74, s.p);
       s.content.style.opacity = String(Math.min(cIn, cOut));
-      s.content.style.transform = `translate3d(0, ${(s.rest - s.p) * 12}vh, 0)`;
+      s.content.style.transform = `translate3d(0, ${(0.5 - s.p) * 8}vh, 0)`;
 
-      if (!s.revealed && s.p > s.rest - 0.22) {
+      if (!s.revealed && s.p > 0.30) {
         s.revealed = true;
         s.content.classList.add("in-view");
         s.content.querySelectorAll("[data-count]").forEach(runCounter);
       }
 
       if (s.hasVideo && s.video.duration) {
-        /* scrub the film with the section progress */
-        const target = s.p * Math.max(s.video.duration - 0.05, 0);
+        /* scrub through remapped segments so every section reads the
+           same way: assemble -> stand assembled -> break apart */
+        const target = clamp(videoTime(s.form, s.p), 0, s.video.duration - 0.05);
         if (Math.abs(s.video.currentTime - target) > 0.055) {
           try { s.video.currentTime = target; } catch (e) {}
         }
