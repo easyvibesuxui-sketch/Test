@@ -10,13 +10,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --paper:      #0b0a08;               /* warm black — the v1 ground */
-    --paper-hi:   #14120e;
-    --paper-lo:   #060505;
-    --ink:        #ece7db;               /* bone text */
-    --ink-dim:    rgba(236, 231, 219, 0.52);
-    --marble:     #0d0c0a;               /* dark fill for solid buttons  */
-    --brass:      #cfa85c;               /* champagne gold */
+    --ink:        #0b0a08;               /* warm black ground */
+    --bone:       #ece7db;
+    --bone-dim:   rgba(236, 231, 219, 0.52);
+    --gold:       #cfa85c;
+    --gold-soft:  #e0c07d;
+    --gold-dim:   rgba(207, 168, 92, 0.3);
     --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
     --sans:  "Manrope", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
     --ease:    cubic-bezier(0.22, 1, 0.36, 1);
@@ -25,15 +24,38 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  html, body { background: var(--paper); }
+  html, body { background: var(--ink); }
   body {
     font-family: var(--sans);
-    color: var(--ink);
+    color: var(--bone);
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
 
-  ::selection { background: var(--brass); color: var(--marble); }
+  ::selection { background: var(--gold); color: var(--ink); }
+
+  /* ============ the one continuous film: a fixed canvas behind
+     everything — tiles of the five artworks assemble and shatter
+     on it as one unbroken material ============ */
+  .film {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+  }
+  .film canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .atmosphere {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: radial-gradient(115% 92% at 50% 50%, transparent 52%, rgba(11,10,8,0.62) 100%);
+  }
 
   /* ============ header ============ */
   .site-head {
@@ -52,7 +74,7 @@
     font-weight: 700;
     font-size: 19px;
     letter-spacing: 0.18em;
-    color: var(--ink);
+    color: var(--bone);
     text-decoration: none;
   }
   .site-head__logo small {
@@ -67,7 +89,7 @@
   }
   .site-head__nav { display: flex; gap: clamp(14px, 2.4vw, 34px); }
   .site-head__nav a {
-    color: var(--ink);
+    color: var(--bone);
     text-decoration: none;
     font-size: 9.5px;
     font-weight: 700;
@@ -79,7 +101,7 @@
   .site-head__nav a:hover { opacity: 1; }
   @media (max-width: 760px) { .site-head__nav { display: none; } }
 
-  /* ============ vertical progress rail ============ */
+  /* ============ gold progress rail ============ */
   .rail {
     position: fixed;
     left: clamp(22px, 3vw, 44px);
@@ -101,16 +123,16 @@
     inset: 0;
     transform-origin: 50% 0;
     transform: scaleY(0);
-    background: linear-gradient(180deg, rgba(138,119,79,0.4), var(--brass));
+    background: linear-gradient(180deg, rgba(207,168,92,0.4), var(--gold));
   }
   .rail__drop {
     position: absolute;
     left: 50%; top: 0;
     width: 7px; height: 7px;
     border-radius: 50%;
-    background: var(--brass);
+    background: var(--gold-soft);
     transform: translate(-50%, -50%);
-    box-shadow: 0 0 8px 2px rgba(138, 119, 79, 0.5);
+    box-shadow: 0 0 10px 2px rgba(224, 192, 125, 0.7), 0 0 24px 6px rgba(207, 168, 92, 0.3);
   }
   .rail__ticks {
     position: absolute;
@@ -130,14 +152,14 @@
     font-weight: 700;
     letter-spacing: 0.28em;
     text-transform: uppercase;
-    color: var(--ink);
+    color: var(--bone);
     opacity: 0.3;
     transition: opacity 0.4s var(--ease), color 0.4s var(--ease);
     padding: 2px 0;
     white-space: nowrap;
   }
   .rail__ticks button:hover { opacity: 0.7; }
-  .rail__ticks button.on { opacity: 1; color: var(--brass); }
+  .rail__ticks button.on { opacity: 1; color: var(--gold-soft); }
   @media (max-width: 900px) { .rail__ticks { display: none; } }
 
   .counter {
@@ -148,64 +170,53 @@
     font-family: var(--serif);
     font-size: 13px;
     letter-spacing: 0.2em;
-    color: var(--ink-dim);
+    color: var(--bone-dim);
     transition: opacity 1.2s var(--ease) 0.9s;
   }
   .is-loading .counter { opacity: 0; }
-  .counter b { color: var(--brass); font-weight: 600; font-size: 17px; }
+  .counter b { color: var(--gold-soft); font-weight: 600; font-size: 17px; }
 
-  /* ============ tall sections with sticky stages ============ */
-  .sec { position: relative; height: 420vh; }
+  .scroll-cue {
+    position: fixed;
+    bottom: clamp(24px, 4.4vh, 42px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 810;
+    font-size: 8.5px;
+    letter-spacing: 0.44em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    transition: opacity 0.8s var(--ease);
+  }
+  .is-loading .scroll-cue { opacity: 0; }
+  .scroll-cue.gone { opacity: 0; }
+  .scroll-cue::after {
+    content: "";
+    display: block;
+    width: 1px;
+    height: 42px;
+    margin: 10px auto 0;
+    background: linear-gradient(180deg, var(--gold), transparent);
+    animation: cueDrop 2.2s var(--ease-io) infinite;
+    transform-origin: top;
+  }
+  @keyframes cueDrop {
+    0%   { transform: scaleY(0); }
+    45%  { transform: scaleY(1); }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+
+  /* ============ sections (free scroll, sticky stages) ============ */
+  .sec { position: relative; height: 260vh; }
   .stage {
     position: sticky;
     top: 0;
     height: 100vh;
-    overflow: hidden;
     display: grid;
   }
-
-  .media {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-  }
-  .media canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
-  /* scrubbed film: grey ground matches the page, so the sculpture
-     floats free; edges melt with crossed masks anyway */
-  .media video {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: clamp(560px, 62vw, 1120px);
-    max-width: 94%;
-    aspect-ratio: 16 / 9;
-    height: auto;
-    object-fit: cover;
-    display: block;
-    opacity: 0;
-    transition: opacity 1.2s var(--ease);
-    -webkit-mask-image:
-      linear-gradient(90deg,  transparent 0%, #000 20%, #000 80%, transparent 100%),
-      linear-gradient(180deg, transparent 0%, #000 20%, #000 80%, transparent 100%);
-    -webkit-mask-composite: source-in;
-    mask-image:
-      linear-gradient(90deg,  transparent 0%, #000 20%, #000 80%, transparent 100%),
-      linear-gradient(180deg, transparent 0%, #000 20%, #000 80%, transparent 100%);
-    mask-composite: intersect;
-  }
-  .media video.is-live { opacity: 1; }
-  @media (max-width: 900px) { .media video { width: 94vw; } }
-
-  /* ============ content ============ */
   .content {
     position: relative;
-    z-index: 2;
+    z-index: 4;
     height: 100%;
     width: 100%;
     max-width: 1360px;
@@ -224,14 +235,14 @@
     font-weight: 700;
     letter-spacing: 0.5em;
     text-transform: uppercase;
-    color: var(--brass);
+    color: var(--gold-soft);
     margin-bottom: clamp(20px, 3.6vh, 40px);
   }
   .eyebrow::before {
     content: "";
     display: inline-block;
     width: 42px; height: 1px;
-    background: var(--brass);
+    background: var(--gold);
     vertical-align: middle;
     margin-right: 16px;
   }
@@ -241,8 +252,9 @@
     font-weight: 600;
     line-height: 1.08;
     letter-spacing: 0.005em;
-    color: var(--ink);
+    color: var(--bone);
     text-wrap: balance;
+    text-shadow: 0 2px 26px rgba(11, 10, 8, 0.85);
   }
   .display-xl { font-size: clamp(32px, 4.6vw, 66px); font-weight: 700; }
   .display-l  { font-size: clamp(25px, 3.3vw, 48px); }
@@ -251,11 +263,12 @@
     font-weight: 400;
     line-height: 2;
     letter-spacing: 0.02em;
-    color: var(--ink-dim);
+    color: var(--bone-dim);
     max-width: 32em;
     margin-top: clamp(20px, 3.4vh, 38px);
+    text-shadow: 0 1px 16px rgba(11, 10, 8, 0.9);
   }
-  .accent { color: var(--brass); font-style: italic; }
+  .accent { color: var(--gold-soft); font-style: italic; }
 
   .rv { display: block; overflow: hidden; }
   .rv > span {
@@ -276,7 +289,6 @@
   .in-view .fd.d3 { transition-delay: 0.6s; }
   .in-view .fd.d4 { transition-delay: 0.75s; }
 
-  /* alignment variants */
   .s-hero .content { align-items: center; text-align: center; }
   .s-hero .eyebrow::before { display: none; }
   .s-hero .lede { margin-left: auto; margin-right: auto; }
@@ -307,21 +319,21 @@
     z-index: 0;
     transition: color 0.45s var(--ease), border-color 0.45s var(--ease);
   }
-  .btn--solid { color: var(--marble); background: var(--ink); }
-  .btn--ghost { color: var(--ink); border: 1px solid rgba(236,231,219,0.3); background: transparent; }
+  .btn--solid { color: var(--ink); background: var(--gold); }
+  .btn--ghost { color: var(--bone); border: 1px solid rgba(236,231,219,0.3); background: transparent; }
   .btn::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: var(--brass);
+    background: var(--bone);
     border-radius: inherit;
     transform: translateY(102%);
     transition: transform 0.5s var(--ease);
     z-index: -1;
   }
+  .btn--solid::after { background: var(--gold-soft); }
   .btn:hover::after { transform: translateY(0); }
-  .btn--ghost:hover { color: var(--marble); border-color: var(--brass); }
-  .btn--solid:hover { color: var(--marble); }
+  .btn--ghost:hover { color: var(--ink); border-color: var(--bone); }
 
   .prog-list {
     list-style: none;
@@ -338,11 +350,12 @@
     align-items: baseline;
     gap: clamp(14px, 2.4vw, 34px);
     padding: clamp(10px, 1.7vh, 16px) 6px;
-    color: var(--ink);
+    color: var(--bone);
     text-decoration: none;
     font-family: var(--serif);
     font-size: clamp(16px, 1.7vw, 24px);
     font-weight: 600;
+    text-shadow: 0 1px 14px rgba(11, 10, 8, 0.9);
     transition: padding-left 0.55s var(--ease), color 0.55s var(--ease);
   }
   .prog-list a::before {
@@ -351,19 +364,19 @@
     font-size: 8.5px;
     font-weight: 700;
     letter-spacing: 0.2em;
-    color: var(--brass);
+    color: var(--gold);
   }
   .prog-list a::after {
     content: "→";
     margin-left: auto;
-    font-weight: 300;
     font-family: var(--sans);
+    font-weight: 300;
     opacity: 0;
     transform: translateX(-14px);
     transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
-    color: var(--brass);
+    color: var(--gold-soft);
   }
-  .prog-list a:hover { padding-left: 20px; color: var(--brass); }
+  .prog-list a:hover { padding-left: 20px; color: var(--gold-soft); }
   .prog-list a:hover::after { opacity: 1; transform: none; }
 
   .steps {
@@ -382,19 +395,20 @@
     font-weight: 700;
     line-height: 0.9;
     color: transparent;
-    -webkit-text-stroke: 1px var(--brass);
+    -webkit-text-stroke: 1px var(--gold);
   }
   .steps h3 {
     font-family: var(--serif);
     font-size: clamp(15px, 1.4vw, 20px);
     font-weight: 700;
     margin-bottom: 6px;
+    text-shadow: 0 1px 14px rgba(11, 10, 8, 0.9);
   }
   .steps p {
     font-size: clamp(11px, 0.85vw, 13px);
     font-weight: 400;
     line-height: 1.9;
-    color: var(--ink-dim);
+    color: var(--bone-dim);
   }
 
   .grants {
@@ -409,19 +423,19 @@
     font-size: clamp(36px, 4vw, 66px);
     font-weight: 700;
     line-height: 1;
-    color: var(--brass);
+    color: var(--gold);
   }
-  .grants__big sup { font-size: 0.38em; }
+  .grants__big sup { font-size: 0.38em; color: var(--gold-soft); }
   .grants__label {
     margin-top: 10px;
     font-size: 9px;
     font-weight: 600;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--ink-dim);
+    color: var(--bone-dim);
     line-height: 2;
   }
-  .grants__label b { display: block; color: var(--ink); font-weight: 800; }
+  .grants__label b { display: block; color: var(--bone); font-weight: 800; }
 
   .contact-row {
     margin-top: clamp(26px, 4.6vh, 48px);
@@ -432,7 +446,7 @@
     font-size: 11px;
     font-weight: 400;
     letter-spacing: 0.06em;
-    color: var(--ink-dim);
+    color: var(--bone-dim);
     line-height: 2.2;
   }
   .contact-row b {
@@ -441,14 +455,14 @@
     font-size: 8px;
     letter-spacing: 0.4em;
     text-transform: uppercase;
-    color: var(--brass);
+    color: var(--gold-soft);
   }
-  .contact-row a { color: var(--ink); text-decoration: none; border-bottom: 1px solid rgba(138,119,79,0.4); }
+  .contact-row a { color: var(--bone); text-decoration: none; border-bottom: 1px solid var(--gold-dim); }
 
   .site-foot {
     position: absolute;
     bottom: 0; left: 0; right: 0;
-    z-index: 3;
+    z-index: 4;
     display: flex;
     justify-content: space-between;
     gap: 16px;
@@ -457,38 +471,49 @@
     font-size: 8.5px;
     letter-spacing: 0.24em;
     text-transform: uppercase;
-    color: rgba(236,231,219,0.38);
+    color: rgba(236,231,219,0.35);
   }
 
   .curtain {
     position: fixed;
     inset: 0;
     z-index: 999;
-    background: var(--paper);
+    background: var(--ink);
     display: grid;
     place-items: center;
     transition: opacity 1s var(--ease) 0.3s, visibility 0s 1.3s;
   }
   html:not(.is-loading) .curtain { opacity: 0; visibility: hidden; }
+  .curtain__inner { text-align: center; }
   .curtain span {
     font-family: var(--serif);
     font-weight: 700;
     letter-spacing: 0.34em;
     font-size: clamp(20px, 2.6vw, 34px);
-    color: var(--brass);
+    color: var(--gold);
     animation: breathe 1.6s var(--ease-io) infinite alternate;
+  }
+  .curtain i {
+    display: block;
+    width: 120px;
+    height: 1px;
+    margin: 18px auto 0;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
   }
   @keyframes breathe { from { opacity: 0.3; } to { opacity: 1; } }
 
   @media (prefers-reduced-motion: reduce) {
     .rv > span, .fd { transition-duration: 0.01s !important; }
-    .curtain span { animation: none; }
+    .curtain span, .scroll-cue::after { animation: none; }
   }
 </style>
 </head>
 <body>
 
-<div class="curtain" aria-hidden="true"><span>IBSU</span></div>
+<div class="curtain" aria-hidden="true"><div class="curtain__inner"><span>IBSU</span><i></i></div></div>
+
+<div class="film" aria-hidden="true"><canvas id="film"></canvas></div>
+<div class="atmosphere" aria-hidden="true"></div>
 
 <header class="site-head">
   <a class="site-head__logo" href="#hero">IBSU<small>International Black Sea University</small></a>
@@ -515,13 +540,14 @@
 </div>
 
 <div class="counter"><b id="counterNum">01</b> / 05</div>
+<div class="scroll-cue" id="scrollCue">Scroll</div>
 
 <main>
 
   <!-- 01 · HERO -->
-  <section class="sec s-hero" id="hero" data-sec data-form="0" data-rest="0.40" data-video="../assets/videos/v2-section-01.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_051724_f0543a09-38de-41b3-97f5-c4f07c8690cd.mp4">
+  <section class="sec s-hero" id="hero" data-sec
+    data-img="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171105_15c7808f-86ac-4088-b031-fd47cb6cb227.png">
     <div class="stage">
-      <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
       <div class="content" data-observe>
         <p class="eyebrow fd">Admissions 2026 · Tbilisi</p>
         <h1 class="display-xl">
@@ -538,9 +564,9 @@
   </section>
 
   <!-- 02 · PROGRAMS -->
-  <section class="sec s-programs" id="programs" data-sec data-form="1" data-rest="0.50" data-cx="0.72" data-video="../assets/videos/v2-section-02.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_051727_5a1d642b-d996-42d4-891b-315083c2c5f1.mp4">
+  <section class="sec s-programs" id="programs" data-sec data-cx="0.70"
+    data-img="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_183040_3fe41937-d8ce-437b-8830-c67b55de6efc.png">
     <div class="stage">
-      <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
       <div class="content" data-observe>
         <p class="eyebrow fd">02 · Bachelor programs</p>
         <h2 class="display-l"><span class="rv"><span>Choose your <em class="accent">path</em></span></span></h2>
@@ -558,9 +584,9 @@
   </section>
 
   <!-- 03 · ADMISSION -->
-  <section class="sec s-admission" id="admission" data-sec data-form="2" data-rest="0.52" data-cx="0.28" data-video="../assets/videos/v2-section-03.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_052104_77acd0b5-ebb1-47a4-adc5-3222ab0ba88d.mp4">
+  <section class="sec s-admission" id="admission" data-sec data-cx="0.30"
+    data-img="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171122_03a902e0-c45e-4c61-a50c-6ca30806384d.png">
     <div class="stage">
-      <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
       <div class="content" data-observe>
         <p class="eyebrow fd">03 · How to enroll</p>
         <h2 class="display-l">
@@ -580,9 +606,9 @@
   </section>
 
   <!-- 04 · FUNDING -->
-  <section class="sec s-funding" id="funding" data-sec data-form="3" data-rest="0.85" data-cx="0.72" data-video="../assets/videos/v2-section-04.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_052108_4e6c9d87-7693-4950-86cf-90e43c536871.mp4">
+  <section class="sec s-funding" id="funding" data-sec data-cx="0.70"
+    data-img="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_183043_7885061f-edaf-4cf4-b90c-6f0b37707d69.png">
     <div class="stage">
-      <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
       <div class="content" data-observe>
         <p class="eyebrow fd">04 · Scholarships &amp; grants</p>
         <h2 class="display-l">
@@ -603,9 +629,9 @@
   </section>
 
   <!-- 05 · APPLY -->
-  <section class="sec s-final" id="apply" data-sec data-form="4" data-rest="0.52" data-video="../assets/videos/v2-section-05.mp4" data-video-remote="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260712_052456_e9a67888-7c3c-4665-9479-dcbafff802a8.mp4">
+  <section class="sec s-final" id="apply" data-sec
+    data-img="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_183045_1c8de996-a721-4a1c-8358-8c79c740bf15.png">
     <div class="stage">
-      <div class="media"><canvas></canvas><video muted playsinline preload="auto"></video></div>
       <div class="content" data-observe>
         <p class="eyebrow fd">05 · Join us</p>
         <h2 class="display-xl"><span class="rv"><span>Are you <em class="accent">ready?</em></span></span></h2>
@@ -638,17 +664,11 @@
     const t = clamp01((x - e0) / (e1 - e0));
     return t * t * (3 - 2 * t);
   };
+  const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+  const easeIn = (t) => t * t * t;
   const TAU = Math.PI * 2;
+  const GOLD = (a) => `rgba(207, 168, 92, ${a})`;
 
-  /* =====================================================
-     Stone-block engine — the reference concept, procedural:
-     scattered blocks assemble into a bust, the bust turns a
-     full 360°, then breaks apart into blocks again. The
-     scatter field of section N+1 equals the end-field of
-     section N, so the whole page reads as one material.
-     When a real film exists it is scrubbed by the same
-     progress instead.
-     ===================================================== */
   function makeRng(seed) {
     let s = seed >>> 0;
     return () => {
@@ -657,253 +677,173 @@
     };
   }
 
-  /* coarse bust silhouette (12 x 14): 1 = stone block */
-  const BUST = [
-    "000011110000",
-    "000111111000",
-    "001111111100",
-    "001111111100",
-    "011111111110",
-    "011111111110",
-    "011111111110",
-    "001111111100",
-    "001111111100",
-    "000111111000",
-    "000011110000",
-    "001111111100",
-    "011111111110",
-    "111111111111"
-  ];
+  /* =====================================================
+     ONE continuous film, rendered in the browser at 60fps:
+     each artwork is cut into tiles; scroll drives the tiles
+     to assemble the image (complete exactly at the section
+     centre), hold, then shatter toward the next. No video
+     decoding, no network seeking — it can never lag.
+     ===================================================== */
+  const COLS = 10, ROWS = 6;
 
-  /* pre-render dark charcoal stone tiles: gold-veined kintsugi slabs
-     and gold-dusted speckle, matching the v1 black-and-gold statues */
-  function makeTiles() {
+  const secs = [...document.querySelectorAll("[data-sec]")].map((el, i) => {
+    const content = el.querySelector(".content");
+    const cx = +(el.dataset.cx || 0.5);
+    const img = new Image();
+    img.decoding = "async";
+    const state = { ready: false };
+    img.onload = () => { state.ready = true; };
+    img.src = el.dataset.img;
+    /* per-tile choreography seeds */
+    const rng = makeRng(0xF11A + i * 7919);
     const tiles = [];
-    const rng = makeRng(0xA11CE);
-    for (let k = 0; k < 6; k++) {
-      const c = document.createElement("canvas");
-      c.width = c.height = 96;
-      const g = c.getContext("2d");
-      const veined = k < 4;      /* 4 gold-veined stone, 2 gold-dust speckle */
-      g.fillStyle = `hsl(${38 + k * 2}, 7%, ${11 + k * 2.4}%)`;
-      g.fillRect(0, 0, 96, 96);
-      if (veined) {
-        for (let v = 0; v < 3; v++) {
-          g.strokeStyle = `rgba(207,168,92,${0.4 + rng() * 0.35})`;
-          g.lineWidth = 0.6 + rng() * 1.1;
-          g.beginPath();
-          let x = rng() * 96, y = rng() * 96;
-          g.moveTo(x, y);
-          for (let s = 0; s < 5; s++) {
-            x += (rng() - 0.5) * 52; y += (rng() - 0.5) * 52;
-            g.lineTo(x, y);
-          }
-          g.stroke();
-        }
-      } else {
-        for (let s = 0; s < 130; s++) {
-          g.fillStyle = `rgba(207,168,92,${0.12 + rng() * 0.4})`;
-          g.beginPath();
-          g.arc(rng() * 96, rng() * 96, rng() * 1.7, 0, TAU);
-          g.fill();
-        }
-      }
-      /* bevel light + hairline gold edge */
-      const bl = g.createLinearGradient(0, 0, 96, 96);
-      bl.addColorStop(0, "rgba(255,250,235,0.10)");
-      bl.addColorStop(0.5, "rgba(255,255,255,0)");
-      bl.addColorStop(1, "rgba(0,0,0,0.35)");
-      g.fillStyle = bl;
-      g.fillRect(0, 0, 96, 96);
-      g.strokeStyle = "rgba(207,168,92,0.22)";
-      g.lineWidth = 1;
-      g.strokeRect(0.5, 0.5, 95, 95);
-      tiles.push(c);
-    }
-    return tiles;
-  }
-  const TILES = makeTiles();
-
-  /* scatter field i — shared border states between sections */
-  function scatterField(i, rng) {
-    return { x: rng() * 2 - 0.5, y: 1.25 + rng() * 0.5, r: (rng() - 0.5) * 2.4, s: 0.5 + rng() * 0.8 };
-  }
-
-  function buildBlocks(formIndex) {
-    const rows = BUST.length, cols = BUST[0].length;
-    const inRng = makeRng(0xB10C + formIndex * 733);
-    const outRng = makeRng(0xB10C + (formIndex + 1) * 733);
-    const jit = makeRng(0x9E37 + formIndex * 97);
-    const blocks = [];
-    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
-      if (BUST[r][c] !== "1") continue;
-      /* merge some cells into bigger slabs for the collage feel */
-      if (jit() < 0.22) continue;
-      const big = jit() < 0.18;
-      blocks.push({
-        gx: (c + 0.5) / cols, gy: (r + 0.5) / rows,
-        w: big ? 2 / cols : (0.72 + jit() * 0.5) / cols,
-        h: big ? 1.6 / rows : (0.72 + jit() * 0.5) / rows,
-        tile: TILES[(jit() * TILES.length) | 0],
-        depth: jit() * 2 - 1,                 /* -1..1, for the 360° turn */
-        in:  scatterField(formIndex, inRng),  /* where it flies in from  */
-        out: scatterField(formIndex + 1, outRng),
-        ph: jit() * TAU
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+      tiles.push({
+        c, r,
+        ord: rng(),                      /* stagger order            */
+        inA: rng() * TAU,                /* entry angle              */
+        inD: 0.6 + rng() * 0.9,          /* entry distance (×view)   */
+        outA: rng() * TAU,
+        outD: 0.6 + rng() * 0.9,
+        spin: (rng() - 0.5) * 1.6,
+        ph: rng() * TAU
       });
     }
-    return blocks;
+    return { el, content, cx, img, imgState: state, tiles,
+             p: 0, revealed: false, top: 0, range: 1 };
+  });
+
+  const canvas = document.getElementById("film");
+  const ctx = canvas.getContext("2d");
+  let W = 0, H = 0, vh = innerHeight;
+
+  function layout() {
+    vh = innerHeight;
+    const dpr = Math.min(devicePixelRatio || 1, 1.75);
+    W = innerWidth; H = innerHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    for (const s of secs) {
+      s.top = s.el.offsetTop;
+      s.range = s.el.offsetHeight - vh;
+    }
+  }
+  addEventListener("resize", layout);
+  layout();
+
+  /* ambient gold dust across the whole page */
+  const dustRng = makeRng(0xD057);
+  const dust = Array.from({ length: 60 }, () => ({
+    x: dustRng(), y: dustRng(), s: 0.5 + dustRng() * 1.6,
+    vy: 0.004 + dustRng() * 0.012, tw: 0.4 + dustRng() * 2, ph: dustRng() * TAU
+  }));
+
+  /* pointer parallax */
+  let mx = 0, my = 0, smx = 0, smy = 0;
+  addEventListener("pointermove", (e) => {
+    mx = (e.clientX / innerWidth - 0.5) * 2;
+    my = (e.clientY / innerHeight - 0.5) * 2;
+  });
+
+  /* image footprint on screen for a section */
+  function frameRect(s) {
+    const iw = s.imgState.ready ? s.img.naturalWidth : 1376;
+    const ih = s.imgState.ready ? s.img.naturalHeight : 768;
+    const maxW = Math.min(W * 0.66, 1120);
+    const maxH = H * 0.74;
+    const k = Math.min(maxW / iw, maxH / ih);
+    const dw = iw * k, dh = ih * k;
+    const cx = W * s.cx + smx * 14;
+    const cy = H * 0.5 + smy * 10;
+    return { x: cx - dw / 2, y: cy - dh / 2, w: dw, h: dh, iw, ih };
   }
 
-  function drawBlocks(ctx, blocks, p, t, w, h, cxr) {
-    /* phases: 0-.30 assemble · .30-.70 full 360° turn · .70-1 scatter */
-    const asm = smooth(0.02, 0.30, p);
-    const rot = smooth(0.30, 0.70, p) * TAU;
-    const brk = smooth(0.70, 0.99, p);
-    const cx = w * (cxr || 0.5), cy = h * 0.52;
-    const scaleBase = Math.min(w, h) * 0.85;
+  /* draw one section's tiles at progress p (assemble→hold→shatter) */
+  function drawSection(s, p, t) {
+    const fr = frameRect(s);
+    const asmP = smooth(0.06, 0.46, p);         /* done exactly by centre  */
+    const brkP = smooth(0.58, 0.96, p);
+    const tw = fr.w / COLS, th = fr.h / ROWS;
+    const sw = fr.iw / COLS, sh = fr.ih / ROWS;
+    const diag = Math.max(W, H);
 
-    ctx.clearRect(0, 0, w, h);
-    /* soft gold under-glow while assembled */
-    const solid = Math.min(asm, 1 - brk);
-    if (solid > 0.02) {
-      const sg = ctx.createRadialGradient(cx, cy + scaleBase * 0.52, 0, cx, cy + scaleBase * 0.52, scaleBase * 0.5);
-      sg.addColorStop(0, `rgba(207,168,92,${0.14 * solid})`);
-      sg.addColorStop(1, "rgba(207,168,92,0)");
-      ctx.fillStyle = sg;
-      ctx.beginPath();
-      ctx.ellipse(cx, cy + scaleBase * 0.52, scaleBase * 0.42, scaleBase * 0.09, 0, 0, TAU);
-      ctx.fill();
-    }
+    for (const tl of s.tiles) {
+      /* stagger: each tile finishes at its own moment, all by P=1 */
+      const uIn = easeOut(clamp01((asmP - tl.ord * 0.34) / 0.66));
+      const uOut = easeIn(clamp01((brkP - (1 - tl.ord) * 0.34) / 0.66));
+      if (uIn <= 0.001 && p > 0.5) continue;
+      if (uOut >= 0.999) continue;
 
-    const order = [...blocks].sort((a, b) =>
-      Math.sin(rot + a.depth * 1.2) - Math.sin(rot + b.depth * 1.2));
+      const hx = fr.x + tl.c * tw + tw / 2;
+      const hy = fr.y + tl.r * th + th / 2;
 
-    for (const b of order) {
-      /* formation position with pseudo-3D turntable */
-      const ang = rot + b.depth * 1.2;
-      const spin = Math.cos(ang);
-      const fx = cx + ((b.gx - 0.5) * spin) * scaleBase * 0.72;
-      const fy = cy + (b.gy - 0.55) * scaleBase * 0.78;
-      const fs = 1 + Math.sin(ang) * 0.22;
-
-      /* blend: in-field → formation → out-field */
-      let x, y, rotZ, sc, alpha;
-      if (brk > 0) {
-        x = lerp(fx, b.out.x * w, brk);
-        y = lerp(fy, b.out.y * h, brk);
-        rotZ = lerp(0, b.out.r, brk);
-        sc = lerp(fs, b.out.s, brk);
-        alpha = 1 - smooth(0.75, 1, brk) * 0.35;
-      } else {
-        x = lerp(b.in.x * w, fx, asm);
-        y = lerp(b.in.y * h, fy, asm);
-        rotZ = lerp(b.in.r, 0, asm);
-        sc = lerp(b.in.s, fs, asm);
-        alpha = 0.35 + 0.65 * asm;
+      let x = hx, y = hy, rot = 0, sc = 1, alpha = 1;
+      if (uIn < 1) {
+        const d = tl.inD * diag;
+        x = lerp(hx + Math.cos(tl.inA) * d, hx, uIn);
+        y = lerp(hy + Math.sin(tl.inA) * d + diag * 0.15, hy, uIn);
+        rot = lerp(tl.spin, 0, uIn);
+        sc = lerp(0.55, 1, uIn);
+        alpha = 0.25 + 0.75 * uIn;
       }
-      /* idle breathing so it never freezes */
+      if (uOut > 0) {
+        const d = tl.outD * diag;
+        x = lerp(x, hx + Math.cos(tl.outA) * d, uOut);
+        y = lerp(y, hy + Math.sin(tl.outA) * d - diag * 0.12, uOut);
+        rot = lerp(rot, -tl.spin, uOut);
+        sc = lerp(sc, 0.5, uOut);
+        alpha = alpha * (1 - uOut * 0.85);
+      }
+      /* idle drift so the mosaic always breathes */
       if (!reduceMotion) {
-        x += Math.sin(t * 0.6 + b.ph) * 3;
-        y += Math.cos(t * 0.5 + b.ph) * 3;
+        const idle = 1 - Math.min(uIn, 1 - uOut);
+        x += Math.sin(t * 0.5 + tl.ph) * 3 * (0.4 + idle);
+        y += Math.cos(t * 0.45 + tl.ph) * 3 * (0.4 + idle);
       }
 
-      const bw = b.w * scaleBase * 1.05 * sc;
-      const bh = b.h * scaleBase * 1.05 * sc;
       ctx.save();
       ctx.translate(x, y);
-      ctx.rotate(rotZ * 0.5);
+      ctx.rotate(rot * 0.5);
+      ctx.scale(sc, sc);
       ctx.globalAlpha = alpha;
-      /* slab side for a hint of volume */
-      ctx.fillStyle = "rgba(0,0,0,0.55)";
-      ctx.fillRect(-bw / 2 + 3, -bh / 2 + 4, bw, bh);
-      ctx.drawImage(b.tile, -bw / 2, -bh / 2, bw, bh);
+      if (s.imgState.ready) {
+        const flying = uIn < 0.98 || uOut > 0.02;
+        if (flying) {
+          ctx.shadowColor = "rgba(0,0,0,0.55)";
+          ctx.shadowBlur = 16;
+          ctx.shadowOffsetY = 6;
+        }
+        ctx.drawImage(s.img,
+          tl.c * sw, tl.r * sh, sw, sh,
+          -tw / 2, -th / 2, tw + 0.6, th + 0.6);
+        if (flying) {
+          ctx.shadowColor = "transparent";
+          ctx.strokeStyle = GOLD(0.35 * (1 - Math.min(uIn, 1 - uOut)) + 0.05);
+          ctx.lineWidth = 1;
+          ctx.strokeRect(-tw / 2, -th / 2, tw, th);
+        }
+      } else {
+        ctx.fillStyle = `hsl(40, 7%, ${10 + (tl.ord * 8) | 0}%)`;
+        ctx.fillRect(-tw / 2, -th / 2, tw, th);
+        ctx.strokeStyle = GOLD(0.25);
+        ctx.strokeRect(-tw / 2, -th / 2, tw, th);
+      }
       ctx.restore();
     }
     ctx.globalAlpha = 1;
   }
 
-  /* =====================================================
-     Sections: sticky stages, progress-driven film scrub or
-     procedural blocks
-     ===================================================== */
-  const secs = [...document.querySelectorAll("[data-sec]")].map((el) => {
-    const canvas = el.querySelector("canvas");
-    const video = el.querySelector("video");
-    const media = el.querySelector(".media");
-    const content = el.querySelector(".content");
-    const blocks = buildBlocks(+el.dataset.form);
-    const cxr = +(el.dataset.cx || 0.5);
-    return { el, canvas, ctx: canvas.getContext("2d"), video, media, content,
-             blocks, cxr, form: +el.dataset.form, rest: 0.5,
-             p: 0, hasVideo: false, revealed: false };
-  });
-
-  for (const s of secs) {
-    const sources = [s.el.dataset.video, s.el.dataset.videoRemote].filter((u) => u);
-    if (!sources.length) { s.video.remove(); continue; }
-    let si = 0;
-    const tryNext = () => {
-      if (si >= sources.length) { s.video.remove(); return; }
-      s.video.src = sources[si++];
-    };
-    s.video.addEventListener("loadeddata", () => {
-      s.hasVideo = true;
-      s.video.classList.add("is-live");
-      s.canvas.style.display = "none";
-    }, { once: true });
-    s.video.addEventListener("error", tryNext);
-    tryNext();
-  }
-
-  /* Per-film time segments (from scene analysis), so each section plays
-     assembly first, holds on the assembled figure, then the break-up —
-     regardless of where those beats live inside the raw footage. */
-  const SEGS = [
-    { asm: [0.0, 3.0],  hold: [3.0, 6.0],  brk: [6.0, 9.5] },  /* hero      */
-    { asm: [1.0, 4.0],  hold: [4.0, 7.0],  brk: [7.0, 9.8] },  /* programs  */
-    { asm: [0.0, 4.0],  hold: [4.0, 7.0],  brk: [7.0, 9.3] },  /* admission */
-    { asm: [7.0, 9.85], hold: [0.05, 4.0], brk: [4.0, 7.0] },  /* funding: its assembly lives at the end */
-    { asm: [0.0, 4.0],  hold: [4.0, 7.0],  brk: [7.0, 9.3] }   /* apply     */
-  ];
-  /* strictly linear inside each phase — constant flow, no easing kinks */
-  function videoTime(form, p) {
-    const g = SEGS[form] || SEGS[0];
-    if (p < 0.38) return lerp(g.asm[0], g.asm[1], p / 0.38);
-    if (p < 0.62) return lerp(g.hold[0], g.hold[1], (p - 0.38) / 0.24);
-    return lerp(g.brk[0], g.brk[1], (p - 0.62) / 0.38);
-  }
-
-  function sizeCanvases() {
-    const dpr = Math.min(devicePixelRatio || 1, 1.5);
-    for (const s of secs) {
-      const r = s.media.getBoundingClientRect();
-      s.canvas.width = Math.round(r.width * dpr);
-      s.canvas.height = Math.round(r.height * dpr);
-      s.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      s.cw = r.width; s.ch = r.height;
-    }
-  }
-  addEventListener("resize", sizeCanvases);
-  sizeCanvases();
-
   const railFill = document.getElementById("railFill");
   const railDrop = document.getElementById("railDrop");
   const ticks = [...document.querySelectorAll("#railTicks button")];
   const counterNum = document.getElementById("counterNum");
-
-  let vh = innerHeight;
-  addEventListener("resize", () => { vh = innerHeight; });
-
-  /* free scrolling; nav buttons and anchors just scroll to the
-     mid-section rest where the figure stands assembled */
-  function restY(i) {
-    const s = secs[i];
-    return Math.round(s.el.offsetTop + (s.el.offsetHeight - vh) * s.rest);
-  }
+  const scrollCue = document.getElementById("scrollCue");
   const idByGo = {};
   secs.forEach((s, i) => { idByGo[s.el.id] = i; });
   function goTo(i) {
-    scrollTo({ top: restY(clamp(i, 0, secs.length - 1)), behavior: reduceMotion ? "auto" : "smooth" });
+    const s = secs[clamp(i, 0, secs.length - 1)];
+    scrollTo({ top: Math.round(s.top + s.range * 0.5), behavior: reduceMotion ? "auto" : "smooth" });
   }
   ticks.forEach((b) => b.addEventListener("click", () => goTo(idByGo[b.dataset.go] ?? 0)));
   document.addEventListener("click", (e) => {
@@ -919,45 +859,55 @@
   function frame(now) {
     const t = (now - start) / 1000;
     const sy = scrollY;
+    if (!reduceMotion) { smx = lerp(smx, mx, 0.05); smy = lerp(smy, my, 0.05); }
+
     const docH = document.documentElement.scrollHeight - vh;
     const gp = docH ? sy / docH : 0;
     railFill.style.transform = `scaleY(${gp})`;
     railDrop.style.top = (gp * 100) + "%";
+    scrollCue.classList.toggle("gone", sy > vh * 0.4);
+
+    /* one canvas, one paint */
+    ctx.clearRect(0, 0, W, H);
+    const bgG = ctx.createRadialGradient(W * 0.5, H * 0.42, 0, W * 0.5, H * 0.42, Math.max(W, H) * 0.8);
+    bgG.addColorStop(0, "#100e0b"); bgG.addColorStop(0.6, "#090806"); bgG.addColorStop(1, "#0b0a08");
+    ctx.fillStyle = bgG;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.globalCompositeOperation = "lighter";
+    for (const d of dust) {
+      d.y -= d.vy / 60;
+      if (d.y < -0.02) d.y = 1.02;
+      const a = 0.2 + 0.4 * (0.5 + 0.5 * Math.sin(t * d.tw + d.ph));
+      ctx.fillStyle = GOLD(a);
+      ctx.beginPath();
+      ctx.arc(d.x * W + Math.sin(t * 0.4 + d.ph) * 10, d.y * H, d.s, 0, TAU);
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = "source-over";
 
     let active = 0, best = Infinity;
     secs.forEach((s, i) => {
-      const top = s.el.offsetTop;
-      const range = s.el.offsetHeight - vh;
-      const target = clamp01((sy - top) / (range || 1));
-      s.p = reduceMotion ? target : lerp(s.p, target, 0.09);
+      const target = clamp01((sy - s.top) / (s.range || 1));
+      s.p = reduceMotion ? target : lerp(s.p, target, 0.12);
 
-      const mid = Math.abs(sy + vh / 2 - (top + s.el.offsetHeight / 2));
+      const mid = Math.abs(sy + vh / 2 - (s.top + s.el.offsetHeight / 2));
       if (mid < best) { best = mid; active = i; }
 
-      const visible = sy + vh > top - vh * 0.2 && sy < top + s.el.offsetHeight + vh * 0.2;
+      const visible = sy + vh > s.top - vh * 0.25 && sy < s.top + s.el.offsetHeight + vh * 0.25;
       if (!visible) return;
 
-      /* content fills the section while the figure stands assembled */
-      const cIn = smooth(0.30, 0.42, s.p);
+      drawSection(s, s.p, t);
+
+      const cIn = smooth(0.30, 0.44, s.p);
       const cOut = 1 - smooth(0.60, 0.74, s.p);
       s.content.style.opacity = String(Math.min(cIn, cOut));
-      s.content.style.transform = `translate3d(0, ${(0.5 - s.p) * 8}vh, 0)`;
+      s.content.style.transform = `translate3d(${smx * -8}px, calc(${(0.5 - s.p) * 7}vh + ${smy * -6}px), 0)`;
 
-      if (!s.revealed && s.p > 0.30) {
+      if (!s.revealed && s.p > 0.3) {
         s.revealed = true;
         s.content.classList.add("in-view");
         s.content.querySelectorAll("[data-count]").forEach(runCounter);
-      }
-
-      if (s.hasVideo && s.video.duration) {
-        /* direct scrub: the smoothed scroll progress (s.p) already eases
-           the motion, and the film always reaches its exact frame */
-        const target = clamp(videoTime(s.form, s.p), 0, s.video.duration - 0.05);
-        if (Math.abs(s.video.currentTime - target) > 0.05) {
-          try { s.video.currentTime = target; } catch (e) {}
-        }
-      } else {
-        drawBlocks(s.ctx, s.blocks, s.p, t, s.cw, s.ch, s.cxr);
       }
     });
 
@@ -982,7 +932,7 @@
   }
 
   addEventListener("load", () => {
-    sizeCanvases();
+    layout();
     setTimeout(() => document.documentElement.classList.remove("is-loading"), 400);
   });
   setTimeout(() => document.documentElement.classList.remove("is-loading"), 2000);
