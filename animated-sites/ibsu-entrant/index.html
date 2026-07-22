@@ -165,7 +165,7 @@ footer .legal{font-size:10px;letter-spacing:.06em;color:var(--concrete-dim);line
 
 <section id="anim">
   <div class="stage">
-    <video id="vid" muted playsinline preload="auto" crossorigin="anonymous" poster="">
+    <video id="vid" muted playsinline webkit-playsinline="true" preload="auto" crossorigin="anonymous" poster="">
       <source src="assets/entrant.webm" type="video/webm">
       <source src="assets/entrant.mp4" type="video/mp4">
     </video>
@@ -364,11 +364,23 @@ const hint=document.getElementById('hint');addEventListener('scroll',()=>{hint.s
 const lbar=document.getElementById('lbar'),lpct=document.getElementById('lpct'),loader=document.getElementById('loader');
 vid.addEventListener('progress',()=>{if(vid.buffered.length&&vid.duration){const pctv=Math.round(vid.buffered.end(vid.buffered.length-1)/vid.duration*100);lbar.style.width=pctv+'%';}});
 let started=false;
+// Mobile browsers (esp. iOS Safari) will not paint a seeked frame until the
+// video has been "activated" by a user gesture. Prime it with a muted
+// play()->pause() on the first touch/click so scroll-scrubbing renders.
+let unlocked=false;
+function unlock(){
+  if(unlocked)return;unlocked=true;
+  const pr=vid.play();
+  if(pr&&pr.then)pr.then(()=>{setTimeout(()=>{try{vid.pause();}catch(e){}},0);}).catch(()=>{});
+}
+['touchstart','pointerdown','mousedown','click','wheel','keydown'].forEach(ev=>addEventListener(ev,unlock,{passive:true}));
+
 function start(){
   if(started)return;started=true;
   setKeytimes();
-  try{vid.pause();}catch(e){}
-  try{vid.currentTime=0;}catch(e){}
+  const pr=vid.play(); // muted autoplay is permitted; primes decode on desktop
+  if(pr&&pr.then)pr.then(()=>{setTimeout(()=>{try{vid.pause();vid.currentTime=0;}catch(e){}},0);}).catch(()=>{try{vid.currentTime=0;}catch(e){}});
+  else{try{vid.pause();vid.currentTime=0;}catch(e){}}
   lbar.style.width='100%';
   setTimeout(()=>{loader.classList.add('done');runStats();const sp=scenes[0].querySelector('[data-split]');if(sp&&!splitDone.has(0)){splitDone.add(0);playSplit(sp);}},400);
   loop();
