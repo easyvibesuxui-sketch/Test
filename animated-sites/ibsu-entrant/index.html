@@ -55,8 +55,9 @@ body{background:var(--ink);color:var(--warm-white);font-family:var(--body);font-
 @media (max-width:760px){.chapters{display:none}}
 
 #anim{position:relative;height:820vh}
-.stage{position:sticky;top:0;height:100vh;width:100%;overflow:hidden;background:#000;perspective:1500px}
+.stage{position:sticky;top:0;height:100vh;width:100%;overflow:hidden;background:#000}
 #vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:center center;will-change:transform;background:#000}
+.blackout{position:absolute;inset:0;z-index:3;pointer-events:none;background:#000;opacity:0;will-change:opacity}
 .grad-left{position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(90deg,rgba(6,5,4,.7) 0%,rgba(6,5,4,.3) 28%,transparent 55%)}
 .grad-bottom{position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(0deg,rgba(6,5,4,.72) 0%,transparent 34%)}
 .grad-top{position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(6,5,4,.55) 0%,transparent 22%)}
@@ -172,6 +173,7 @@ footer .legal{font-size:10px;letter-spacing:.06em;color:var(--concrete-dim);line
     <div class="grad-top"></div>
     <div class="grad-left"></div>
     <div class="grad-bottom"></div>
+    <div class="blackout" id="blackout"></div>
   </div>
 </section>
 
@@ -287,40 +289,44 @@ const seg=(p,a,b)=>smooth((p-a)/(b-a));
 let DUR=15, PROFILE=4.5, END=14.9;
 function setKeytimes(){DUR=vid.duration||15;END=Math.max(0,DUR-0.08);PROFILE=DUR*0.30;}
 
-// returns {time, flip(deg)} for a scroll progress p.
-// The video scrubs forward (0 -> profile -> end), then a 3D flip (0->180deg)
-// turns it to the mirror. currentTime jumps END->0 exactly at the 90deg
-// edge-on point, so the seek is invisible: smooth, no snap, no black screen.
+// returns {time, mirror, black} for a scroll progress p.
+// The video scrubs forward (0 -> profile -> end), fades to BLACK, and under
+// that black cover it flips to mirror (scaleX) and jumps currentTime END->0,
+// then fades back in mirrored. No visible snap, no PowerPoint flip.
 function plan(p){
-  let t=0, flip=0;
+  let t=0, mirror=false, black=0;
   // time
   if(p<C[0]) t=0;
   else if(p<C[1]) t=lerp(0,PROFILE,seg(p,C[0],C[1]));
   else if(p<C[2]) t=lerp(PROFILE,END,seg(p,C[1],C[2]));
-  else if(p<C[3]) t=END;                                  // hold end while flip 0->90
-  else if(p<C[4]) t=0;                                     // hold mirrored start while flip 90->180
+  else if(p<C[3]) t=END;                                   // hold end while fading to black
+  else if(p<C[4]) t=0;                                     // mirrored start, fading back in
   else if(p<C[5]) t=lerp(0,PROFILE,seg(p,C[4],C[5]));      // mirrored: start -> profile
   else            t=lerp(PROFILE,END,seg(p,C[5],1));       // mirrored: profile -> end
-  // flip
-  if(p<C[2]) flip=0;
-  else if(p<C[3]) flip=lerp(0,90,seg(p,C[2],C[3]));
-  else if(p<C[4]) flip=lerp(90,180,seg(p,C[3],C[4]));
-  else flip=180;
-  return {t,flip};
+  // black cover peaks at C[3]
+  if(p>=C[2]&&p<C[3]) black=seg(p,C[2],C[3]);
+  else if(p>=C[3]&&p<C[4]) black=1-seg(p,C[3],C[4]);
+  // mirror flips under full black
+  if(p>=C[3]) mirror=true;
+  return {t,mirror,black};
 }
 function progress(){const r=anim.getBoundingClientRect();const h=anim.offsetHeight-innerHeight;return Math.max(0,Math.min(1,-r.top/h));}
 
+const blackout=document.getElementById('blackout');
 let curT=0, targetT=0;
 function loop(){
   const p=progress();
   const st=plan(p);
   targetT=st.t;
-  curT+=(targetT-curT)*(REDUCED?1:0.2);
+  // snap time under full black so the END->0 reverse jump is invisible
+  if(st.black>0.55) curT=targetT;
+  else curT+=(targetT-curT)*(REDUCED?1:0.2);
   if(vid.readyState>=2 && isFinite(DUR)){
     const want=Math.max(0,Math.min(END,curT));
     if(Math.abs(vid.currentTime-want)>0.02){ try{vid.currentTime=want;}catch(e){} }
   }
-  vid.style.transform=`rotateY(${st.flip}deg)`;
+  vid.style.transform=st.mirror?'scaleX(-1)':'scaleX(1)';
+  blackout.style.opacity=st.black.toFixed(3);
   updateScenes(p);updateChapters(p);
   requestAnimationFrame(loop);
 }
