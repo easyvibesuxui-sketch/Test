@@ -55,8 +55,9 @@ body{background:var(--ink);color:var(--warm-white);font-family:var(--body);font-
 @media (max-width:760px){.chapters{display:none}}
 
 #anim{position:relative;height:820vh}
-.stage{position:sticky;top:0;height:100vh;width:100%;overflow:hidden;background:#000}
-#vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:center center;will-change:transform;background:#000}
+.stage{position:sticky;top:0;height:100vh;width:100%;overflow:hidden;background:#000;perspective:1300px}
+#vidtilt{position:absolute;inset:0;transform-origin:center center;will-change:transform;transform:scale(1.07)}
+#vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:center center;will-change:transform,filter;background:#000;filter:url(#water)}
 .blackout{position:absolute;inset:0;z-index:3;pointer-events:none;background:#000;opacity:0;will-change:opacity}
 .grad-left{position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(90deg,rgba(6,5,4,.7) 0%,rgba(6,5,4,.3) 28%,transparent 55%)}
 .grad-bottom{position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(0deg,rgba(6,5,4,.72) 0%,transparent 34%)}
@@ -164,12 +165,23 @@ footer .legal{font-size:10px;letter-spacing:.06em;color:var(--concrete-dim);line
 <div class="chapters" id="chapters"></div>
 <div class="hint" id="hint"><span>Scroll to begin</span><span class="m"></span></div>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="water" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency="0.010 0.016" numOctaves="2" seed="7" result="noise">
+      <animate attributeName="baseFrequency" dur="16s" values="0.010 0.016;0.016 0.011;0.010 0.016" repeatCount="indefinite"/>
+    </feTurbulence>
+    <feDisplacementMap id="waterDisp" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</defs></svg>
+
 <section id="anim">
   <div class="stage">
-    <video id="vid" muted playsinline webkit-playsinline="true" preload="auto" crossorigin="anonymous" poster="">
-      <source src="assets/entrant.webm" type="video/webm">
-      <source src="assets/entrant.mp4" type="video/mp4">
-    </video>
+    <div id="vidtilt">
+      <video id="vid" muted playsinline webkit-playsinline="true" preload="auto" crossorigin="anonymous" poster="">
+        <source src="assets/entrant.webm" type="video/webm">
+        <source src="assets/entrant.mp4" type="video/mp4">
+      </video>
+    </div>
     <div class="grad-top"></div>
     <div class="grad-left"></div>
     <div class="grad-bottom"></div>
@@ -313,6 +325,25 @@ function plan(p){
 function progress(){const r=anim.getBoundingClientRect();const h=anim.offsetHeight-innerHeight;return Math.max(0,Math.min(1,-r.top/h));}
 
 const blackout=document.getElementById('blackout');
+
+/* Water-surface hover: ease SVG displacement in while the pointer is over the
+   hero, out when it leaves. A quick pointer move adds a momentary "ripple"
+   surge on top. Disabled on touch / reduced-motion. */
+const waterDisp=document.getElementById('waterDisp');
+const stage=document.querySelector('.stage');
+const WATER=(matchMedia('(hover:hover)').matches && !REDUCED);
+let waterTarget=0, waterCur=0, lastMoveT=0, ripple=0, lpx=0, lpy=0;
+if(WATER){
+  stage.addEventListener('pointerenter',()=>{waterTarget=7;});
+  stage.addEventListener('pointerleave',()=>{waterTarget=0;});
+  stage.addEventListener('pointermove',e=>{
+    const dx=e.clientX-lpx, dy=e.clientY-lpy; lpx=e.clientX; lpy=e.clientY;
+    const v=Math.min(1,Math.hypot(dx,dy)/40);
+    ripple=Math.min(1,ripple+v*0.45); // faster move -> stronger surge
+    waterTarget=7;
+  });
+}
+
 let curT=0, targetT=0;
 function loop(){
   const p=progress();
@@ -327,6 +358,11 @@ function loop(){
   }
   vid.style.transform=st.mirror?'scaleX(-1)':'scaleX(1)';
   blackout.style.opacity=st.black.toFixed(3);
+  if(WATER){
+    ripple*=0.92;
+    waterCur+=((waterTarget+ripple*9)-waterCur)*0.09;
+    waterDisp.setAttribute('scale',waterCur.toFixed(2));
+  }
   updateScenes(p);updateChapters(p);
   requestAnimationFrame(loop);
 }
