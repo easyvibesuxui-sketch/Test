@@ -57,7 +57,8 @@ body{background:var(--ink);color:var(--warm-white);font-family:var(--body);font-
 #anim{position:relative;height:820vh}
 .stage{position:sticky;top:0;height:100vh;width:100%;overflow:hidden;background:#000;perspective:1300px}
 #vidtilt{position:absolute;inset:0;transform-origin:center center;will-change:transform;transform:scale(1.07)}
-#vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:center center;will-change:transform,filter;background:#000;filter:url(#water)}
+#vid,#vid2{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:center center;will-change:transform,filter;background:#000;filter:url(#water)}
+#vid2{opacity:0}
 .blackout{position:absolute;inset:0;z-index:3;pointer-events:none;background:#000;opacity:0;will-change:opacity}
 .grad-left{position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(90deg,rgba(6,5,4,.7) 0%,rgba(6,5,4,.3) 28%,transparent 55%)}
 .grad-bottom{position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(0deg,rgba(6,5,4,.72) 0%,transparent 34%)}
@@ -181,6 +182,10 @@ footer .legal{font-size:10px;letter-spacing:.06em;color:var(--concrete-dim);line
         <source src="assets/entrant.webm" type="video/webm">
         <source src="assets/entrant.mp4" type="video/mp4">
       </video>
+      <video id="vid2" muted playsinline webkit-playsinline="true" preload="auto" crossorigin="anonymous" poster="">
+        <source src="assets/scroll.webm" type="video/webm">
+        <source src="assets/scroll.mp4" type="video/mp4">
+      </video>
     </div>
     <div class="grad-top"></div>
     <div class="grad-left"></div>
@@ -298,29 +303,29 @@ const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
 const lerp=(a,b,t)=>a+(b-a)*t;
 const seg=(p,a,b)=>smooth((p-a)/(b-a));
 
-let DUR=15, PROFILE=4.5, END=14.9;
-function setKeytimes(){DUR=vid.duration||15;END=Math.max(0,DUR-0.08);PROFILE=DUR*0.30;}
+let DUR1=15, PROFILE=4.5, END1=14.9;   // video 1 (statue)
+let DUR2=10, END2=9.9;                  // video 2 (scroll)
+function setKeytimes(){
+  DUR1=vid.duration||15;  END1=Math.max(0,DUR1-0.08); PROFILE=DUR1*0.30;
+  DUR2=vid2.duration||10; END2=Math.max(0,DUR2-0.08);
+}
 
-// returns {time, mirror, black} for a scroll progress p.
-// The video scrubs forward (0 -> profile -> end), fades to BLACK, and under
-// that black cover it flips to mirror (scaleX) and jumps currentTime END->0,
-// then fades back in mirrored. No visible snap, no PowerPoint flip.
+// returns {which(1|2), time, black} for a scroll progress p.
+// Video 1 (statue) scrubs 0 -> profile -> end, fades to BLACK; under the black
+// cover we switch to video 2 (the scroll), which then unrolls 0 -> end as you
+// keep scrolling down. The video swap happens at full black, so no visible pop.
 function plan(p){
-  let t=0, mirror=false, black=0;
-  // time
+  let which=1, t=0, black=0;
   if(p<C[0]) t=0;
   else if(p<C[1]) t=lerp(0,PROFILE,seg(p,C[0],C[1]));
-  else if(p<C[2]) t=lerp(PROFILE,END,seg(p,C[1],C[2]));
-  else if(p<C[3]) t=END;                                   // hold end while fading to black
-  else if(p<C[4]) t=0;                                     // mirrored start, fading back in
-  else if(p<C[5]) t=lerp(0,PROFILE,seg(p,C[4],C[5]));      // mirrored: start -> profile
-  else            t=lerp(PROFILE,END,seg(p,C[5],1));       // mirrored: profile -> end
-  // black cover peaks at C[3]
-  if(p>=C[2]&&p<C[3]) black=seg(p,C[2],C[3]);
-  else if(p>=C[3]&&p<C[4]) black=1-seg(p,C[3],C[4]);
-  // mirror flips under full black
-  if(p>=C[3]) mirror=true;
-  return {t,mirror,black};
+  else if(p<C[2]) t=lerp(PROFILE,END1,seg(p,C[1],C[2]));
+  else if(p<C[3]){ t=END1; black=seg(p,C[2],C[3]); }        // statue end, fade to black
+  else {                                                     // second half: the scroll
+    which=2;
+    if(p<C[4]){ t=0; black=1-seg(p,C[3],C[4]); }            // scroll closed, fade back in
+    else t=lerp(0,END2,seg(p,C[4],1));                      // scroll unrolls as we scroll
+  }
+  return {which,t,black};
 }
 function progress(){const r=anim.getBoundingClientRect();const h=anim.offsetHeight-innerHeight;return Math.max(0,Math.min(1,-r.top/h));}
 
@@ -348,15 +353,19 @@ let curT=0, targetT=0;
 function loop(){
   const p=progress();
   const st=plan(p);
+  const av=st.which===1?vid:vid2;      // active video
+  const aEnd=st.which===1?END1:END2;
+  // cross-fade under the black cover (swap is invisible at full black)
+  vid.style.opacity =st.which===1?'1':'0';
+  vid2.style.opacity=st.which===2?'1':'0';
   targetT=st.t;
-  // snap time under full black so the END->0 reverse jump is invisible
+  // snap time under full black so any jump between clips is invisible
   if(st.black>0.55) curT=targetT;
   else curT+=(targetT-curT)*(REDUCED?1:0.2);
-  if(vid.readyState>=2 && isFinite(DUR)){
-    const want=Math.max(0,Math.min(END,curT));
-    if(Math.abs(vid.currentTime-want)>0.02){ try{vid.currentTime=want;}catch(e){} }
+  if(av.readyState>=2 && isFinite(aEnd)){
+    const want=Math.max(0,Math.min(aEnd,curT));
+    if(Math.abs(av.currentTime-want)>0.02){ try{av.currentTime=want;}catch(e){} }
   }
-  vid.style.transform=st.mirror?'scaleX(-1)':'scaleX(1)';
   blackout.style.opacity=st.black.toFixed(3);
   if(WATER){
     ripple*=0.92;
@@ -410,25 +419,25 @@ let started=false;
 // video has been "activated" by a user gesture. Prime it with a muted
 // play()->pause() on the first touch/click so scroll-scrubbing renders.
 let unlocked=false;
+function prime(v){const pr=v.play();if(pr&&pr.then)pr.then(()=>{setTimeout(()=>{try{v.pause();}catch(e){}},0);}).catch(()=>{});}
 function unlock(){
   if(unlocked)return;unlocked=true;
-  const pr=vid.play();
-  if(pr&&pr.then)pr.then(()=>{setTimeout(()=>{try{vid.pause();}catch(e){}},0);}).catch(()=>{});
+  prime(vid); prime(vid2); // activate both clips for mobile scrubbing
 }
 ['touchstart','pointerdown','mousedown','click','wheel','keydown'].forEach(ev=>addEventListener(ev,unlock,{passive:true}));
 
 function start(){
   if(started)return;started=true;
   setKeytimes();
-  const pr=vid.play(); // muted autoplay is permitted; primes decode on desktop
-  if(pr&&pr.then)pr.then(()=>{setTimeout(()=>{try{vid.pause();vid.currentTime=0;}catch(e){}},0);}).catch(()=>{try{vid.currentTime=0;}catch(e){}});
-  else{try{vid.pause();vid.currentTime=0;}catch(e){}}
+  prime(vid); prime(vid2); // muted play->pause primes decode (both clips)
+  setTimeout(()=>{try{vid.currentTime=0;vid2.currentTime=0;}catch(e){}},30);
   lbar.style.width='100%';
   setTimeout(()=>{loader.classList.add('done');runStats();const sp=scenes[0].querySelector('[data-split]');if(sp&&!splitDone.has(0)){splitDone.add(0);playSplit(sp);}},400);
   loop();
 }
 vid.addEventListener('loadeddata',start);
 vid.addEventListener('canplay',start);
+vid2.addEventListener('loadedmetadata',setKeytimes); // refine scroll clip duration
 setTimeout(start,4000); // fallback
 addEventListener('resize',()=>{});
 })();
