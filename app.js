@@ -79,8 +79,6 @@ scene.fog = new THREE.Fog(0x06070a, 16, 46);
 
 const camera = new THREE.PerspectiveCamera(CAM.fov, innerWidth / innerHeight, 0.1, 120);
 camera.position.set(0, 3.5, 15);
-// Layers in this scene: 2 = "the walker only" (his personal lights),
-// 4 = "architecture only" (the fills and wall washes). The camera sees them all.
 camera.layers.enableAll();
 
 /* a small procedural environment so the black surfaces have something to reflect */
@@ -215,13 +213,11 @@ function buildHall(){
     reveal.position.set(side * (HALL.hw - 0.04), 5.9, midZ);
     g.add(reveal);
 
-    // Two soft washes per side. They live on LAYER 4 — "walls only" — so they
-    // model the architecture without laying a specular hotspot on the floor.
+    // two soft washes per side, aimed along the wall so they graze it
     for (const z of [7.5, -8]){
       const wash = new THREE.SpotLight(0xffc48d, LOW ? 26 : 42, 15, 0.85, 1, 2);
       wash.position.set(side * (HALL.hw - 0.5), HALL.h - 0.7, z);
       wash.target.position.set(side * HALL.hw, 1.5, z);
-      wash.layers.set(4);
       g.add(wash, wash.target);
     }
   }
@@ -244,10 +240,6 @@ function buildHall(){
 
   // ---- IBSU on the back wall ----
   g.add(makeWordmark());
-
-  // walls and columns also answer to the layer-4 wall washes
-  const wallish = [matWall, matWallDark, matPillar, matTrim, matSteel];
-  g.traverse(o => { if (o.isMesh && wallish.includes(o.material)) o.layers.enable(4); });
 
   return g;
 }
@@ -276,7 +268,7 @@ function makeWordmark(){
   mark.position.set(0, 6.55, HALL.zBack + 0.05);
   grp.add(mark);
 
-  const glow = new THREE.PointLight(0xffd9ac, 26, 18, 2);
+  const glow = new THREE.PointLight(0xffd9ac, 30, 18, 2);
   glow.position.set(0, 6.4, HALL.zBack + 1.8);
   grp.add(glow);
 
@@ -432,7 +424,7 @@ function buildDoor(d){
   const pool = new THREE.Mesh(
     new THREE.PlaneGeometry(3.2, 4.4),
     new THREE.MeshBasicMaterial({
-      map: glowTex, transparent: true, opacity: 0.18,
+      map: glowTex, transparent: true, opacity: 0.13,
       blending: THREE.AdditiveBlending, depthWrite: false,
     })
   );
@@ -449,9 +441,6 @@ function buildDoor(d){
     doorOf.set(m, d);
     pickables.push(m);
   }
-
-  // doors belong to the architecture, so the layer-4 fills reach them too
-  grp.traverse(o => { if (o.isMesh) o.layers.enable(4); });
 
   d.group = grp;
   d.open = 0;
@@ -548,18 +537,16 @@ function buildHero(){
   book.rotation.z = -0.09;
   upper.add(book);
 
-  // LAYER 2 = "only the walker". His personal lights live there, so they model
-  // him without ever blowing highlights across the polished floor.
-  g.traverse(o => { if (o.isMesh){ o.castShadow = !LOW; o.layers.enable(2); } });
+  g.traverse(o => { if (o.isMesh) o.castShadow = !LOW; });
 
-  const key = new THREE.PointLight(0xffe8cf, 14, 8, 2);
-  key.position.set(0.9, 2.5, 2.2);
-  key.layers.set(2);
+  // a close key and a warm rim travel with him, short-range so they model the
+  // figure without reaching far across the floor
+  const key = new THREE.PointLight(0xffe8cf, 12, 5.5, 2);
+  key.position.set(0.9, 2.3, 1.8);
   g.add(key);
 
-  const rim = new THREE.PointLight(0xffb877, 11, 6, 2);
-  rim.position.set(-0.8, 2.1, -1.8);
-  rim.layers.set(2);
+  const rim = new THREE.PointLight(0xffb877, 9, 4.5, 2);
+  rim.position.set(-0.8, 2, -1.5);
   g.add(rim);
 
   g.userData.limbs = limbs;
@@ -574,7 +561,7 @@ const dimCache = new Map();
 function dimMaterial(m){
   if (dimCache.has(m)) return dimCache.get(m);
   const d = m.clone();
-  d.color.multiplyScalar(0.42);
+  d.color.multiplyScalar(0.32);
   if (d.emissive) d.emissiveIntensity = (d.emissiveIntensity || 0) * 0.45;
   d.side = THREE.DoubleSide;          // the negative scale flips face winding
   d.transparent = true;
@@ -631,18 +618,11 @@ let floorPicker = null;
 const pickables = [];
 const doorOf = new Map();
 
-scene.add(new THREE.HemisphereLight(0x8496b4, 0x0d0f15, 1.8));
-
-// Directional fills are for the architecture only (layer 4). Aimed at the floor
-// they would smear a broad specular blob across the polish.
-const fill = new THREE.DirectionalLight(0xc6d6ff, 0.9);
-fill.position.set(4, 9, 12);
-fill.layers.set(4);
-scene.add(fill);
-const backFill = new THREE.DirectionalLight(0xffc48d, 0.5);
-backFill.position.set(-3, 6, -12);
-backFill.layers.set(4);
-scene.add(backFill);
+/* Ambient comes from a hemisphere light alone. Directional fills were tried and
+   removed: a directional light on a floor this polished lays a broad specular
+   smear across the stone that no amount of aiming gets rid of. A hemisphere is
+   diffuse-only, so it lifts the room without touching the polish. */
+scene.add(new THREE.HemisphereLight(0x8fa2c0, 0x101218, 2.6));
 
 scene.add(buildHall());
 for (const d of DOORS){
@@ -668,12 +648,22 @@ if (heroMirror) scene.add(heroMirror);
 
 /* a soft pool of light that travels with him, plus a contact shadow so he
    is planted on the floor rather than hovering over it */
-const heroSpot = new THREE.SpotLight(0xfff0da, 62, 18, 0.42, 1, 2);
+/* The pool under his feet is painted, not lit: a real spot straight above him
+   blooms across polished stone. */
+const heroSpot = new THREE.SpotLight(0xfff0da, 26, 14, 0.4, 1, 2);
 heroSpot.position.set(0, HALL.h - 0.4, 8.5);
-heroSpot.castShadow = !LOW;
-heroSpot.shadow.mapSize.set(1024, 1024);
-heroSpot.shadow.bias = -0.0012;
 scene.add(heroSpot, heroSpot.target);
+
+const heroPool = new THREE.Mesh(
+  new THREE.PlaneGeometry(3.4, 3.4),
+  new THREE.MeshBasicMaterial({
+    map: glowTex, transparent: true, opacity: 0.13,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  })
+);
+heroPool.rotation.x = -Math.PI / 2;
+heroPool.position.y = 0.016;
+scene.add(heroPool);
 
 const contact = new THREE.Mesh(
   new THREE.PlaneGeometry(1.5, 1.5),
@@ -695,6 +685,19 @@ contact.rotation.x = -Math.PI / 2;
 contact.position.y = 0.012;
 scene.add(contact);
 
+/* a marker where you clicked, so a walk order always has visible feedback */
+const marker = new THREE.Mesh(
+  new THREE.RingGeometry(0.34, 0.42, 40),
+  new THREE.MeshBasicMaterial({
+    color: GOLD, transparent: true, opacity: 0,
+    blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+  })
+);
+marker.rotation.x = -Math.PI / 2;
+marker.position.y = 0.02;
+marker.renderOrder = 2;
+scene.add(marker);
+
 /* ---------- post processing ---------- */
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
@@ -709,7 +712,7 @@ composer.addPass(new OutputPass());
    ====================================================================== */
 const keys = new Set();
 const MOVE_KEYS = { ArrowLeft:1, ArrowRight:1, ArrowUp:1, ArrowDown:1, KeyA:1, KeyD:1, KeyW:1, KeyS:1 };
-const SPEED = 4.2;
+const SPEED = 5;
 
 let target = null;        // Vector3 on the floor
 let queuedDoor = null;
@@ -880,7 +883,7 @@ function update(dt, t){
     hero.position.x = clamp(hero.position.x + vx * dt, -BOUND.x, BOUND.x);
     hero.position.z = clamp(hero.position.z + vz * dt, BOUND.zMin, BOUND.zMax);
     yaw = Math.atan2(vx, vz);
-    phase += dt * 9.2;
+    phase += dt * 9.2 * (speed / SPEED);   // legs keep pace with the actual speed
   }
   // shortest-path turn
   let dy = yaw - hero.rotation.y;
@@ -899,10 +902,22 @@ function update(dt, t){
   hero.userData.upper.rotation.x = 0.08 * moving;
   hero.userData.upper.rotation.z = Math.sin(phase) * 0.035 * moving;
 
+  // the walk-to marker: sits on the destination, pulses, fades once we arrive
+  if (target){
+    marker.position.set(target.x, 0.02, target.z);
+    marker.material.opacity = Math.min(0.75, marker.material.opacity + dt * 4);
+    const pulse = 1 + Math.sin(t * 5) * 0.12;
+    marker.scale.setScalar(pulse);
+  } else if (marker.material.opacity > 0){
+    marker.material.opacity = Math.max(0, marker.material.opacity - dt * 2.2);
+    marker.scale.multiplyScalar(1 + dt * 1.6);
+  }
+
   if (heroMirror) syncMirror(hero, heroMirror);
   heroSpot.position.set(hero.position.x, HALL.h - 0.4, hero.position.z + 0.6);
   heroSpot.target.position.copy(hero.position);
   contact.position.set(hero.position.x, 0.012, hero.position.z);
+  heroPool.position.set(hero.position.x, 0.016, hero.position.z);
 
   // ---- which door are we at ----
   promptDoor = null;
@@ -930,7 +945,7 @@ function update(dt, t){
     d.frameMat.emissiveIntensity = 0.16 + d.hot * 0.75;
     d.signMat.color.setScalar(1 + d.hot * 0.9);
     d.spot.intensity = (LOW ? 26 : 48) * (1 + d.hot * 0.5);
-    d.pool.material.opacity = 0.18 + d.hot * 0.28 + d.open * 0.4;
+    d.pool.material.opacity = 0.13 + d.hot * 0.26 + d.open * 0.38;
   }
   if (!DOORS.some(d => d.open > 0.02)) portalLight.intensity = 0;
 
