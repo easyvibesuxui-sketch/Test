@@ -3,1138 +3,215 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>IBSU — The Hall of Doors</title>
-<meta name="description" content="Walk through the IBSU hall and open the door you need: Programs, Tuition, Fees, Calculation, Trainings For Pupils, Open Day.">
-<meta name="theme-color" content="#efe4cd">
-<meta property="og:title" content="IBSU — The Hall of Doors">
-<meta property="og:description" content="An interactive ink-sketch hall. Walk to a door and open it.">
+<title>IBSU — The Hall</title>
+<meta name="description" content="Walk the IBSU hall in 3D and open the door you need: Programs, Tuition, Fees, Calculation, Trainings For Pupils, Open Day.">
+<meta name="theme-color" content="#08090c">
+<meta property="og:title" content="IBSU — The Hall">
+<meta property="og:description" content="An interactive 3D hall. Walk to a door and open it.">
 <meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='7.5' y='3.5' width='17' height='25' fill='none' stroke='%232b2620' stroke-width='2.6'/%3E%3Ccircle cx='20.5' cy='17' r='1.7' fill='%232b2620'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2308090c'/%3E%3Crect x='8' y='4.5' width='16' height='23' fill='none' stroke='%23f0b978' stroke-width='2.2'/%3E%3Ccircle cx='20' cy='16.5' r='1.5' fill='%23f0b978'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#efe4cd;
-    --ink:#2b2620;
-    --ink-soft:rgba(43,38,32,.62);
-    --hand:'Kalam','Trebuchet MS','Segoe UI',system-ui,sans-serif;
+    --bg:#08090c;
+    --gold:#f0b978;
+    --gold-soft:rgba(240,185,120,.62);
+    --text:#f2ece4;
+    --dim:rgba(242,236,228,.55);
+    --ui:'Outfit',-apple-system,'Segoe UI',Roboto,system-ui,sans-serif;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0;
-    background:var(--paper);
-    color:var(--ink);
-    font-family:var(--hand);
-    overflow:hidden;
-    -webkit-tap-highlight-color:transparent;
+    margin:0;background:var(--bg);color:var(--text);font-family:var(--ui);font-weight:300;
+    overflow:hidden;-webkit-tap-highlight-color:transparent;
   }
-  #stage{position:fixed;inset:0;overflow:hidden}
-  #hall{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:default;touch-action:none;outline:none}
-  #hall.pointing{cursor:pointer}
+  #scene{position:fixed;inset:0;display:block;touch-action:none;outline:none}
+  #scene.pointing{cursor:pointer}
 
-  .vignette{
-    position:absolute;inset:0;pointer-events:none;
-    background:radial-gradient(120% 90% at 50% 45%,rgba(0,0,0,0) 45%,rgba(90,72,45,.13) 78%,rgba(70,55,32,.28) 100%);
-    mix-blend-mode:multiply;
+  .grain{
+    position:fixed;inset:0;pointer-events:none;z-index:2;opacity:.5;
+    background-image:radial-gradient(circle at 50% 50%,rgba(255,255,255,.03) 0,rgba(0,0,0,0) 60%);
+    mix-blend-mode:screen;
+  }
+  .edge{
+    position:fixed;inset:0;pointer-events:none;z-index:2;
+    box-shadow:inset 0 0 200px 40px rgba(0,0,0,.75);
   }
 
   /* ---------- HUD ---------- */
-  .hud{position:absolute;top:0;left:0;right:0;display:flex;align-items:flex-start;justify-content:space-between;
-       padding:clamp(14px,2.4vw,26px);gap:14px;pointer-events:none;z-index:5}
+  .hud{position:fixed;top:0;left:0;right:0;z-index:6;display:flex;align-items:flex-start;
+       justify-content:space-between;gap:16px;padding:clamp(16px,2.4vw,30px);pointer-events:none}
   .hud > *{pointer-events:auto}
 
-  .logo{
-    display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
-    padding:8px 16px 8px 4px;margin:-8px 0 0 -4px;
-    background:radial-gradient(120% 150% at 25% 45%,rgba(243,235,218,.94) 42%,rgba(243,235,218,0) 100%);
+  .logo{display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit}
+  .logo .mark{
+    font-size:clamp(21px,2.4vw,30px);font-weight:600;letter-spacing:.22em;
+    color:var(--text);text-shadow:0 0 26px rgba(240,185,120,.45);
   }
-  .logo svg{display:block;width:clamp(84px,9vw,118px);height:auto}
   .logo .sub{
-    max-width:15ch;font-size:clamp(9px,1vw,11.5px);line-height:1.3;letter-spacing:.15em;
-    text-transform:uppercase;color:var(--ink-soft);border-left:1.5px solid rgba(43,38,32,.35);padding-left:10px;
+    max-width:16ch;font-size:clamp(8.5px,.95vw,10.5px);line-height:1.45;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--dim);
+    border-left:1px solid rgba(240,185,120,.35);padding-left:12px;
   }
-  @media (max-width:600px){ .logo .sub{display:none} }
+  @media (max-width:620px){ .logo .sub{display:none} }
 
   .btn{
-    font-family:var(--hand);font-size:clamp(12px,1.3vw,15px);color:var(--ink);
-    background:rgba(243,235,218,.88);border:1.8px solid var(--ink);
-    border-radius:14px 8px 16px 9px/9px 16px 8px 14px;
-    padding:.5em 1em;cursor:pointer;transition:transform .16s ease,background .16s ease;
+    font-family:var(--ui);font-size:clamp(11px,1.15vw,13px);font-weight:400;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--text);
+    background:rgba(255,255,255,.045);border:1px solid rgba(240,185,120,.32);
+    border-radius:999px;padding:.72em 1.3em;cursor:pointer;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    transition:border-color .25s,background .25s,transform .25s;
   }
-  .btn:hover,.btn:focus-visible{background:rgba(43,38,32,.09);transform:translateY(-1px) rotate(-.4deg)}
-  .btn:focus-visible{outline:2px dashed var(--ink);outline-offset:3px}
+  .btn:hover,.btn:focus-visible{background:rgba(240,185,120,.14);border-color:var(--gold);transform:translateY(-1px)}
+  .btn:focus-visible{outline:2px solid var(--gold-soft);outline-offset:3px}
 
   .index{position:relative}
   .index-panel{
-    position:absolute;top:calc(100% + 10px);right:0;min-width:222px;
-    background:rgba(243,235,218,.97);border:1.8px solid var(--ink);
-    border-radius:16px 10px 18px 11px/11px 18px 10px 16px;
-    padding:10px;margin:0;list-style:none;
-    box-shadow:6px 8px 0 rgba(43,38,32,.12);
+    position:absolute;top:calc(100% + 12px);right:0;min-width:250px;margin:0;padding:8px;list-style:none;
+    background:rgba(12,13,18,.86);border:1px solid rgba(240,185,120,.22);border-radius:16px;
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    box-shadow:0 24px 60px rgba(0,0,0,.6);
   }
   .index-panel[hidden]{display:none}
   .index-panel a{
-    display:flex;justify-content:space-between;gap:10px;align-items:center;
-    text-decoration:none;color:var(--ink);padding:.45em .6em;border-radius:8px;font-size:14px;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:.7em .85em;border-radius:10px;text-decoration:none;color:var(--text);
+    font-size:14px;letter-spacing:.04em;transition:background .2s,color .2s;
   }
-  .index-panel a:hover,.index-panel a:focus-visible{background:rgba(43,38,32,.1);outline:none}
-  .index-panel a::after{content:'↗';opacity:.5;font-size:12px}
+  .index-panel a::after{content:'→';color:var(--gold-soft);transition:transform .2s}
+  .index-panel a:hover,.index-panel a:focus-visible{background:rgba(240,185,120,.12);outline:none}
+  .index-panel a:hover::after{transform:translateX(3px)}
 
   /* ---------- hint ---------- */
   .hint{
-    position:absolute;left:50%;bottom:clamp(14px,3vh,30px);transform:translateX(-50%);
-    margin:0;padding:.5em 1.1em;z-index:5;
-    font-size:clamp(11.5px,1.25vw,14px);color:var(--ink-soft);text-align:center;
-    background:rgba(243,235,218,.72);border-radius:20px;
-    transition:opacity .8s ease;pointer-events:none;white-space:nowrap;
+    position:fixed;left:50%;bottom:clamp(18px,3.4vh,34px);transform:translateX(-50%);z-index:6;
+    margin:0;padding:.7em 1.4em;white-space:nowrap;pointer-events:none;
+    font-size:clamp(10.5px,1.1vw,12.5px);letter-spacing:.15em;text-transform:uppercase;color:var(--dim);
+    background:rgba(10,11,15,.5);border:1px solid rgba(255,255,255,.07);border-radius:999px;
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    transition:opacity .8s ease;
   }
   .hint kbd{
-    font-family:var(--hand);font-size:1em;border:1.4px solid rgba(43,38,32,.45);
-    border-radius:5px;padding:0 .35em;margin:0 .05em;
+    font:inherit;color:var(--text);border:1px solid rgba(255,255,255,.22);
+    border-radius:5px;padding:.1em .45em;margin:0 .1em;
   }
   .hint.gone{opacity:0}
-  @media (max-width:600px){ .hint .desktop-only{display:none} }
+  @media (max-width:620px){ .hint .desktop-only{display:none} }
 
-  /* ---------- popup ---------- */
+  /* ---------- door popup ---------- */
   .modal{
-    position:absolute;inset:0;z-index:20;display:grid;place-items:center;
-    padding:20px;background:rgba(60,48,30,.26);
-    opacity:0;visibility:hidden;transition:opacity .28s ease,visibility .28s;
+    position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:22px;
+    background:radial-gradient(80% 70% at 50% 50%,rgba(6,7,10,.72),rgba(4,5,7,.93));
+    opacity:0;visibility:hidden;transition:opacity .35s ease,visibility .35s;
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
   }
   .modal.on{opacity:1;visibility:visible}
   .card{
-    position:relative;width:min(440px,100%);
-    background:var(--paper);border:2px solid var(--ink);
-    border-radius:22px 14px 24px 16px/16px 24px 14px 22px;
-    padding:clamp(22px,3vw,30px);text-align:center;
-    box-shadow:9px 11px 0 rgba(43,38,32,.14);
-    transform:translateY(14px) scale(.97) rotate(-.5deg);
-    transition:transform .3s cubic-bezier(.2,.9,.3,1.1);
+    position:relative;width:min(460px,100%);padding:clamp(30px,4vw,42px);text-align:center;
+    background:linear-gradient(165deg,rgba(24,26,33,.94),rgba(11,12,16,.96));
+    border:1px solid rgba(240,185,120,.26);border-radius:22px;
+    box-shadow:0 40px 90px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.06);
+    transform:translateY(18px) scale(.97);transition:transform .4s cubic-bezier(.2,.9,.3,1.05);
   }
   .modal.on .card{transform:none}
-  .card::before{
-    content:'';position:absolute;inset:6px;pointer-events:none;
-    border:1.2px solid rgba(43,38,32,.35);
-    border-radius:18px 11px 20px 13px/13px 20px 11px 18px;
+  .card::after{
+    content:'';position:absolute;left:50%;top:-1px;width:52%;height:1px;transform:translateX(-50%);
+    background:linear-gradient(90deg,transparent,var(--gold),transparent);
   }
-  .kicker{margin:0 0 .3em;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft)}
-  .card h2{margin:0 0 .35em;font-size:clamp(24px,3.4vw,32px);font-weight:700;line-height:1.1}
-  .card p.blurb{margin:0 0 1.3em;font-size:clamp(14px,1.6vw,16px);line-height:1.5;color:rgba(43,38,32,.85)}
-  .actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+  .kicker{margin:0 0 .85em;font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold-soft)}
+  .card h2{margin:0 0 .5em;font-size:clamp(25px,3.4vw,34px);font-weight:600;letter-spacing:.01em;line-height:1.12}
+  .card p.blurb{margin:0 0 2em;font-size:clamp(14px,1.5vw,15.5px);line-height:1.65;color:var(--dim)}
+  .actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
   .go{
-    font-family:var(--hand);font-size:16px;text-decoration:none;color:var(--paper);background:var(--ink);
-    border:2px solid var(--ink);border-radius:16px 9px 18px 10px/10px 18px 9px 16px;
-    padding:.6em 1.3em;transition:transform .16s ease,opacity .16s ease;
+    font-family:var(--ui);font-size:13px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;
+    text-decoration:none;color:#120d07;background:linear-gradient(180deg,#ffd9a8,var(--gold));
+    border:1px solid rgba(255,220,175,.7);border-radius:999px;padding:.95em 1.7em;
+    box-shadow:0 12px 34px rgba(240,185,120,.26);transition:transform .22s,box-shadow .22s;
   }
-  .go:hover,.go:focus-visible{transform:translateY(-2px) rotate(.4deg);opacity:.9}
-  .card .btn{font-size:15px}
+  .go:hover,.go:focus-visible{transform:translateY(-2px);box-shadow:0 18px 44px rgba(240,185,120,.38)}
+
+  /* ---------- loader ---------- */
+  .loader{
+    position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:var(--bg);
+    transition:opacity .8s ease,visibility .8s;
+  }
+  .loader.done{opacity:0;visibility:hidden}
+  .loader .inner{text-align:center}
+  .loader .mark{font-size:34px;font-weight:600;letter-spacing:.3em;color:var(--text)}
+  .loader .bar{margin:20px auto 0;width:190px;height:1px;background:rgba(255,255,255,.12);overflow:hidden}
+  .loader .bar i{display:block;height:100%;width:40%;background:var(--gold);animation:slide 1.15s ease-in-out infinite}
+  @keyframes slide{0%{transform:translateX(-110%)}100%{transform:translateX(360%)}}
+  .loader .err{margin-top:18px;font-size:13px;color:#ff9a8a;max-width:32ch;line-height:1.5}
+
   .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 </style>
 </head>
 <body>
-<div id="stage">
-  <canvas id="hall" role="application"
-          aria-label="Interactive hall. Use the arrow keys to walk to a door, then press Enter to open it. A list of every door is also available from the All doors button."></canvas>
-  <div class="vignette"></div>
+<canvas id="scene" role="application"
+        aria-label="Interactive 3D hall. Use the arrow keys to walk to a door, then press Enter to open it. Every door is also listed under the All doors button."></canvas>
+<div class="grain"></div>
+<div class="edge"></div>
 
-  <h1 class="sr">IBSU — walk the hall and open the door you need</h1>
+<h1 class="sr">IBSU — walk the hall and open the door you need</h1>
 
-  <header class="hud">
-    <a class="logo" href="https://ibsu.edu.ge/en/entrant/" target="_blank" rel="noopener"
-       aria-label="IBSU, International Black Sea University — entrant pages">
-      <svg viewBox="0 0 208 80" aria-hidden="true">
-        <g fill="none" stroke="#2b2620" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M13 14 L13.6 64 M5 13.6 L22 14.4 M5 64.4 L22 63.6"/>
-          <path d="M38 14 L38.6 64 L57 63 C71 62 73 51 65 44 C72 39 70 26 56 14.6 L38 14 Z M39 38.5 L62 39.2"/>
-          <path d="M124 20 C118 11 96 11 92.5 22 C89 34 116 35 120 47 C124 61 100 71 90.5 61"/>
-          <path d="M144 13.6 L144.6 45 C144.6 67 178 67 178 45 L177.6 13.6"/>
-          <path d="M10 73 C68 69.5 148 70.5 194 72.5" stroke-width="2"/>
-        </g>
-      </svg>
-      <span class="sub">International Black Sea University</span>
-    </a>
+<header class="hud">
+  <a class="logo" href="https://ibsu.edu.ge/en/entrant/" target="_blank" rel="noopener"
+     aria-label="IBSU, International Black Sea University — entrant pages">
+    <span class="mark">IBSU</span>
+    <span class="sub">International Black Sea University</span>
+  </a>
+  <div class="index">
+    <button class="btn" id="indexBtn" aria-expanded="false" aria-controls="indexPanel">All doors</button>
+    <ul class="index-panel" id="indexPanel" hidden></ul>
+  </div>
+</header>
 
-    <div class="index">
-      <button class="btn" id="indexBtn" aria-expanded="false" aria-controls="indexPanel">All doors</button>
-      <ul class="index-panel" id="indexPanel" hidden></ul>
-    </div>
-  </header>
+<p class="hint" id="hint">
+  <span class="desktop-only"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows to walk &nbsp;·&nbsp; click the floor to go there &nbsp;·&nbsp; </span>click a door to open it
+</p>
 
-  <p class="hint" id="hint">
-    <span class="desktop-only"><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> to walk &middot; click the floor to go there &middot; </span>click a door to open it
-  </p>
-
-  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
-    <div class="card">
-      <p class="kicker">You opened the door to</p>
-      <h2 id="mTitle">Programs</h2>
-      <p class="blurb" id="mBlurb"></p>
-      <div class="actions">
-        <a class="go" id="mGo" href="https://ibsu.edu.ge/en/entrant/" target="_blank" rel="noopener">Enter the room ↗</a>
-        <button class="btn" id="mBack">Stay in the hall</button>
-      </div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="card">
+    <p class="kicker">You opened the door to</p>
+    <h2 id="mTitle">Programs</h2>
+    <p class="blurb" id="mBlurb"></p>
+    <div class="actions">
+      <a class="go" id="mGo" href="https://ibsu.edu.ge/en/entrant/" target="_blank" rel="noopener">Enter the room</a>
+      <button class="btn" id="mBack">Stay in the hall</button>
     </div>
   </div>
 </div>
 
+<div class="loader" id="loader">
+  <div class="inner">
+    <div class="mark">IBSU</div>
+    <div class="bar"><i></i></div>
+    <p class="err" id="loadErr" hidden></p>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/three.module.min.js",
+    "three/addons/": "./vendor/three/addons/"
+  }
+}
+</script>
+<script type="module" src="./app.js"></script>
 <script>
-(() => {
-'use strict';
-
-/* ======================================================================
-   1. The doors. Everything user-facing lives in this one list.
-   ====================================================================== */
-const DOORS = [
-  { id:'programs', label:'Programs', wall:'left', slot:'near', w:0.255,
-    url:'https://ibsu.edu.ge/en/entrant/catalog-of-programs/',
-    blurb:'Bachelor’s, master’s and doctoral programs, taught in English and in Georgian.' },
-
-  { id:'tuition', label:'Tuition', wall:'left', slot:'far', w:0.205,
-    url:'https://ibsu.edu.ge/en/entrant/tuition-fees/',
-    blurb:'Tuition rates for every level of study, for Georgian and international students.' },
-
-  { id:'fees', label:'Fees', wall:'right', slot:'near', w:0.255,
-    url:'https://ibsu.edu.ge/en/entrant/tuition-fees/',
-    blurb:'What an entrant pays and when — the full fee list, in one place.' },
-
-  { id:'openday', label:'Open Day', wall:'right', slot:'far', w:0.205,
-    url:'https://ibsu.edu.ge/en/events/',
-    blurb:'Come and see the campus. Open Day is held every Friday at 3 pm — register in advance.' },
-
-  { id:'calculation', label:'Calculation', wall:'back', x:-0.545, w:0.30, pw:0.21,
-    url:'https://ibsu.edu.ge/en/calculation/',
-    blurb:'Work out your final tuition with the state grant and IBSU’s internal grants applied.' },
-
-  { id:'pupils', label:'Trainings For Pupils', wall:'back', x:0.545, w:0.30, pw:0.315,
-    url:'https://ibsu.edu.ge/en/entrant/seasonal-schools/',
-    blurb:'Seasonal schools and trainings where pupils try a profession before choosing one.' },
-
-  /* unlabelled doors — depth only, not clickable */
-  { id:'deco-l', wall:'left',  z:0.862, w:0.112, deco:true },
-  { id:'deco-r', wall:'right', z:0.862, w:0.112, deco:true },
-];
-
-/* ======================================================================
-   2. Canvas + one-point perspective
-   ====================================================================== */
-const cvs = document.getElementById('hall');
-const ctx = cvs.getContext('2d');
-
-const INK = '#2b2620';
-const K = 2.2;      // depth compression
-const ZB = 1.0;     // back wall
-let CEIL = 5.4;     // wall height in vertical units; tall enough to leave the frame up close
-
-let W = 0, H = 0, DPR = 1;
-let CX = 0, HORIZON = 0, FLOOR_Y = 0, HW = 0, VS = 0;
-let paper = null;
-
-const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
-
-function layout(){
-  DPR = Math.min(2, window.devicePixelRatio || 1);
-  W = cvs.clientWidth  || window.innerWidth;
-  H = cvs.clientHeight || window.innerHeight;
-  cvs.width  = Math.round(W * DPR);
-  cvs.height = Math.round(H * DPR);
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
-  CX = W / 2;
-  HORIZON = H * 0.40;
-  FLOOR_Y = H * 1.06;
-  VS = Math.min(H * 0.40, W * 0.30);   // one vertical world unit, in px at z = 0
-  HW = Math.max(VS * 2.7, W * 0.58);   // half hall width, in px at z = 0
-  // On tall screens the hall is narrow on screen, so its walls only appear
-  // some way down the room. They have to be taller in world units for their
-  // tops to still leave the frame where they first become visible.
-  const sEdge = Math.min(0.999, (W / 2) / HW);
-  CEIL = Math.max(5.4, (FLOOR_Y + H * 0.06) / (VS * sEdge));
-
-  placeDoors();
-  paper = makePaper();
-}
-
-/* The side walls only enter the frame past a certain depth — nearer than that,
-   a door and its sign would be cut off by the edge of the screen. So the two
-   depth slots are derived from the viewport instead of being hard-coded. */
-function placeDoors(){
-  const sEdge = Math.min(0.999, (W / 2) / HW);
-  const zEdge = (1 / sEdge - 1) / K;
-  const zNear = clamp(zEdge + 0.16, 0.265, 0.46);
-  const zFar = Math.min(0.70, zNear + 0.355);
-  for (const d of DOORS){
-    if (d.slot === 'near') d.z = zNear;
-    else if (d.slot === 'far') d.z = zFar;
-  }
-  SIDE_DOORS.sort((a, b) => b.z - a.z);
-}
-
-const sOf = z => 1 / (1 + z * K);
-
-/** world (x across −1..1, y up, z depth 0..1) → screen px */
-function proj(x, y, z){
-  const s = sOf(z);
-  return { x: CX + x * HW * s, y: HORIZON + (FLOOR_Y - HORIZON) * s - y * VS * s, s };
-}
-/** screen px → point on the floor */
-function unproj(sx, sy){
-  let s = (sy - HORIZON) / (FLOOR_Y - HORIZON);
-  if (s <= 0.06) return null;               // above the horizon: not floor
-  s = Math.min(1, s);
-  return { x: (sx - CX) / (HW * s), z: (1 / s - 1) / K };
-}
-
-/* ======================================================================
-   3. Ink strokes — deterministic jitter, so static lines never shimmer
-   ====================================================================== */
-function rnd(seed){
-  let t = (seed + 0x6D2B79F5) | 0;
-  t = Math.imul(t ^ (t >>> 15), t | 1);
-  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-}
-let boil = 0;   // re-seeded ~7×/s, only for the walker, to give it a living line
-
-function line(x1, y1, x2, y2, o){
-  o = o || {};
-  const width  = o.w != null ? o.w : 1.7;
-  const alpha  = o.a != null ? o.a : 1;
-  const passes = o.passes != null ? o.passes : 2;
-  const seed   = (o.seed || 0) + (o.live ? boil * 977 : 0);
-
-  const dx = x2 - x1, dy = y2 - y1;
-  const len = Math.hypot(dx, dy) || 1;
-  const nx = -dy / len, ny = dx / len;
-  const j = Math.min(o.jit != null ? o.jit : 1.15, len * 0.22);
-
-  ctx.strokeStyle = o.col || INK;
-  ctx.lineCap = 'round';
-  for (let p = 0; p < passes; p++){
-    const a1 = (rnd(seed + p * 17) - 0.5) * j;
-    const a2 = (rnd(seed + p * 31 + 7) - 0.5) * j;
-    const am = (rnd(seed + p * 53 + 13) - 0.5) * j * 2.1;
-    ctx.beginPath();
-    ctx.moveTo(x1 + nx * a1, y1 + ny * a1);
-    ctx.quadraticCurveTo((x1 + x2) / 2 + nx * am, (y1 + y2) / 2 + ny * am, x2 + nx * a2, y2 + ny * a2);
-    ctx.lineWidth = width * (p ? 0.62 : 1);
-    ctx.globalAlpha = alpha * (p ? 0.5 : 1);
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-}
-
-function ring(pts, o){
-  o = o || {};
-  for (let i = 0; i < pts.length; i++){
-    const a = pts[i], b = pts[(i + 1) % pts.length];
-    line(a.x, a.y, b.x, b.y, Object.assign({}, o, { seed: (o.seed || 0) + i * 101 }));
-  }
-}
-function pathOf(pts){
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-  ctx.closePath();
-}
-function wash(pts, alpha){
-  pathOf(pts);
-  ctx.fillStyle = INK;
-  ctx.globalAlpha = alpha;
-  ctx.fill();
-  ctx.globalAlpha = 1;
-}
-/** parallel pencil shading clipped to a polygon */
-function hatch(pts, o){
-  o = o || {};
-  const gap = Math.max(3, o.gap || 9);
-  const ang = o.ang != null ? o.ang : -0.9;
-  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-  for (const p of pts){ x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }
-  if (!isFinite(x0)) return;
-  const spanW = Math.min(x1 - x0, W * 2), spanH = Math.min(y1 - y0, H * 2);
-  ctx.save();
-  pathOf(pts); ctx.clip();
-  const dx = Math.cos(ang), dy = Math.sin(ang);
-  const span = Math.hypot(spanW, spanH);
-  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = o.w || 1.05;
-  ctx.globalAlpha = o.a != null ? o.a : 0.3;
-  for (let t = -span; t <= span; t += gap){
-    ctx.beginPath();
-    ctx.moveTo(cx - dy * t - dx * span, cy + dx * t - dy * span);
-    ctx.lineTo(cx - dy * t + dx * span, cy + dx * t + dy * span);
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-  ctx.restore();
-}
-
-/* ======================================================================
-   4. Paper texture, rebuilt on resize
-   ====================================================================== */
-function makePaper(){
-  const c = document.createElement('canvas');
-  c.width = Math.max(2, Math.round(W / 2));
-  c.height = Math.max(2, Math.round(H / 2));
-  const g = c.getContext('2d');
-
-  g.fillStyle = '#efe4cd';
-  g.fillRect(0, 0, c.width, c.height);
-
-  const glow = g.createRadialGradient(c.width * 0.5, c.height * 0.42, 0,
-                                      c.width * 0.5, c.height * 0.42, Math.max(c.width, c.height) * 0.7);
-  glow.addColorStop(0, 'rgba(255,250,236,.85)');
-  glow.addColorStop(1, 'rgba(255,250,236,0)');
-  g.fillStyle = glow;
-  g.fillRect(0, 0, c.width, c.height);
-
-  for (let i = 0; i < 26; i++){
-    const r = rnd(i * 7 + 3) * Math.min(c.width, c.height) * 0.28 + 20;
-    const bx = rnd(i * 13 + 1) * c.width, by = rnd(i * 29 + 5) * c.height;
-    const bg = g.createRadialGradient(bx, by, 0, bx, by, r);
-    bg.addColorStop(0, rnd(i * 41) > 0.5 ? 'rgba(150,124,80,.055)' : 'rgba(255,252,240,.10)');
-    bg.addColorStop(1, 'rgba(0,0,0,0)');
-    g.fillStyle = bg;
-    g.fillRect(bx - r, by - r, r * 2, r * 2);
-  }
-
-  const img = g.getImageData(0, 0, c.width, c.height);
-  const d = img.data;
-  for (let i = 0; i < d.length; i += 4){
-    const n = (Math.random() - 0.5) * 17;
-    d[i] += n; d[i + 1] += n; d[i + 2] += n * 0.9;
-  }
-  g.putImageData(img, 0, 0);
-  return c;
-}
-
-/* ======================================================================
-   5. Text lying on a wall plaque. quad = [bl, br, tr, tl]
-   ====================================================================== */
-function quadText(q, text, o){
-  o = o || {};
-  const bl = q[0], br = q[1], tr = q[2], tl = q[3];
-  const e1x = br.x - bl.x, e1y = br.y - bl.y;                   // along the baseline
-  const e2x = ((tl.x - bl.x) + (tr.x - br.x)) / 2;              // up the plaque
-  const e2y = ((tl.y - bl.y) + (tr.y - br.y)) / 2;
-  const wq = Math.hypot(e1x, e1y), hq = Math.hypot(e2x, e2y);
-  if (wq < 14 || hq < 7) return;
-
-  ctx.save();
-  // e2 points up the wall, so the vertical basis is negated: local +y then runs
-  // down the plaque, which is the orientation canvas text expects.
-  ctx.transform(e1x / wq, e1y / wq, -e2x / hq, -e2y / hq, bl.x, bl.y);
-  const size = Math.max(7, hq * (o.size || 0.56));
-  ctx.font = `700 ${size}px Kalam,'Trebuchet MS',system-ui,sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.fillStyle = INK;
-  const m = ctx.measureText(text).width || 1;
-  const room = wq * 0.86;
-  let cxLocal = wq / 2;
-  if (m > room){ const k = room / m; ctx.scale(k, 1); cxLocal = wq / (2 * k); }
-  ctx.fillText(text, cxLocal, -hq * 0.30);   // local y points up, so baseline is negative
-  ctx.restore();
-}
-
-/* ======================================================================
-   6. Architecture
-   ====================================================================== */
-const PILASTERS = [0.005, 0.402, 0.748, 0.945];
-
-function drawFloor(){
-  const nl = proj(-1, 0, 0), fl = proj(-1, 0, ZB);
-  const nr = proj(1, 0, 0),  fr = proj(1, 0, ZB);
-  line(nl.x, nl.y, fl.x, fl.y, { w: 2.1, seed: 11 });
-  line(nr.x, nr.y, fr.x, fr.y, { w: 2.1, seed: 22 });
-  line(fl.x, fl.y, fr.x, fr.y, { w: 2.1, seed: 33 });
-
-  for (let i = 1; i <= 6; i++){
-    const z = i * 0.145;
-    const a = proj(-1, 0, z), b = proj(1, 0, z);
-    line(a.x, a.y, b.x, b.y, { w: 1, a: 0.18, seed: 400 + i * 9 });
-  }
-  for (const x of [-0.62, -0.2, 0.2, 0.62]){
-    const a = proj(x, 0, 0.02), b = proj(x, 0, ZB);
-    line(a.x, a.y, b.x, b.y, { w: 1, a: 0.15, seed: 500 + Math.round(x * 100) });
-  }
-  const inlay = (ix, z0, z1, o) => ring([proj(-ix, 0, z0), proj(ix, 0, z0), proj(ix, 0, z1), proj(-ix, 0, z1)], o);
-  inlay(0.66, 0.16, 0.882, { w: 1.7, a: 0.8, seed: 600 });
-  inlay(0.60, 0.215, 0.845, { w: 1.15, a: 0.45, seed: 700 });
-}
-
-function drawPilaster(side, z){
-  const dz = 0.045;
-  const zb = z, zf = Math.min(ZB, z + dz);
-  const p0 = proj(side, 0, zb), p1 = proj(side, 0, zf);
-  const t0 = proj(side, CEIL, zb), t1 = proj(side, CEIL, zf);
-  const sd = Math.round(z * 700) + side * 3;
-
-  line(p0.x, p0.y, t0.x, t0.y, { w: 1.9, seed: 900 + sd });
-  line(p1.x, p1.y, t1.x, t1.y, { w: 1.9, seed: 950 + sd });
-  const m0 = proj(side, 0, (zb + zf) / 2), m1 = proj(side, CEIL, (zb + zf) / 2);
-  line(m0.x, m0.y, m1.x, m1.y, { w: 0.9, a: 0.2, seed: 970 + sd });
-
-  const hB = 0.42;
-  const base = [proj(side, 0, zb), proj(side, 0, zf), proj(side, hB, zf), proj(side, hB, zb)];
-  ring(base, { w: 1.8, seed: 1000 + sd });
-  ring([proj(side, hB, zb), proj(side, hB, zf), proj(side, hB + 0.1, zf), proj(side, hB + 0.1, zb)],
-       { w: 1.3, a: 0.7, seed: 1100 + sd });
-  hatch(base, { gap: 13 * p0.s, a: 0.13, ang: -1.15 });
-}
-
-function drawSideWall(side){
-  const t0 = proj(side, CEIL, 0.02), t1 = proj(side, CEIL, ZB);
-  line(t0.x, t0.y, t1.x, t1.y, { w: 1.6, a: 0.7, seed: 1200 + side });
-  const c0 = proj(side, CEIL - 0.55, 0.02), c1 = proj(side, CEIL - 0.55, ZB);
-  line(c0.x, c0.y, c1.x, c1.y, { w: 1.2, a: 0.4, seed: 1300 + side });
-  for (const z of PILASTERS) drawPilaster(side, z);
-}
-
-function drawBackWall(){
-  const bl = proj(-1, 0, ZB), tl = proj(-1, CEIL, ZB);
-  const br = proj(1, 0, ZB),  tr = proj(1, CEIL, ZB);
-  line(bl.x, bl.y, tl.x, tl.y, { w: 1.9, seed: 1400 });
-  line(br.x, br.y, tr.x, tr.y, { w: 1.9, seed: 1500 });
-
-  for (const x of [-0.845, -0.295, 0.265, 0.815]){
-    const sd = 1600 + Math.round(x * 90);
-    const a = proj(x, 0, ZB), b = proj(x, CEIL, ZB);
-    const a2 = proj(x + 0.03, 0, ZB), b2 = proj(x + 0.03, CEIL, ZB);
-    line(a.x, a.y, b.x, b.y, { w: 1.5, a: 0.75, seed: sd });
-    line(a2.x, a2.y, b2.x, b2.y, { w: 1.5, a: 0.75, seed: sd + 50 });
-    ring([proj(x, 0, ZB), proj(x + 0.03, 0, ZB), proj(x + 0.03, 0.42, ZB), proj(x, 0.42, ZB)],
-         { w: 1.2, a: 0.8, seed: sd + 90 });
-  }
-  drawWallmark();
-}
-
-/** the big outlined IBSU painted on the back wall */
-function drawWallmark(){
-  const a = proj(-0.285, 3.02, ZB), b = proj(0.285, 3.02, ZB);
-  const span = Math.abs(b.x - a.x);
-  if (span < 26) return;
-  ctx.save();
-  ctx.font = `900 ${span * 0.62}px 'Arial Black','Helvetica Neue',Impact,system-ui,sans-serif`;
-  if ('letterSpacing' in ctx) ctx.letterSpacing = `${span * 0.04}px`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.strokeStyle = INK;
-  ctx.lineJoin = 'round';
-  const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-  ctx.lineWidth = Math.max(1.2, span * 0.016);
-  ctx.globalAlpha = 0.95;
-  ctx.strokeText('IBSU', mx, my);
-  ctx.lineWidth = Math.max(0.7, span * 0.008);
-  ctx.globalAlpha = 0.35;
-  ctx.strokeText('IBSU', mx + span * 0.008, my + span * 0.01);
-  ctx.globalAlpha = 1;
-  ctx.restore();
-}
-
-/* ---------- wall torches ---------- */
-const TORCHES = [
-  { wall:'left',  z:0.462, y:1.60 },
-  { wall:'right', z:0.462, y:1.60 },
-  { wall:'back',  x:0.185, y:1.72 },
-];
-function drawTorch(t, time){
-  const base = t.wall === 'back' ? proj(t.x, t.y, ZB)
-                                 : proj(t.wall === 'left' ? -1 : 1, t.y, t.z);
-  const sc = VS * base.s * 0.9;
-  if (sc < 6) return;
-  const sd = 1800 + Math.round((t.z || 0) * 100) + (t.wall === 'right' ? 7 : 0);
-
-  line(base.x, base.y, base.x, base.y - sc * 0.16, { w: 1.5, seed: sd });
-  ring([
-    { x: base.x - sc * 0.07, y: base.y - sc * 0.16 },
-    { x: base.x + sc * 0.07, y: base.y - sc * 0.16 },
-    { x: base.x + sc * 0.045, y: base.y - sc * 0.31 },
-    { x: base.x - sc * 0.045, y: base.y - sc * 0.31 },
-  ], { w: 1.3, seed: sd + 40 });
-
-  const fy = base.y - sc * 0.33;
-  const flick = reduceMotion ? 0 : Math.sin(time * 7.3 + (t.z || 0) * 9) * 0.5 + Math.sin(time * 11.7) * 0.3;
-  const fh = sc * (0.24 + flick * 0.025);
-  const fw = sc * (0.08 + flick * 0.008);
-
-  const r = Math.max(5, sc * 1.05);
-  const g = ctx.createRadialGradient(base.x, fy - fh * 0.4, 0, base.x, fy - fh * 0.4, r);
-  g.addColorStop(0, 'rgba(255,214,140,.5)');
-  g.addColorStop(1, 'rgba(255,214,140,0)');
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(base.x, fy - fh * 0.4, r, 0, Math.PI * 2); ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(base.x - fw, fy);
-  ctx.quadraticCurveTo(base.x - fw * 0.75, fy - fh * 0.7, base.x, fy - fh);
-  ctx.quadraticCurveTo(base.x + fw * 0.75, fy - fh * 0.7, base.x + fw, fy);
-  ctx.closePath();
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = Math.max(0.8, sc * 0.022);
-  ctx.stroke();
-}
-
-/* ======================================================================
-   7. Doors
-   ====================================================================== */
-const DOOR_H = 2.24, BACK_DOOR_H = 1.94, XZ = 1.55;
-
-function doorGeom(d){
-  if (d.wall === 'back'){
-    const x0 = d.x - d.w / 2, x1 = d.x + d.w / 2;
-    return { h: BACK_DOOR_H, x0, x1,
-             quad: [proj(x0, 0, ZB), proj(x1, 0, ZB), proj(x1, BACK_DOOR_H, ZB), proj(x0, BACK_DOOR_H, ZB)] };
-  }
-  const side = d.wall === 'left' ? -1 : 1;
-  const zn = d.z - d.w / 2, zf = d.z + d.w / 2;
-  return { h: DOOR_H, zn, zf, side,
-           quad: [proj(side, 0, zn), proj(side, 0, zf), proj(side, DOOR_H, zf), proj(side, DOOR_H, zn)] };
-}
-
-/** sign board above the door, ordered so the text reads left→right on screen */
-function plaqueQuad(d){
-  if (d.wall === 'back'){
-    const pw = d.pw || d.w * 0.8;
-    const y0 = BACK_DOOR_H + 0.10, y1 = y0 + 0.30;
-    return [proj(d.x - pw, y0, ZB), proj(d.x + pw, y0, ZB), proj(d.x + pw, y1, ZB), proj(d.x - pw, y1, ZB)];
-  }
-  const side = d.wall === 'left' ? -1 : 1;
-  const zn = d.z - d.w / 2 - 0.014, zf = d.z + d.w / 2 + 0.014;
-  const y0 = DOOR_H + 0.11, y1 = y0 + 0.40;
-  return side < 0
-    ? [proj(side, y0, zn), proj(side, y0, zf), proj(side, y1, zf), proj(side, y1, zn)]
-    : [proj(side, y0, zf), proj(side, y0, zn), proj(side, y1, zn), proj(side, y1, zf)];
-}
-
-/** the swinging leaf, opening into the hall */
-function leafQuad(d, open){
-  const a = open * 0.72;
-  const g = doorGeom(d);
-  if (d.wall === 'back'){
-    const pivotX = d.x < 0 ? g.x0 : g.x1;
-    const dir = d.x < 0 ? 1 : -1;
-    const fx = pivotX + dir * d.w * Math.cos(a);
-    const fz = ZB - (d.w * Math.sin(a)) / XZ;
-    return [proj(pivotX, 0, ZB), proj(fx, 0, fz), proj(fx, g.h, fz), proj(pivotX, g.h, ZB)];
-  }
-  const fz = g.zf - d.w * Math.cos(a);
-  const fx = g.side - g.side * d.w * XZ * Math.sin(a);
-  return [proj(g.side, 0, g.zf), proj(fx, 0, fz), proj(fx, g.h, fz), proj(g.side, g.h, g.zf)];
-}
-
-function drawDoor(d){
-  const g = doorGeom(d);
-  const q = g.quad;
-  d.poly = q;
-  const near = Math.max(q[0].s, q[1].s);
-  const hot = !d.deco && (d === hoverDoor || d === activeDoor || d === promptDoor);
-  const sd = hashId(d.id);
-
-  // the recess, so an open door reads as a hole in the wall
-  wash(q, 0.035 + 0.19 * d.open);
-  if (d.open > 0.02){
-    hatch(q, { gap: 11 * near, a: 0.25, ang: -1.2 });
-    hatch(q, { gap: 15 * near, a: 0.15, ang: 0.6 });
-    const c = centroid(q);
-    const rad = Math.max(12, Math.hypot(q[1].x - q[0].x, q[2].y - q[1].y) * 0.85);
-    const gl = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, rad);
-    gl.addColorStop(0, `rgba(255,226,160,${0.36 * d.open})`);
-    gl.addColorStop(1, 'rgba(255,226,160,0)');
-    ctx.fillStyle = gl;
-    ctx.beginPath(); ctx.arc(c.x, c.y, rad, 0, Math.PI * 2); ctx.fill();
-  }
-
-  ring(q, { w: hot ? 2.7 : 2.0, seed: sd });
-  ring(expandQuad(q, Math.max(2.5, 9 * near)), { w: hot ? 1.9 : 1.35, a: 0.8, seed: sd + 7 });
-
-  // the leaf. It only swings ~41°, so it never hides the opening and is always drawn.
-  {
-    const lq = leafQuad(d, d.open);
-    wash(lq, 0.05 - 0.025 * d.open);
-    ring(lq, { w: 1.9, seed: sd + 21 });
-    drawPanels(lq, near, sd);
-    if (d.open > 0.03){        // edge thickness, visible once it is ajar
-      const t = Math.max(1.5, 6 * near) * d.open;
-      ring([lq[1], { x: lq[1].x + t, y: lq[1].y }, { x: lq[2].x + t, y: lq[2].y }, lq[2]],
-           { w: 1.2, a: 0.65, seed: sd + 27 });
+  // if the module never boots (old browser, blocked file) say so instead of hanging on the loader
+  setTimeout(() => {
+    if (!document.getElementById('loader').classList.contains('done')){
+      const e = document.getElementById('loadErr');
+      e.hidden = false;
+      e.textContent = 'The 3D hall could not start. Use the “All doors” menu to reach every page.';
     }
-    // handle, on the free edge
-    const hx = lq[1].x * 0.84 + lq[0].x * 0.16;
-    const hy = (lq[1].y * 0.84 + lq[0].y * 0.16) + (lq[2].y - lq[1].y) * 0.44;
-    const r = Math.max(1.6, 5.5 * near);
-    ctx.strokeStyle = INK;
-    ctx.lineWidth = Math.max(1, 1.6 * Math.min(1.4, near * 2));
-    ctx.beginPath(); ctx.arc(hx, hy, r, 0, Math.PI * 2); ctx.stroke();
-  }
-
-  if (!d.deco){
-    const pq = plaqueQuad(d);
-    d.plaquePoly = pq;
-    wash(pq, 0.025);
-    ring(pq, { w: hot ? 2.2 : 1.7, seed: sd + 41 });
-    const th = Math.max(1.5, 5 * near);
-    ring([pq[0], pq[1], { x: pq[1].x, y: pq[1].y + th }, { x: pq[0].x, y: pq[0].y + th }],
-         { w: 1.1, a: 0.5, seed: sd + 47 });
-    if (hot){
-      const c = centroid(pq);
-      const rad = Math.max(16, Math.hypot(pq[1].x - pq[0].x, pq[1].y - pq[0].y) * 0.8);
-      const gl = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, rad);
-      gl.addColorStop(0, 'rgba(255,220,146,.34)');
-      gl.addColorStop(1, 'rgba(255,220,146,0)');
-      ctx.fillStyle = gl;
-      ctx.beginPath(); ctx.arc(c.x, c.y, rad, 0, Math.PI * 2); ctx.fill();
-    }
-    quadText(pq, d.label, { size: 0.54 });
-  }
-}
-
-function drawPanels(q, near, sd){
-  const P = (u, v) => {
-    const bx = q[0].x + (q[1].x - q[0].x) * u, by = q[0].y + (q[1].y - q[0].y) * u;
-    const tx = q[3].x + (q[2].x - q[3].x) * u, ty = q[3].y + (q[2].y - q[3].y) * u;
-    return { x: bx + (tx - bx) * v, y: by + (ty - by) * v };
-  };
-  const rows = [[0.58, 0.91], [0.31, 0.53], [0.06, 0.26]];
-  for (let i = 0; i < rows.length; i++){
-    const pn = [P(0.18, rows[i][0]), P(0.82, rows[i][0]), P(0.82, rows[i][1]), P(0.18, rows[i][1])];
-    ring(pn, { w: 1.15, a: 0.7, seed: sd + 60 + i * 13 });
-    if (near > 0.35) hatch(pn, { gap: 14 * near, a: 0.07, ang: -1.1 });
-  }
-}
-
-function centroid(q){
-  let x = 0, y = 0;
-  for (const p of q){ x += p.x; y += p.y; }
-  return { x: x / q.length, y: y / q.length };
-}
-function expandQuad(q, m){
-  const c = centroid(q);
-  return q.map(p => {
-    const dx = p.x - c.x, dy = p.y - c.y, l = Math.hypot(dx, dy) || 1;
-    return { x: p.x + (dx / l) * m, y: p.y + (dy / l) * m };
-  });
-}
-function hashId(id){
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
-  return Math.abs(h) % 9973;
-}
-
-/* ======================================================================
-   8. The walker, seen from behind
-   ====================================================================== */
-const man = { x: 0, z: 0.135, phase: 0, lean: 0, vx: 0, vz: 0 };
-const MAN_SCALE = 1.09;
-
-function drawMan(time){
-  const p = proj(man.x, 0, man.z);
-  const u = VS * p.s * MAN_SCALE;           // one height unit in px — used for both axes
-  if (u < 8) return;
-  const walking = Math.hypot(man.vx, man.vz * 1.55) > 0.05;
-  const sw = Math.sin(man.phase);
-  const bob = walking ? Math.sin(man.phase * 2) * 0.013 : Math.sin(time * 1.5) * 0.004;
-
-  const X = v => p.x + (v + man.lean * 0.045) * u;
-  const Y = v => p.y - (v + bob) * u;
-  const L = (ax, ay, bx, by, o) =>
-    line(X(ax), Y(ay), X(bx), Y(by), Object.assign({ live: !reduceMotion, jit: 1.5 }, o));
-  const px = pts => pts.map(q => ({ x: X(q.x), y: Y(q.y) }));
-
-  const HIP = 0.80, SH = 1.255, HEADY = 1.415;
-
-  // ground shadow
-  ctx.save();
-  ctx.globalAlpha = 0.15;
-  ctx.fillStyle = INK;
-  ctx.beginPath();
-  ctx.ellipse(p.x, p.y + u * 0.015, u * 0.30, u * 0.072, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-
-  // ---- legs ----
-  const swing = walking ? sw * 0.115 : 0;
-  for (const lg of [{ s: -1, ph: swing }, { s: 1, ph: -swing }]){
-    const hipX = lg.s * 0.077;
-    const footX = hipX + lg.ph;
-    const footY = (walking ? Math.max(0, -lg.ph * 0.9) : 0) + 0.03;
-    L(hipX - 0.056, HIP, footX - 0.031, footY, { w: 1.8, seed: 2000 + lg.s * 5 });
-    L(hipX + 0.052, HIP, footX + 0.030, footY, { w: 1.8, seed: 2100 + lg.s * 5 });
-    L(hipX - 0.048, HIP - 0.30, hipX + 0.045, HIP - 0.315, { w: 1.0, a: 0.28, seed: 2150 + lg.s * 5 });
-    const shoe = px([
-      { x: footX - 0.034, y: footY + 0.004 },
-      { x: footX + 0.033, y: footY + 0.004 },
-      { x: footX + 0.040 + lg.s * 0.016, y: footY - 0.030 },
-      { x: footX - 0.041 + lg.s * 0.016, y: footY - 0.030 },
-    ]);
-    wash(shoe, 0.2);
-    ring(shoe, { w: 1.6, seed: 2200 + lg.s * 5 });
-  }
-
-  // ---- coat ----
-  const coat = [
-    { x: -0.152, y: SH }, { x: -0.176, y: 1.06 }, { x: -0.196, y: HIP - 0.055 },
-    { x: 0.196, y: HIP - 0.055 }, { x: 0.176, y: 1.06 }, { x: 0.152, y: SH },
-  ];
-  for (let i = 0; i < coat.length - 1; i++)
-    L(coat[i].x, coat[i].y, coat[i + 1].x, coat[i + 1].y, { w: 2.0, seed: 2300 + i * 31 });
-  L(-0.152, SH, -0.075, SH + 0.045, { w: 2.0, seed: 2400 });
-  L(-0.075, SH + 0.045, 0.075, SH + 0.045, { w: 1.9, seed: 2410 });
-  L(0.075, SH + 0.045, 0.152, SH, { w: 2.0, seed: 2420 });
-  L(-0.072, SH + 0.032, -0.03, SH - 0.03, { w: 1.4, a: 0.8, seed: 2430 });
-  L(0.072, SH + 0.032, 0.03, SH - 0.03, { w: 1.4, a: 0.8, seed: 2440 });
-  L(0, SH - 0.02, 0, HIP - 0.04, { w: 1.0, a: 0.28, seed: 2450 });
-  hatch(px([{ x: 0.055, y: SH - 0.02 }, { x: 0.19, y: SH - 0.06 },
-             { x: 0.19, y: HIP - 0.05 }, { x: 0.055, y: HIP - 0.05 }]),
-        { gap: u * 0.055, a: 0.15, ang: -1.15 });
-
-  // ---- arms ----
-  const arm = walking ? sw * 0.055 : 0;
-  L(-0.150, SH - 0.02, -0.186 - arm * 0.3, 0.92 + arm, { w: 1.7, seed: 2500 });
-  L(0.150, SH - 0.02, 0.186 + arm * 0.3, 0.92 - arm, { w: 1.7, seed: 2510 });
-
-  // ---- satchel + strap ----
-  const bag = px([{ x: -0.272, y: 0.505 }, { x: -0.118, y: 0.505 },
-                  { x: -0.118, y: 0.735 }, { x: -0.272, y: 0.735 }]);
-  wash(bag, 0.05);
-  ring(bag, { w: 1.8, seed: 2600 });
-  L(-0.272, 0.678, -0.118, 0.678, { w: 1.3, a: 0.75, seed: 2610 });
-  L(-0.195, 0.678, -0.195, 0.632, { w: 1.2, a: 0.7, seed: 2620 });
-  hatch(bag, { gap: u * 0.05, a: 0.12, ang: -1.0 });
-  L(0.128, SH + 0.015, -0.185, 0.752, { w: 1.7, seed: 2630 });
-  L(0.106, SH + 0.022, -0.207, 0.762, { w: 1.1, a: 0.45, seed: 2640 });
-
-  // ---- books under the other arm ----
-  const bk = px([{ x: 0.152, y: 0.685 }, { x: 0.272, y: 0.652 },
-                 { x: 0.288, y: 0.792 }, { x: 0.168, y: 0.825 }]);
-  wash(bk, 0.045);
-  ring(bk, { w: 1.6, seed: 2700 });
-  L(0.157, 0.742, 0.279, 0.709, { w: 1.0, a: 0.55, seed: 2710 });
-  L(0.160, 0.714, 0.281, 0.681, { w: 1.0, a: 0.45, seed: 2720 });
-
-  // ---- neck + head ----
-  L(-0.032, SH + 0.04, -0.030, HEADY - 0.10, { w: 1.5, seed: 2800 });
-  L(0.032, SH + 0.04, 0.030, HEADY - 0.10, { w: 1.5, seed: 2810 });
-  const hcx = X(0), hcy = Y(HEADY), rx = u * 0.098, ry = u * 0.115;
-  const seedH = 2900 + (reduceMotion ? 0 : boil * 977);
-  for (let pass = 0; pass < 2; pass++){
-    ctx.beginPath();
-    for (let i = 0; i <= 26; i++){
-      const t = (i / 26) * Math.PI * 2;
-      const k = 1 + (rnd(seedH + i * 13 + pass * 71) - 0.5) * 0.05;
-      const qx = hcx + Math.cos(t) * rx * k, qy = hcy + Math.sin(t) * ry * k;
-      i ? ctx.lineTo(qx, qy) : ctx.moveTo(qx, qy);
-    }
-    ctx.closePath();
-    ctx.strokeStyle = INK;
-    ctx.lineWidth = (pass ? 1.0 : 1.9) * clamp(u / 220, 0.55, 1.5);
-    ctx.globalAlpha = pass ? 0.45 : 1;
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-  L(-0.104, HEADY - 0.005, -0.122, HEADY - 0.022, { w: 1.3, a: 0.8, seed: 2950 });
-  L(0.104, HEADY - 0.005, 0.122, HEADY - 0.022, { w: 1.3, a: 0.8, seed: 2960 });
-  L(-0.048, HEADY + 0.102, -0.028, HEADY + 0.120, { w: 1.0, a: 0.4, seed: 2970 });
-  L(0.020, HEADY + 0.110, 0.042, HEADY + 0.124, { w: 1.0, a: 0.35, seed: 2980 });
-  hatch([{ x: hcx - rx, y: hcy - ry * 0.2 }, { x: hcx - rx * 0.25, y: hcy - ry * 0.2 },
-         { x: hcx - rx * 0.25, y: hcy + ry }, { x: hcx - rx, y: hcy + ry }],
-        { gap: u * 0.042, a: 0.1, ang: -1.2 });
-}
-
-/* ======================================================================
-   9. Dust in the air
-   ====================================================================== */
-const MOTES = Array.from({ length: 32 }, (_, i) => ({
-  x: rnd(i * 3 + 1), y: rnd(i * 7 + 2), r: 0.4 + rnd(i * 11 + 3) * 1.5,
-  sp: 0.3 + rnd(i * 13 + 5) * 0.9, ph: rnd(i * 17 + 7) * 6.28,
-}));
-function drawMotes(time){
-  ctx.fillStyle = INK;
-  for (const m of MOTES){
-    const y = (((m.y - (reduceMotion ? 0 : time * m.sp * 0.006)) % 1) + 1) % 1;
-    const x = ((m.x + Math.sin(time * 0.4 + m.ph) * 0.012) % 1 + 1) % 1;
-    ctx.globalAlpha = 0.14 + Math.sin(time * 1.2 + m.ph) * 0.05;
-    ctx.beginPath();
-    ctx.arc(x * W, y * H * 0.95, m.r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-}
-
-/* ======================================================================
-   10. Interaction
-   ====================================================================== */
-const BOUND = { x: 0.80, z0: 0.07, z1: 0.895 };
-const SPEED = 0.92;
-
-let target = null;        // floor point we are walking to
-let queuedDoor = null;    // door to open once we arrive
-let hoverDoor = null;
-let activeDoor = null;    // door whose popup is open
-let promptDoor = null;    // door we are standing in front of
-const keys = new Set();
-
-for (const d of DOORS){ d.open = 0; d.openTarget = 0; }
-
-function standSpot(d){
-  if (d.wall === 'back') return { x: d.x * 0.72, z: 0.775 };
-  return { x: (d.wall === 'left' ? -1 : 1) * 0.585, z: d.z };
-}
-const metric = (ax, az, bx, bz) => Math.hypot(ax - bx, (az - bz) * 1.55);
-
-/** How close the walker is to being "at" a door. Walking past the standing spot,
-    right up against the wall, still counts as standing there. */
-function doorProximity(d){
-  if (d.wall === 'back'){
-    // the two back doors are far apart, so be generous sideways
-    return Math.hypot((man.x - d.x * 0.72) * 0.62, Math.max(0, 0.775 - man.z) * 1.55);
-  }
-  const side = d.wall === 'left' ? -1 : 1;
-  if (man.x * side < 0.28) return Infinity;          // wrong half of the hall
-  return Math.hypot(Math.max(0, 0.585 - man.x * side), (man.z - d.z) * 1.55);
-}
-
-function pointInPoly(px, py, poly){
-  let inside = false;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++){
-    const xi = poly[i].x, yi = poly[i].y, xj = poly[j].x, yj = poly[j].y;
-    if (((yi > py) !== (yj > py)) && (px < ((xj - xi) * (py - yi)) / (yj - yi) + xi)) inside = !inside;
-  }
-  return inside;
-}
-function doorAt(px, py){
-  const list = DOORS.filter(d => !d.deco && d.poly);
-  list.sort((a, b) => Math.max(b.poly[0].s, b.poly[1].s) - Math.max(a.poly[0].s, a.poly[1].s));
-  for (const d of list){
-    if (pointInPoly(px, py, d.poly)) return d;
-    if (d.plaquePoly && pointInPoly(px, py, d.plaquePoly)) return d;
-  }
-  return null;
-}
-
-/* ---------- popup ---------- */
-const modal = document.getElementById('modal');
-const mTitle = document.getElementById('mTitle');
-const mBlurb = document.getElementById('mBlurb');
-const mGo = document.getElementById('mGo');
-const mBack = document.getElementById('mBack');
-
-function openPopup(d){
-  activeDoor = d;
-  mTitle.textContent = d.label;
-  mBlurb.textContent = d.blurb || '';
-  mGo.href = d.url;
-  modal.classList.add('on');
-  setTimeout(() => mGo.focus({ preventScroll: true }), 140);
-}
-function closePopup(){
-  if (activeDoor){ activeDoor.openTarget = 0; activeDoor = null; }
-  modal.classList.remove('on');
-  cvs.focus({ preventScroll: true });
-}
-/** the real <a target="_blank"> click is what opens the tab — never blocked */
-mGo.addEventListener('click', () => setTimeout(closePopup, 80));
-mBack.addEventListener('click', closePopup);
-modal.addEventListener('click', e => { if (e.target === modal) closePopup(); });
-
-function enterDoor(d){
-  if (!d || activeDoor) return;
-  d.openTarget = 1;
-  setTimeout(() => { if (d.openTarget === 1 && !activeDoor) openPopup(d); }, 420);
-}
-
-/* ---------- pointer ---------- */
-function localPt(e){
-  const r = cvs.getBoundingClientRect();
-  return { x: e.clientX - r.left, y: e.clientY - r.top };
-}
-cvs.addEventListener('pointermove', e => {
-  if (activeDoor) return;
-  const p = localPt(e);
-  hoverDoor = doorAt(p.x, p.y);
-  cvs.classList.toggle('pointing', !!hoverDoor);
-});
-cvs.addEventListener('pointerleave', () => { hoverDoor = null; cvs.classList.remove('pointing'); });
-cvs.addEventListener('pointerdown', e => {
-  if (activeDoor) return;
-  cvs.focus({ preventScroll: true });
-  hideHint();
-  const p = localPt(e);
-  const d = doorAt(p.x, p.y);
-  if (d){
-    const spot = standSpot(d);
-    if (metric(man.x, man.z, spot.x, spot.z) < 0.06){ enterDoor(d); target = null; queuedDoor = null; }
-    else { target = spot; queuedDoor = d; }
-    return;
-  }
-  const f = unproj(p.x, p.y);
-  if (!f) return;
-  target = { x: clamp(f.x, -BOUND.x, BOUND.x), z: clamp(f.z, BOUND.z0, BOUND.z1) };
-  queuedDoor = null;
-});
-
-/* ---------- keyboard ---------- */
-const MOVE_KEYS = { ArrowLeft:1, ArrowRight:1, ArrowUp:1, ArrowDown:1, KeyA:1, KeyD:1, KeyW:1, KeyS:1 };
-addEventListener('keydown', e => {
-  if (e.code === 'Escape'){ if (activeDoor) closePopup(); return; }
-  if (activeDoor) return;
-  if (MOVE_KEYS[e.code]){
-    keys.add(e.code);
-    target = null; queuedDoor = null;
-    hideHint();
-    e.preventDefault();
-  } else if (e.code === 'Enter' || e.code === 'Space'){
-    if (promptDoor){ enterDoor(promptDoor); e.preventDefault(); }
-  }
-});
-addEventListener('keyup', e => keys.delete(e.code));
-addEventListener('blur', () => keys.clear());
-
-/* ---------- hint ---------- */
-const hint = document.getElementById('hint');
-let hintHidden = false;
-function hideHint(){
-  if (hintHidden) return;
-  hintHidden = true;
-  setTimeout(() => hint.classList.add('gone'), 1200);
-}
-
-/* ---------- the plain door index, for keyboard and screen readers ---------- */
-const indexBtn = document.getElementById('indexBtn');
-const indexPanel = document.getElementById('indexPanel');
-indexPanel.innerHTML = DOORS.filter(d => !d.deco)
-  .map(d => `<li><a href="${d.url}" target="_blank" rel="noopener">${d.label}</a></li>`).join('');
-indexBtn.addEventListener('click', () => {
-  const willOpen = indexPanel.hidden;
-  indexPanel.hidden = !willOpen;
-  indexBtn.setAttribute('aria-expanded', String(willOpen));
-});
-document.addEventListener('click', e => {
-  if (!indexPanel.hidden && !indexPanel.contains(e.target) && e.target !== indexBtn){
-    indexPanel.hidden = true;
-    indexBtn.setAttribute('aria-expanded', 'false');
-  }
-});
-
-/* ======================================================================
-   11. Update + draw
-   ====================================================================== */
-function update(dt){
-  let ax = 0, az = 0;
-  if (keys.has('ArrowLeft') || keys.has('KeyA')) ax -= 1;
-  if (keys.has('ArrowRight') || keys.has('KeyD')) ax += 1;
-  if (keys.has('ArrowUp') || keys.has('KeyW')) az += 1;
-  if (keys.has('ArrowDown') || keys.has('KeyS')) az -= 1;
-
-  let mvx = 0, mvz = 0;
-  if (ax || az){
-    const l = Math.hypot(ax, az);
-    mvx = (ax / l) * SPEED * dt;
-    mvz = (az / l) * (SPEED / 1.55) * dt;
-  } else if (target){
-    const len = metric(man.x, man.z, target.x, target.z);
-    if (len < 0.02){
-      man.x = target.x; man.z = target.z;
-      target = null;
-      if (queuedDoor){ const d = queuedDoor; queuedDoor = null; enterDoor(d); }
-    } else {
-      const step = Math.min(1, (SPEED * dt) / len);
-      mvx = (target.x - man.x) * step;
-      mvz = (target.z - man.z) * step;
-    }
-  }
-
-  man.x = clamp(man.x + mvx, -BOUND.x, BOUND.x);
-  man.z = clamp(man.z + mvz, BOUND.z0, BOUND.z1);
-  man.vx = mvx / dt;
-  man.vz = mvz / dt;
-  man.phase += Math.hypot(mvx, mvz * 1.55) * 26;
-  man.lean += (clamp(man.vx * 0.7, -1, 1) - man.lean) * Math.min(1, dt * 7);
-
-  promptDoor = null;
-  let best = 0.19;
-  for (const d of DOORS){
-    if (!d.deco){
-      const m = doorProximity(d);
-      if (m < best){ best = m; promptDoor = d; }
-    }
-    d.open += (d.openTarget - d.open) * Math.min(1, dt * (d.openTarget > d.open ? 6 : 9));
-  }
-}
-
-function drawPrompt(){
-  if (!promptDoor || activeDoor || promptDoor.open > 0.04) return;
-  const p = proj(man.x, 1.74, man.z);
-  const size = Math.max(11, VS * p.s * 0.11);
-  const text = 'press ⏎ to open';
-  ctx.save();
-  ctx.font = `700 ${size}px Kalam,'Trebuchet MS',system-ui,sans-serif`;
-  ctx.textAlign = 'center';
-  const tw = ctx.measureText(text).width;
-  const pad = size * 0.6;
-  ctx.fillStyle = 'rgba(243,235,218,.88)';
-  roundRect(p.x - tw / 2 - pad, p.y - size, tw + pad * 2, size * 1.6, size * 0.6);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(43,38,32,.35)';
-  ctx.lineWidth = 1.2;
-  ctx.stroke();
-  ctx.fillStyle = INK;
-  ctx.fillText(text, p.x, p.y + size * 0.26);
-  ctx.restore();
-}
-function roundRect(x, y, w, h, r){
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-}
-
-const BACK_DOORS = DOORS.filter(d => d.wall === 'back');
-const SIDE_DOORS = DOORS.filter(d => d.wall !== 'back').sort((a, b) => b.z - a.z);
-
-let last = 0;
-function frame(ms){
-  const time = ms / 1000;
-  const dt = clamp(time - last, 0.001, 0.05);
-  last = time;
-  boil = reduceMotion ? 0 : Math.floor(time * 7) % 1024;
-
-  update(dt);
-
-  ctx.clearRect(0, 0, W, H);
-  if (paper) ctx.drawImage(paper, 0, 0, W, H);
-
-  drawFloor();
-  drawBackWall();
-  for (const d of BACK_DOORS) drawDoor(d);      // far first
-  drawSideWall(-1);
-  drawSideWall(1);
-  for (const d of SIDE_DOORS) drawDoor(d);      // then near
-  for (const t of TORCHES) drawTorch(t, time);
-
-  drawMan(time);
-  drawPrompt();
-  drawMotes(time);
-
-  requestAnimationFrame(frame);
-}
-
-/* ======================================================================
-   12. Boot
-   ====================================================================== */
-cvs.tabIndex = 0;
-layout();
-let resizeT = 0;
-addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(layout, 120); });
-setTimeout(() => hideHint(), 9000);
-requestAnimationFrame(frame);
-})();
+  }, 9000);
 </script>
 </body>
 </html>
