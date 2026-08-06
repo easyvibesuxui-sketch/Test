@@ -120,10 +120,7 @@ const matLeaf = new THREE.MeshPhysicalMaterial({
 });
 const matStrip = new THREE.MeshBasicMaterial({ color: 0xb3a48c });
 const matBody = new THREE.MeshPhysicalMaterial({
-  color: 0x39414f, roughness: 0.34, metalness: 0.22, clearcoat: 1, clearcoatRoughness: 0.16,
-});
-const matSkin = new THREE.MeshPhysicalMaterial({
-  color: 0x8d7f70, roughness: 0.62, metalness: 0.05, clearcoat: 0.3, clearcoatRoughness: 0.45,
+  color: 0x49525f, roughness: 0.36, metalness: 0.18, clearcoat: 1, clearcoatRoughness: 0.18,
 });
 const matGold = new THREE.MeshStandardMaterial({
   color: 0x8a6535, roughness: 0.24, metalness: 1, emissive: GOLD, emissiveIntensity: 0.08,
@@ -456,86 +453,64 @@ function buildHero(){
   const g = new THREE.Group();
   const limbs = {};
 
-  // upper body sits in its own group so it can lean into the walk
+  // The whole figure is one material and one continuous silhouette: a single
+  // revolved coat from hem to collar, a head, two arms, two legs. No separate
+  // shoulders, collar, shoes or trim pieces to read as assembled parts.
   const upper = new THREE.Group();
-  upper.position.y = 0.92;
+  upper.position.y = 0.72;                        // the hem of the coat
   g.add(upper);
 
-  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.235, 0.44, 6, 18), matBody);
-  torso.position.y = 0.3;
-  torso.scale.set(1.06, 1, 0.84);
-  upper.add(torso);
+  const profile = [
+    [0.000, -0.026], [0.108, -0.020], [0.152, 0.008], [0.163, 0.120],
+    [0.160, 0.300], [0.148, 0.450], [0.160, 0.580], [0.166, 0.690],
+    [0.148, 0.782], [0.092, 0.845], [0.058, 0.868],
+  ].map(([x, y]) => new THREE.Vector2(x, y));
+  const body = new THREE.Mesh(new THREE.LatheGeometry(profile, 30), matBody);
+  body.scale.z = 0.86;
+  upper.add(body);
 
-  const shoulders = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.42, 4, 14), matBody);
-  shoulders.rotation.z = Math.PI / 2;
-  shoulders.position.y = 0.53;
-  shoulders.scale.set(1, 1, 0.8);
-  upper.add(shoulders);
-
-  const hips = new THREE.Mesh(new THREE.CapsuleGeometry(0.2, 0.1, 4, 14), matBody);
-  hips.position.y = 0.02;
-  hips.scale.set(1.05, 1, 0.78);
-  upper.add(hips);
-
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.075, 0.1, 10), matSkin);
-  neck.position.y = 0.66;
-  upper.add(neck);
-
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.152, 26, 20), matSkin);
-  head.position.y = 0.83;
-  head.scale.set(0.94, 1.12, 1);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.152, 30, 22), matBody);
+  head.position.y = 0.995;
+  head.scale.set(0.98, 1.08, 1);
   upper.add(head);
 
-  // arms
+  // arms, hugging the silhouette
   for (const s of [-1, 1]){
     const pivot = new THREE.Group();
-    pivot.position.set(s * 0.275, 0.5, 0);
-    const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.062, 0.4, 4, 12), matBody);
-    arm.position.y = -0.28;
+    pivot.position.set(s * 0.163, 0.755, 0);
+    const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.40, 5, 14), matBody);
+    arm.position.y = -0.27;
     pivot.add(arm);
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.062, 12, 10), matSkin);
-    hand.position.y = -0.52;
-    pivot.add(hand);
     upper.add(pivot);
     limbs[s < 0 ? 'armL' : 'armR'] = pivot;
   }
 
-  // legs
+  // legs: one capsule each, a soft foot rather than a separate shoe
   for (const s of [-1, 1]){
     const pivot = new THREE.Group();
-    pivot.position.set(s * 0.125, 0.88, 0);
-    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.082, 0.46, 4, 12), matBody);
-    leg.position.y = -0.34;
+    pivot.position.set(s * 0.108, 0.84, 0);
+    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.076, 0.648, 5, 14), matBody);
+    leg.position.y = -0.40;
     pivot.add(leg);
-    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.09, 0.3), matLeaf);
-    shoe.position.set(0, -0.68, 0.04);
-    pivot.add(shoe);
+    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.083, 16, 12), matBody);
+    foot.position.set(0, -0.762, 0.028);
+    foot.scale.set(1, 0.62, 1.5);
+    pivot.add(foot);
     g.add(pivot);
     limbs[s < 0 ? 'legL' : 'legR'] = pivot;
   }
 
-  // satchel on the left hip, strap across the chest
-  const bag = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.26, 0.12), matBody);
-  bag.position.set(-0.31, 0.06, 0.02);
-  bag.rotation.z = 0.07;
+  // satchel and strap, same material, so they read as part of the figure
+  const bag = new THREE.Mesh(new THREE.SphereGeometry(0.15, 20, 14), matBody);
+  bag.position.set(-0.168, 0.215, 0.01);
+  bag.scale.set(0.72, 0.78, 0.38);
   upper.add(bag);
-  const flap = new THREE.Mesh(new THREE.BoxGeometry(0.315, 0.06, 0.135), matGold);
-  flap.position.set(-0.31, 0.16, 0.02);
-  flap.rotation.z = 0.07;
-  upper.add(flap);
 
-  for (const z of [-0.16, 0.16]){
-    const strap = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.7, 0.016), matSteel);
-    strap.position.set(-0.05, 0.33, z);
-    strap.rotation.z = -0.4;
-    upper.add(strap);
-  }
-
-  // a book tucked under the right arm
-  const book = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.26, 0.2), matGold);
-  book.position.set(0.3, 0.16, 0.02);
-  book.rotation.z = -0.09;
-  upper.add(book);
+  const strap = new THREE.Mesh(new THREE.TorusGeometry(0.163, 0.0125, 8, 44), matBody);
+  strap.position.y = 0.47;
+  strap.rotation.set(Math.PI / 2, 0, 0.5);
+  strap.scale.z = 0.88;
+  upper.add(strap);
 
   g.traverse(o => { if (o.isMesh) o.castShadow = !LOW; });
 
@@ -746,6 +721,7 @@ canvas.addEventListener('pointerdown', ev => {
   if (activeDoor) return;
   canvas.focus({ preventScroll: true });
   hideHint();
+  pad.classList.remove('idle');
   const hit = pick(ev);
   if (hit.door){
     if (hero.position.distanceTo(hit.door.stand) < 1.2){ enterDoor(hit.door); target = null; queuedDoor = null; }
@@ -760,17 +736,48 @@ canvas.addEventListener('pointerdown', ev => {
   }
 });
 
+/* The on-screen arrows are both a control and a legend: pressing a real key
+   lights the matching one, which is how you learn the keyboard works. */
+const pad = document.getElementById('pad');
+const padKeys = new Map();                       // 'ArrowUp' → button
+for (const btn of pad.querySelectorAll('.key')) padKeys.set(btn.dataset.key, btn);
+
+const KEY_ALIAS = { KeyW:'ArrowUp', KeyS:'ArrowDown', KeyA:'ArrowLeft', KeyD:'ArrowRight' };
+const padOf = code => padKeys.get(KEY_ALIAS[code] || code);
+
+function startWalk(code){
+  if (activeDoor) return;
+  keys.add(code);
+  padOf(code)?.classList.add('on');
+  target = null; queuedDoor = null;
+  pad.classList.remove('idle');
+  hideHint();
+}
+function stopWalk(code){
+  keys.delete(code);
+  padOf(code)?.classList.remove('on');
+}
+
+for (const [code, btn] of padKeys){
+  btn.addEventListener('pointerdown', e => { e.preventDefault(); btn.setPointerCapture?.(e.pointerId); startWalk(code); });
+  for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) btn.addEventListener(ev, () => stopWalk(code));
+  // buttons are focusable, so they answer to the keyboard too
+  btn.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); startWalk(code); } });
+  btn.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') stopWalk(code); });
+}
+
 addEventListener('keydown', e => {
   if (e.code === 'Escape'){ if (activeDoor) closePopup(); return; }
   if (activeDoor) return;
   if (MOVE_KEYS[e.code]){
-    keys.add(e.code); target = null; queuedDoor = null; hideHint(); e.preventDefault();
+    startWalk(e.code);
+    e.preventDefault();
   } else if (e.code === 'Enter' || e.code === 'Space'){
     if (promptDoor){ enterDoor(promptDoor); e.preventDefault(); }
   }
 });
-addEventListener('keyup', e => keys.delete(e.code));
-addEventListener('blur', () => keys.clear());
+addEventListener('keyup', e => { if (MOVE_KEYS[e.code]) stopWalk(e.code); });
+addEventListener('blur', () => { for (const code of [...keys]) stopWalk(code); });
 
 /* ======================================================================
    10. Popup
@@ -782,6 +789,7 @@ const mGo = document.getElementById('mGo');
 
 function openPopup(d){
   activeDoor = d;
+  for (const code of [...keys]) stopWalk(code);   // don't keep walking behind the card
   mTitle.textContent = d.label;
   mBlurb.textContent = d.blurb;
   mGo.href = d.url;

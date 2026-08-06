@@ -102,6 +102,45 @@
   .hint.gone{opacity:0}
   @media (max-width:620px){ .hint .desktop-only{display:none} }
 
+  /* ---------- on-screen arrow keys ---------- */
+  .pad{
+    position:fixed;right:clamp(16px,2.4vw,30px);bottom:clamp(16px,3vh,30px);z-index:7;
+    display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);
+    gap:8px;touch-action:none;
+  }
+  .pad .key{
+    width:clamp(46px,5.2vw,56px);height:clamp(46px,5.2vw,56px);
+    display:grid;place-items:center;padding:0;cursor:pointer;
+    font-family:var(--ui);font-size:19px;line-height:1;color:var(--text);
+    background:rgba(255,255,255,.05);border:1px solid rgba(240,185,120,.3);
+    border-radius:12px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    transition:background .12s,border-color .12s,transform .12s,box-shadow .12s;
+    -webkit-user-select:none;user-select:none;
+  }
+  .pad .key:hover{border-color:rgba(240,185,120,.6)}
+  .pad .key.on{
+    background:rgba(240,185,120,.9);border-color:#ffdcae;color:#120d07;
+    transform:translateY(1px) scale(.97);box-shadow:0 0 22px rgba(240,185,120,.45);
+  }
+  .pad .key:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+  .pad .up{grid-area:1/2}
+  .pad .left{grid-area:2/1}
+  .pad .down{grid-area:2/2}
+  .pad .right{grid-area:2/3}
+  /* a gentle nudge until the walker is first moved */
+  .pad.idle .key{animation:padHint 2.8s ease-in-out infinite}
+  .pad.idle .up{animation-delay:.15s}
+  @keyframes padHint{
+    0%,72%,100%{border-color:rgba(240,185,120,.3)}
+    80%{border-color:rgba(240,185,120,.85)}
+  }
+  @media (prefers-reduced-motion:reduce){ .pad.idle .key{animation:none} }
+  @media (max-width:620px){
+    .pad{left:50%;right:auto;transform:translateX(-50%);bottom:20px}
+    .pad .key{width:58px;height:58px;font-size:22px}
+    .hint{bottom:158px}
+  }
+
   /* ---------- door popup ---------- */
   .modal{
     position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:22px;
@@ -173,6 +212,13 @@
 <p class="hint" id="hint">
   <span class="desktop-only"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows to walk &nbsp;·&nbsp; click the floor to go there &nbsp;·&nbsp; </span>click a door to open it
 </p>
+
+<div class="pad idle" id="pad" role="group" aria-label="Walk controls">
+  <button class="key up" data-key="ArrowUp" type="button" aria-label="Walk forward">↑</button>
+  <button class="key left" data-key="ArrowLeft" type="button" aria-label="Walk left">←</button>
+  <button class="key down" data-key="ArrowDown" type="button" aria-label="Walk back">↓</button>
+  <button class="key right" data-key="ArrowRight" type="button" aria-label="Walk right">→</button>
+</div>
 
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
   <div class="card">

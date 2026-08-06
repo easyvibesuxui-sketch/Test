@@ -27,15 +27,23 @@ execFileSync('npx', [
   `--alias:three=${vendor}/three.module.min.js`,
 ], { stdio: 'inherit' });
 
+const code = readFileSync(bundle, 'utf8');
 const html = readFileSync(join(root, 'index.html'), 'utf8')
   // no external font, no import map, no module script: everything is inline
   .replace(/\n *<link rel="preconnect"[^>]*>/g, '')
   .replace(/\n *<link href="https:\/\/fonts\.googleapis[^>]*>/g, '')
   .replace(/\n *<script type="importmap">[\s\S]*?<\/script>/, '')
-  .replace(
-    /\n *<script type="module" src="\.\/app\.js"><\/script>/,
-    `\n<script>\n${readFileSync(bundle, 'utf8')}\n</script>`
-  );
+  // A function replacer, never a string: minified code contains `$&&`, and in a
+  // replacement string `$&` means "the matched text", which splices the script
+  // tag into the middle of the bundle and truncates the page.
+  .replace(/\n *<script type="module" src="\.\/app\.js"><\/script>/,
+           () => `\n<script>\n${code}\n</script>`);
+
+// the inline bundle plus the small loader fallback: exactly two script tags
+const tags = html.match(/<\/script>/g) ?? [];
+if (tags.length !== 2){
+  throw new Error(`expected 2 script tags in the output, found ${tags.length} — the bundle leaked markup`);
+}
 
 writeFileSync(join(root, 'standalone.html'), html);
 console.log(`standalone.html written — ${(html.length / 1024).toFixed(0)} KB`);
