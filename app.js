@@ -1,8 +1,4 @@
 import * as THREE from 'three';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 /* ======================================================================
    1. The doors. Everything user-facing lives in this one list.
@@ -41,11 +37,11 @@ const DOORS = [
 const PORTRAIT = innerHeight > innerWidth * 1.05;
 
 const HALL = { hw: PORTRAIT ? 4.7 : 7, h: PORTRAIT ? 7.6 : 8.6, zBack: -16, zFront: 16 };
-const DOOR = { w: 1.95, h: 3.65, depth: 0.34 };
+const DOOR = { w: 1.95, h: 3.65, depth: 0.3 };
 const BOUND = { x: HALL.hw - 1.3, zMin: -13.8, zMax: 13.2 };
 const STAND_OFF = 2.35;          // how far in front of a door the walker stops
 const CAM = PORTRAIT
-  ? { fov: 68, back: 10.6, high: 4.2, aim: 2.4, aimZ: -7.5 }
+  ? { fov: 68, back: 10.6, high: 4.0, aim: 2.0, aimZ: -7.0 }
   : { fov: 46, back: 10.4, high: 4.1, aim: 1.75, aimZ: -4.6 };
 
 /* On a phone the side doors also sit deeper down the hall, so both pairs stay
@@ -55,272 +51,191 @@ for (const d of DOORS){
   else if (d.slot === 'far') d.z = PORTRAIT ? -8.8 : -6.4;
 }
 
-const GOLD = 0xf0b978;
-const isCoarse = matchMedia('(pointer: coarse)').matches;
+/* ---------- palette ----------
+   A pale hall where the only dark things are the doors and the walker, so the
+   six choices read at a glance and nothing else competes. */
+const PAPER  = 0xf4f1ea;   // air, and the far end of the hall
+const WALL   = 0xf8f6f1;
+const CEIL   = 0xfcfbf8;
+const FLOOR  = 0xeae5db;
+const GREY   = 0xdad4c8;   // skirting, frames, quiet lines
+const NAVY   = 0x2b3654;   // the doors
+const INK    = 0x2f3542;   // the walker
+const WARM   = 0xffd9a0;   // light through an open door
+
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const params = new URLSearchParams(location.search);
-const LOW = params.has('low') || isCoarse || innerWidth < 820;   // lighter pipeline on phones
+const LOW = params.has('low') || matchMedia('(pointer: coarse)').matches || innerWidth < 820;
 
 /* ======================================================================
    3. Renderer, scene, camera
    ====================================================================== */
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: !LOW, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio || 1, LOW ? 1.5 : 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, LOW ? 1 : 1.5));
 renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = !LOW;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
 
+/* No shadow maps, no post-processing, no reflections, no environment map: this
+   scene is drawn in a single pass with three lights and matte materials. That
+   is what keeps it smooth on a laptop GPU, and it suits the flat, pale look. */
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x06070a);
-scene.fog = new THREE.Fog(0x06070a, 16, 46);
+scene.background = new THREE.Color(PAPER);
+/* barely any fog: it only softens the far corners. Pulled this far back because
+   at 20m it was washing the navy out of the back-wall doors. */
+scene.fog = new THREE.Fog(PAPER, 46, 110);
 
-const camera = new THREE.PerspectiveCamera(CAM.fov, innerWidth / innerHeight, 0.1, 120);
-camera.position.set(0, 3.5, 15);
-camera.layers.enableAll();
+const camera = new THREE.PerspectiveCamera(CAM.fov, innerWidth / innerHeight, 0.1, 90);
+camera.position.set(0, CAM.high, 15);
 
-/* a small procedural environment so the black surfaces have something to reflect */
-function makeEnv(){
-  const c = document.createElement('canvas');
-  c.width = 64; c.height = 256;
-  const g = c.getContext('2d');
-  const grad = g.createLinearGradient(0, 0, 0, 256);
-  grad.addColorStop(0.00, '#05060a');
-  grad.addColorStop(0.42, '#12141c');
-  grad.addColorStop(0.55, '#3a2d20');
-  grad.addColorStop(0.62, '#1a1a22');
-  grad.addColorStop(1.00, '#020305');
-  g.fillStyle = grad;
-  g.fillRect(0, 0, 64, 256);
-  const tex = new THREE.CanvasTexture(c);
-  tex.mapping = THREE.EquirectangularReflectionMapping;
-  tex.colorSpace = THREE.SRGBColorSpace;
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  const env = pmrem.fromEquirectangular(tex).texture;
-  pmrem.dispose();
-  tex.dispose();
-  return env;
-}
-scene.environment = makeEnv();
+/* Mostly ambient, with a weak sun for shape only: an even wash keeps every
+   door the same navy wherever it stands, which is what the flat look needs. */
+scene.add(new THREE.HemisphereLight(0xffffff, 0xe8e2d6, 2.3));
+const sun = new THREE.DirectionalLight(0xfff6e8, 0.5);
+sun.position.set(3, 14, 7);
+scene.add(sun);
+
+/* one warm light, moved to whichever door is open */
+const portalLight = new THREE.PointLight(WARM, 0, 11, 2);
+scene.add(portalLight);
 
 /* ======================================================================
-   4. Materials
+   4. Materials — all Lambert: matte, cheap, and flat enough to stay minimal
    ====================================================================== */
-const matWall = new THREE.MeshStandardMaterial({ color: 0x181b23, roughness: 0.58, metalness: 0.3 });
-const matWallDark = new THREE.MeshStandardMaterial({ color: 0x0d0f14, roughness: 0.8, metalness: 0.1 });
-const matPillar = new THREE.MeshStandardMaterial({ color: 0x1b1e27, roughness: 0.2, metalness: 0.7 });
-const matTrim = new THREE.MeshStandardMaterial({
-  color: 0x1d1710, roughness: 0.28, metalness: 0.85, emissive: GOLD, emissiveIntensity: 0.16,
-});
-const matSteel = new THREE.MeshStandardMaterial({ color: 0x2a2e38, roughness: 0.24, metalness: 0.9 });
-const matLeaf = new THREE.MeshPhysicalMaterial({
-  color: 0x101319, roughness: 0.12, metalness: 0.55, clearcoat: 1, clearcoatRoughness: 0.06,
-});
-const matStrip = new THREE.MeshBasicMaterial({ color: 0xb3a48c });
-const matBody = new THREE.MeshPhysicalMaterial({
-  color: 0x49525f, roughness: 0.36, metalness: 0.18, clearcoat: 1, clearcoatRoughness: 0.18,
-});
-const matGold = new THREE.MeshStandardMaterial({
-  color: 0x8a6535, roughness: 0.24, metalness: 1, emissive: GOLD, emissiveIntensity: 0.08,
-});
+const mat = {
+  wall:  new THREE.MeshLambertMaterial({ color: WALL }),
+  ceil:  new THREE.MeshBasicMaterial({ color: CEIL }),
+  pale:  new THREE.MeshLambertMaterial({ color: CEIL }),
+  floor: new THREE.MeshLambertMaterial({ color: FLOOR }),
+  grey:  new THREE.MeshLambertMaterial({ color: GREY }),
+  navy:  new THREE.MeshLambertMaterial({ color: NAVY }),
+  hole:  new THREE.MeshLambertMaterial({ color: 0x1b2236 }),
+  body:  new THREE.MeshLambertMaterial({ color: INK }),
+};
 
 /* ======================================================================
-   5. The hall
+   5. Canvas-drawn labels
    ====================================================================== */
-const depth = HALL.zFront - HALL.zBack;
-const midZ = (HALL.zFront + HALL.zBack) / 2;
+const UI_FONT = '"Outfit","Segoe UI",system-ui,sans-serif';
 
-function buildHall(){
-  const g = new THREE.Group();
-
-  // ---- floor ----
-  // Polished stone: a semi-transparent glossy sheet with mirrored copies of the
-  // bright objects underneath it (see makeMirror). A real Reflector was tried
-  // first and threw hard specular streaks at grazing angles; this is cheaper
-  // and completely predictable.
-  const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(HALL.hw * 2, depth),
-    new THREE.MeshPhysicalMaterial({
-      color: 0x0c0e15, roughness: 0.4, metalness: 0.45,
-      clearcoat: 0.6, clearcoatRoughness: 0.2,
-      transparent: !LOW, opacity: LOW ? 1 : 0.88,
-    })
-  );
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.z = midZ;
-  floor.receiveShadow = !LOW;
-  g.add(floor);
-
-  // an invisible plane the pointer can hit, so clicks land on the floor
-  const picker = new THREE.Mesh(
-    new THREE.PlaneGeometry(HALL.hw * 2, depth),
-    new THREE.MeshBasicMaterial({ visible: false })
-  );
-  picker.rotation.x = -Math.PI / 2;
-  picker.position.z = midZ;
-  picker.name = 'floor';
-  g.add(picker);
-  floorPicker = picker;
-
-  // ---- ceiling ----
-  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(HALL.hw * 2, depth), matWallDark);
-  ceil.rotation.x = Math.PI / 2;
-  ceil.position.set(0, HALL.h, midZ);
-  g.add(ceil);
-
-  // two light strips running the length of the ceiling
-  for (const x of [-2.6, 2.6]){
-    const strip = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.06, depth - 3), matStrip);
-    strip.position.set(x, HALL.h - 0.16, midZ);
-    g.add(strip);
-  }
-
-
-  // ---- walls ----
-  for (const side of [-1, 1]){
-    const wall = new THREE.Mesh(new THREE.PlaneGeometry(depth, HALL.h), matWall);
-    wall.rotation.y = -side * Math.PI / 2;
-    wall.position.set(side * HALL.hw, HALL.h / 2, midZ);
-    wall.receiveShadow = !LOW;
-    g.add(wall);
-
-    // skirting + cornice
-    for (const [y, h] of [[0.14, 0.28], [HALL.h - 0.3, 0.34]]){
-      const b = new THREE.Mesh(new THREE.BoxGeometry(0.12, h, depth), matSteel);
-      b.position.set(side * (HALL.hw - 0.06), y, midZ);
-      g.add(b);
-    }
-
-    // pillars between the doors, each with a warm vertical strip
-    for (const z of [10.6, 6.4, -1.9, -10.6, -14.4]){
-      const p = new THREE.Mesh(new THREE.BoxGeometry(0.55, HALL.h, 0.9), matPillar);
-      p.position.set(side * (HALL.hw - 0.26), HALL.h / 2, z);
-      p.castShadow = !LOW;
-      g.add(p);
-
-      const s = new THREE.Mesh(new THREE.BoxGeometry(0.04, HALL.h - 3.6, 0.07), matStrip);
-      s.position.set(side * (HALL.hw - 0.54), HALL.h / 2 + 0.35, z);
-      g.add(s);
-    }
-
-    // a horizontal reveal so the wall is not a dead black slab
-    const reveal = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.07, depth - 2), matSteel);
-    reveal.position.set(side * (HALL.hw - 0.04), 5.9, midZ);
-    g.add(reveal);
-
-    // two soft washes per side, aimed along the wall so they graze it
-    for (const z of [7.5, -8]){
-      const wash = new THREE.SpotLight(0xffc48d, LOW ? 26 : 42, 15, 0.85, 1, 2);
-      wash.position.set(side * (HALL.hw - 0.5), HALL.h - 0.7, z);
-      wash.target.position.set(side * HALL.hw, 1.5, z);
-      g.add(wash, wash.target);
-    }
-  }
-
-  // ---- back wall ----
-  const back = new THREE.Mesh(new THREE.PlaneGeometry(HALL.hw * 2, HALL.h), matWall);
-  back.position.set(0, HALL.h / 2, HALL.zBack);
-  back.receiveShadow = !LOW;
-  g.add(back);
-
-  const backTrim = new THREE.Mesh(new THREE.BoxGeometry(HALL.hw * 2, 0.28, 0.12), matSteel);
-  backTrim.position.set(0, 0.14, HALL.zBack + 0.06);
-  g.add(backTrim);
-
-  // the wall behind the camera, so reflections never look into the void
-  const front = new THREE.Mesh(new THREE.PlaneGeometry(HALL.hw * 2, HALL.h), matWallDark);
-  front.rotation.y = Math.PI;
-  front.position.set(0, HALL.h / 2, HALL.zFront);
-  g.add(front);
-
-  // ---- IBSU on the back wall ----
-  g.add(makeWordmark());
-
-  return g;
-}
-
-function makeWordmark(){
-  const c = document.createElement('canvas');
-  c.width = 2048; c.height = 512;
-  const x = c.getContext('2d');
-  x.clearRect(0, 0, c.width, c.height);
-  x.font = '600 300px Outfit, "Segoe UI", system-ui, sans-serif';
-  x.textAlign = 'center';
-  x.textBaseline = 'middle';
-  if ('letterSpacing' in x) x.letterSpacing = '64px';
-  x.fillStyle = '#fff3e2';
-  x.fillText('IBSU', c.width / 2 + 32, c.height / 2);
-
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-
-  const grp = new THREE.Group();
-  const mark = new THREE.Mesh(
-    new THREE.PlaneGeometry(7.2, 1.8),
-    new THREE.MeshBasicMaterial({ map: tex, transparent: true })
-  );
-  mark.position.set(0, 6.55, HALL.zBack + 0.05);
-  grp.add(mark);
-
-  const glow = new THREE.PointLight(0xffd9ac, 30, 18, 2);
-  glow.position.set(0, 6.4, HALL.zBack + 1.8);
-  grp.add(glow);
-
-  // a thin lit line under the wordmark
-  const rule = new THREE.Mesh(new THREE.BoxGeometry(8.6, 0.03, 0.04), matStrip);
-  rule.position.set(0, 5.62, HALL.zBack + 0.06);
-  grp.add(rule);
-
-  return grp;
-}
-
-/* ======================================================================
-   6. A door: frame, swinging leaf, lit sign, portal glow
-   ====================================================================== */
-function signTexture(label){
+function textPlane(label, { px = 104, spacing = 0.16, width = 2.5, height = 0.62 } = {}){
   const c = document.createElement('canvas');
   c.width = 1024; c.height = 256;
   const x = c.getContext('2d');
-  x.clearRect(0, 0, c.width, c.height);
-  const size = 104;
-  x.font = `400 ${size}px Outfit, "Segoe UI", system-ui, sans-serif`;
-  if ('letterSpacing' in x) x.letterSpacing = `${size * 0.16}px`;
+  x.font = `400 ${px}px ${UI_FONT}`;
+  if ('letterSpacing' in x) x.letterSpacing = `${px * spacing}px`;
   x.textAlign = 'center';
   x.textBaseline = 'middle';
-  x.fillStyle = '#fff1dd';
-  // squeeze long labels rather than letting them run off the plate
+  x.fillStyle = '#2b3654';
   const text = label.toUpperCase();
-  const room = c.width * 0.88;
+  const room = c.width * 0.9;
   const w = x.measureText(text).width;
-  x.save();
   if (w > room) x.scale(room / w, 1);
   x.fillText(text, (c.width / 2) * (w > room ? w / room : 1), c.height / 2);
-  x.restore();
+
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  return tex;
+  tex.anisotropy = 2;
+  return new THREE.Mesh(
+    new THREE.PlaneGeometry(width, height),
+    new THREE.MeshBasicMaterial({ map: tex, transparent: true })
+  );
 }
 
-function makeGlowTexture(){
+function radialTexture(inner, outer){
   const c = document.createElement('canvas');
-  c.width = c.height = 256;
+  c.width = c.height = 128;
   const x = c.getContext('2d');
-  const g = x.createRadialGradient(128, 128, 0, 128, 128, 128);
-  g.addColorStop(0, 'rgba(255,226,180,1)');
-  g.addColorStop(0.45, 'rgba(255,190,120,.45)');
-  g.addColorStop(1, 'rgba(255,170,90,0)');
+  const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, inner);
+  g.addColorStop(1, outer);
   x.fillStyle = g;
-  x.fillRect(0, 0, 256, 256);
+  x.fillRect(0, 0, 128, 128);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
-const glowTex = makeGlowTexture();
+const softShadowTex = radialTexture('rgba(60,66,80,.5)', 'rgba(60,66,80,0)');
+const warmGlowTex = radialTexture('rgba(255,214,150,.95)', 'rgba(255,214,150,0)');
 
+/* ======================================================================
+   6. The hall
+   ====================================================================== */
+const depth = HALL.zFront - HALL.zBack;
+const midZ = (HALL.zFront + HALL.zBack) / 2;
+let floorPicker = null;
+const pickables = [];
+const doorOf = new Map();
+
+function buildHall(){
+  const g = new THREE.Group();
+
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(HALL.hw * 2, depth), mat.floor);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.z = midZ;
+  g.add(floor);
+  floorPicker = floor;                       // the floor is its own click target
+  floor.name = 'floor';
+
+  // a single inlaid line down the middle of the floor, for depth and direction
+  for (const x of [-1.5, 1.5]){
+    const line = new THREE.Mesh(new THREE.PlaneGeometry(0.035, depth - 6), mat.grey);
+    line.rotation.x = -Math.PI / 2;
+    line.position.set(x, 0.004, midZ - 1);
+    g.add(line);
+  }
+
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(HALL.hw * 2, depth), mat.ceil);
+  ceil.rotation.x = Math.PI / 2;
+  ceil.position.set(0, HALL.h, midZ);
+  g.add(ceil);
+
+  for (const side of [-1, 1]){
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(depth, HALL.h), mat.wall);
+    wall.rotation.y = -side * Math.PI / 2;
+    wall.position.set(side * HALL.hw, HALL.h / 2, midZ);
+    g.add(wall);
+
+    // skirting: one quiet line where the wall meets the floor
+    const skirt = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.16, depth), mat.grey);
+    skirt.position.set(side * (HALL.hw - 0.03), 0.08, midZ);
+    g.add(skirt);
+
+    // shallow pilasters, just enough to carry the perspective
+    for (const z of [8.4, -2.4, -12.6]){
+      const p = new THREE.Mesh(new THREE.BoxGeometry(0.4, HALL.h, 0.7), mat.pale);
+      p.position.set(side * (HALL.hw - 0.2), HALL.h / 2, z);
+      g.add(p);
+    }
+  }
+
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(HALL.hw * 2, HALL.h), mat.wall);
+  back.position.set(0, HALL.h / 2, HALL.zBack);
+  g.add(back);
+
+  const backSkirt = new THREE.Mesh(new THREE.BoxGeometry(HALL.hw * 2, 0.16, 0.06), mat.grey);
+  backSkirt.position.set(0, 0.08, HALL.zBack + 0.03);
+  g.add(backSkirt);
+
+  // the wall behind the camera, so the room is closed
+  const front = new THREE.Mesh(new THREE.PlaneGeometry(HALL.hw * 2, HALL.h), mat.pale);
+  front.rotation.y = Math.PI;
+  front.position.set(0, HALL.h / 2, HALL.zFront);
+  g.add(front);
+
+  // IBSU on the back wall, and a hairline under it
+  const mark = textPlane('IBSU', { px: 160, spacing: 0.3, width: 6.1, height: 1.5 });
+  mark.position.set(0, 6.15, HALL.zBack + 0.04);
+  g.add(mark);
+  const rule = new THREE.Mesh(new THREE.PlaneGeometry(7, 0.022), mat.grey);
+  rule.position.set(0, 5.35, HALL.zBack + 0.04);
+  g.add(rule);
+
+  return g;
+}
+
+/* ======================================================================
+   7. A door: opening, hinged leaf, name, threshold shadow
+   ====================================================================== */
 function buildDoor(d){
   const grp = new THREE.Group();
   if (d.wall === 'back'){
@@ -329,41 +244,36 @@ function buildDoor(d){
   } else {
     const side = d.wall === 'left' ? -1 : 1;
     grp.position.set(side * (HALL.hw - 0.02), 0, d.z);
-    grp.rotation.y = side * Math.PI / 2 * -1;    // local +z points into the hall
+    grp.rotation.y = -side * Math.PI / 2;        // local +z points into the hall
     d.stand = new THREE.Vector3(side * (HALL.hw - STAND_OFF), 0, d.z);
   }
 
-  const W = DOOR.w, H = DOOR.h, T = 0.17;
+  const W = DOOR.w, H = DOOR.h, T = 0.14;
 
-  // recess: a dark box set into the wall
-  const recess = new THREE.Mesh(
-    new THREE.BoxGeometry(W, H, DOOR.depth),
-    new THREE.MeshStandardMaterial({ color: 0x05060a, roughness: 0.9, metalness: 0 })
-  );
-  recess.position.set(0, H / 2, -DOOR.depth / 2 + 0.02);
-  grp.add(recess);
+  // the opening behind the leaf
+  const hole = new THREE.Mesh(new THREE.BoxGeometry(W, H, DOOR.depth), mat.hole);
+  hole.position.set(0, H / 2, -DOOR.depth / 2 + 0.02);
+  grp.add(hole);
 
-  // portal glow, revealed as the leaf swings
-  const portal = new THREE.Mesh(
-    new THREE.PlaneGeometry(W * 1.5, H * 1.1),
-    new THREE.MeshBasicMaterial({
-      map: glowTex, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false,
-    })
+  // warm light spilling out, revealed as the leaf swings
+  const spill = new THREE.Mesh(
+    new THREE.PlaneGeometry(W * 1.6, H * 1.15),
+    new THREE.MeshBasicMaterial({ map: warmGlowTex, transparent: true, opacity: 0, depthWrite: false })
   );
-  portal.position.set(0, H / 2, 0.03);
-  grp.add(portal);
-  d.portal = portal;
+  spill.position.set(0, H / 2, 0.04);
+  grp.add(spill);
+  d.spill = spill;
 
   // frame
-  const frameMat = matTrim.clone();
+  const frameMat = mat.grey.clone();
   d.frameMat = frameMat;
-  const side1 = new THREE.Mesh(new THREE.BoxGeometry(T, H + T * 2, 0.22), frameMat);
-  side1.position.set(-W / 2 - T / 2, H / 2, 0.09);
-  const side2 = side1.clone();
-  side2.position.x = W / 2 + T / 2;
-  const lintel = new THREE.Mesh(new THREE.BoxGeometry(W + T * 2, T, 0.22), frameMat);
-  lintel.position.set(0, H + T / 2, 0.09);
-  grp.add(side1, side2, lintel);
+  const jambL = new THREE.Mesh(new THREE.BoxGeometry(T, H + T * 2, 0.18), frameMat);
+  jambL.position.set(-W / 2 - T / 2, H / 2, 0.07);
+  const jambR = jambL.clone();
+  jambR.position.x = W / 2 + T / 2;
+  const lintel = new THREE.Mesh(new THREE.BoxGeometry(W + T * 2, T, 0.18), frameMat);
+  lintel.position.set(0, H + T / 2, 0.07);
+  grp.add(jambL, jambR, lintel);
 
   // the leaf, hinged on its left edge
   const hinge = new THREE.Group();
@@ -371,70 +281,45 @@ function buildDoor(d){
   grp.add(hinge);
   d.hinge = hinge;
 
-  const leaf = new THREE.Mesh(new THREE.BoxGeometry(W - 0.04, H - 0.04, 0.09), matLeaf);
+  const leaf = new THREE.Mesh(new THREE.BoxGeometry(W - 0.04, H - 0.04, 0.07), mat.navy);
   leaf.position.set(W / 2 - 0.02, H / 2, 0);
-  leaf.castShadow = !LOW;
   hinge.add(leaf);
 
-  // thin inlays + handle, so the leaf reads as a door without going brassy
-  for (const y of [H * 0.28, H * 0.68]){
-    const pw = W - 0.6, ph = H * 0.28, t = 0.035;
-    for (const [ox, oy, sx, sy] of [[0, ph / 2, pw, t], [0, -ph / 2, pw, t],
-                                    [-pw / 2, 0, t, ph], [pw / 2, 0, t, ph]]){
-      const bar = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, 0.02), matGold);
-      bar.position.set(W / 2 - 0.02 + ox, y + oy, 0.05);
-      hinge.add(bar);
-    }
-  }
-  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.34, 12), matGold);
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.28, 8), mat.grey);
   handle.rotation.x = Math.PI / 2;
-  handle.position.set(W - 0.24, H * 0.47, 0.11);
+  handle.position.set(W - 0.22, H * 0.47, 0.08);
   hinge.add(handle);
 
-  // sign above the door
-  const signMat = new THREE.MeshBasicMaterial({ map: signTexture(d.label), transparent: true });
-  const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 0.62), signMat);
-  sign.position.set(0, H + 0.78, 0.12);
+  // the name, straight on the wall — no plate, no underline
+  const sign = textPlane(d.label, { width: 2.6, height: 0.64 });
+  sign.position.set(0, H + 0.62, 0.1);
   grp.add(sign);
-  d.signMat = signMat;
+  d.signMat = sign.material;
 
-  const plate = new THREE.Mesh(
-    new THREE.BoxGeometry(2.66, 0.8, 0.07),
-    new THREE.MeshStandardMaterial({ color: 0x0b0c11, roughness: 0.3, metalness: 0.7 })
-  );
-  plate.position.set(0, H + 0.78, 0.05);
-  grp.add(plate);
+  const tick = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.018), frameMat);
+  tick.position.set(0, H + 0.3, 0.1);
+  grp.add(tick);
 
-  const underline = new THREE.Mesh(new THREE.BoxGeometry(2.66, 0.026, 0.03), matStrip);
-  underline.position.set(0, H + 0.38, 0.1);
-  grp.add(underline);
-
-  // a spot washing down over the door
-  const spot = new THREE.SpotLight(0xffc38a, LOW ? 26 : 48, 11, 0.62, 0.75, 2);
-  spot.position.set(0, H + 2.4, 1.7);
-  spot.target.position.set(0, H / 2, 0);
-  grp.add(spot, spot.target);
-  d.spot = spot;
-
-  // a painted pool of light on the polished floor at the threshold — free, and
-  // it reads far better on gloss than another real light would
+  // a soft shadow on the floor grounds the doorway
   const pool = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.2, 4.4),
-    new THREE.MeshBasicMaterial({
-      map: glowTex, transparent: true, opacity: 0.13,
-      blending: THREE.AdditiveBlending, depthWrite: false,
-    })
+    new THREE.PlaneGeometry(3.1, 3.4),
+    new THREE.MeshBasicMaterial({ map: softShadowTex, transparent: true, opacity: 0.4, depthWrite: false })
   );
   pool.rotation.x = -Math.PI / 2;
-  pool.position.set(0, 0.014, 1.9);
-  pool.renderOrder = 1;
+  pool.position.set(0, 0.008, 1.15);
   grp.add(pool);
-  d.pool = pool;
 
-  // everything the pointer may hit for this door. The mapping lives in a Map,
-  // not in userData, so that cloning a door for its reflection never has to
-  // serialise a cycle back to this object.
-  for (const m of [leaf, side1, side2, lintel, sign, plate, recess]){
+  // warm wash on the floor once the door is open
+  const glow = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.6, 4.4),
+    new THREE.MeshBasicMaterial({ map: warmGlowTex, transparent: true, opacity: 0, depthWrite: false })
+  );
+  glow.rotation.x = -Math.PI / 2;
+  glow.position.set(0, 0.012, 1.5);
+  grp.add(glow);
+  d.glow = glow;
+
+  for (const m of [leaf, jambL, jambR, lintel, sign, hole]){
     doorOf.set(m, d);
     pickables.push(m);
   }
@@ -447,17 +332,14 @@ function buildDoor(d){
 }
 
 /* ======================================================================
-   7. The walker — built from primitives, lit and glossy
+   8. The walker — one silhouette, one material
    ====================================================================== */
 function buildHero(){
   const g = new THREE.Group();
   const limbs = {};
 
-  // The whole figure is one material and one continuous silhouette: a single
-  // revolved coat from hem to collar, a head, two arms, two legs. No separate
-  // shoulders, collar, shoes or trim pieces to read as assembled parts.
   const upper = new THREE.Group();
-  upper.position.y = 0.72;                        // the hem of the coat
+  upper.position.y = 0.72;                     // the hem of the coat
   g.add(upper);
 
   const profile = [
@@ -465,34 +347,32 @@ function buildHero(){
     [0.160, 0.300], [0.148, 0.450], [0.160, 0.580], [0.166, 0.690],
     [0.148, 0.782], [0.092, 0.845], [0.058, 0.868],
   ].map(([x, y]) => new THREE.Vector2(x, y));
-  const body = new THREE.Mesh(new THREE.LatheGeometry(profile, 30), matBody);
+  const body = new THREE.Mesh(new THREE.LatheGeometry(profile, 18), mat.body);
   body.scale.z = 0.86;
   upper.add(body);
 
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.152, 30, 22), matBody);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.152, 18, 12), mat.body);
   head.position.y = 0.995;
   head.scale.set(0.98, 1.08, 1);
   upper.add(head);
 
-  // arms, hugging the silhouette
   for (const s of [-1, 1]){
     const pivot = new THREE.Group();
     pivot.position.set(s * 0.163, 0.755, 0);
-    const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.40, 5, 14), matBody);
+    const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.40, 3, 8), mat.body);
     arm.position.y = -0.27;
     pivot.add(arm);
     upper.add(pivot);
     limbs[s < 0 ? 'armL' : 'armR'] = pivot;
   }
 
-  // legs: one capsule each, a soft foot rather than a separate shoe
   for (const s of [-1, 1]){
     const pivot = new THREE.Group();
     pivot.position.set(s * 0.108, 0.84, 0);
-    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.076, 0.648, 5, 14), matBody);
+    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.076, 0.648, 3, 8), mat.body);
     leg.position.y = -0.40;
     pivot.add(leg);
-    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.083, 16, 12), matBody);
+    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.083, 10, 8), mat.body);
     foot.position.set(0, -0.762, 0.028);
     foot.scale.set(1, 0.62, 1.5);
     pivot.add(foot);
@@ -500,29 +380,11 @@ function buildHero(){
     limbs[s < 0 ? 'legL' : 'legR'] = pivot;
   }
 
-  // satchel and strap, same material, so they read as part of the figure
-  const bag = new THREE.Mesh(new THREE.SphereGeometry(0.15, 20, 14), matBody);
+  // satchel, same material, so it reads as part of the figure
+  const bag = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 8), mat.body);
   bag.position.set(-0.168, 0.215, 0.01);
   bag.scale.set(0.72, 0.78, 0.38);
   upper.add(bag);
-
-  const strap = new THREE.Mesh(new THREE.TorusGeometry(0.163, 0.0125, 8, 44), matBody);
-  strap.position.y = 0.47;
-  strap.rotation.set(Math.PI / 2, 0, 0.5);
-  strap.scale.z = 0.88;
-  upper.add(strap);
-
-  g.traverse(o => { if (o.isMesh) o.castShadow = !LOW; });
-
-  // a close key and a warm rim travel with him, short-range so they model the
-  // figure without reaching far across the floor
-  const key = new THREE.PointLight(0xffe8cf, 12, 5.5, 2);
-  key.position.set(0.9, 2.3, 1.8);
-  g.add(key);
-
-  const rim = new THREE.PointLight(0xffb877, 9, 4.5, 2);
-  rim.position.set(-0.8, 2, -1.5);
-  g.add(rim);
 
   g.userData.limbs = limbs;
   g.userData.upper = upper;
@@ -530,166 +392,42 @@ function buildHero(){
 }
 
 /* ======================================================================
-   8. Reflections, by mirroring the geometry under the floor
-   ====================================================================== */
-const dimCache = new Map();
-function dimMaterial(m){
-  if (dimCache.has(m)) return dimCache.get(m);
-  const d = m.clone();
-  d.color.multiplyScalar(0.32);
-  if (d.emissive) d.emissiveIntensity = (d.emissiveIntensity || 0) * 0.45;
-  d.side = THREE.DoubleSide;          // the negative scale flips face winding
-  d.transparent = true;
-  d.opacity = (m.opacity ?? 1) * 0.75;
-  d.depthWrite = false;
-  if ('clearcoat' in d) d.clearcoat = 0;
-  dimCache.set(m, d);
-  return d;
-}
-const mirrorPairs = new Map();
-/** a dimmed copy of `src`, flipped through the floor plane */
-function makeMirror(src){
-  const m = src.clone(true);
-
-  // pair the two trees up while they still match node for node
-  const a = [], b = [];
-  src.traverse(o => a.push(o));
-  m.traverse(o => b.push(o));
-  const pairs = [];
-  for (let i = 1; i < a.length && i < b.length; i++){
-    if (!b[i].isLight) pairs.push([a[i], b[i]]);
-  }
-  mirrorPairs.set(m, pairs);
-
-  // a reflection carries no lights, no shadows and no hit targets
-  const lights = b.filter(o => o.isLight);
-  for (const l of lights) l.parent && l.parent.remove(l);
-  for (const o of b){
-    if (o.isMesh) o.material = dimMaterial(o.material);
-    o.castShadow = false;
-    o.receiveShadow = false;
-  }
-
-  m.scale.y *= -1;
-  m.renderOrder = -1;
-  return m;
-}
-/** keep a mirrored copy in step with the original, frame by frame */
-function syncMirror(src, dst){
-  dst.position.set(src.position.x, -src.position.y, src.position.z);
-  dst.quaternion.copy(src.quaternion);
-  const pairs = mirrorPairs.get(dst);
-  if (!pairs) return;
-  for (const [from, to] of pairs){
-    to.position.copy(from.position);
-    to.quaternion.copy(from.quaternion);
-  }
-}
-
-/* ======================================================================
    9. Assemble
    ====================================================================== */
-let floorPicker = null;
-const pickables = [];
-const doorOf = new Map();
-
-/* Ambient comes from a hemisphere light alone. Directional fills were tried and
-   removed: a directional light on a floor this polished lays a broad specular
-   smear across the stone that no amount of aiming gets rid of. A hemisphere is
-   diffuse-only, so it lifts the room without touching the polish. */
-scene.add(new THREE.HemisphereLight(0x8fa2c0, 0x101218, 2.6));
-
 scene.add(buildHall());
-for (const d of DOORS){
-  const grp = buildDoor(d);
-  scene.add(grp);
-  if (!LOW){
-    d.mirror = makeMirror(grp);
-    scene.add(d.mirror);
-  }
-}
-
-/* one shared light for whichever door is open — cheaper than one per door */
-const portalLight = new THREE.PointLight(0xffc98a, 0, 12, 2);
-scene.add(portalLight);
+for (const d of DOORS) scene.add(buildDoor(d));
 
 const hero = buildHero();
 hero.position.set(0, 0, 8.5);
-hero.rotation.y = Math.PI;          // facing away from the camera, down the hall
+hero.rotation.y = Math.PI;            // facing away from the camera, down the hall
 scene.add(hero);
 
-const heroMirror = LOW ? null : makeMirror(hero);
-if (heroMirror) scene.add(heroMirror);
-
-/* a soft pool of light that travels with him, plus a contact shadow so he
-   is planted on the floor rather than hovering over it */
-/* The pool under his feet is painted, not lit: a real spot straight above him
-   blooms across polished stone. */
-const heroSpot = new THREE.SpotLight(0xfff0da, 26, 14, 0.4, 1, 2);
-heroSpot.position.set(0, HALL.h - 0.4, 8.5);
-scene.add(heroSpot, heroSpot.target);
-
-const heroPool = new THREE.Mesh(
-  new THREE.PlaneGeometry(3.4, 3.4),
-  new THREE.MeshBasicMaterial({
-    map: glowTex, transparent: true, opacity: 0.13,
-    blending: THREE.AdditiveBlending, depthWrite: false,
-  })
-);
-heroPool.rotation.x = -Math.PI / 2;
-heroPool.position.y = 0.016;
-scene.add(heroPool);
-
+// his own soft shadow, so he is planted on the floor
 const contact = new THREE.Mesh(
   new THREE.PlaneGeometry(1.5, 1.5),
-  new THREE.MeshBasicMaterial({
-    map: (() => {
-      const c = document.createElement('canvas');
-      c.width = c.height = 128;
-      const x = c.getContext('2d');
-      const gr = x.createRadialGradient(64, 64, 0, 64, 64, 64);
-      gr.addColorStop(0, 'rgba(0,0,0,.85)');
-      gr.addColorStop(1, 'rgba(0,0,0,0)');
-      x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
-      return new THREE.CanvasTexture(c);
-    })(),
-    transparent: true, opacity: 0.75, depthWrite: false,
-  })
+  new THREE.MeshBasicMaterial({ map: softShadowTex, transparent: true, opacity: 0.55, depthWrite: false })
 );
 contact.rotation.x = -Math.PI / 2;
-contact.position.y = 0.012;
+contact.position.y = 0.01;
 scene.add(contact);
 
-/* a marker where you clicked, so a walk order always has visible feedback */
+// a ring where you clicked, so a walk order always has visible feedback
 const marker = new THREE.Mesh(
-  new THREE.RingGeometry(0.34, 0.42, 40),
-  new THREE.MeshBasicMaterial({
-    color: GOLD, transparent: true, opacity: 0,
-    blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
-  })
+  new THREE.RingGeometry(0.32, 0.38, 28),
+  new THREE.MeshBasicMaterial({ color: NAVY, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide })
 );
 marker.rotation.x = -Math.PI / 2;
-marker.position.y = 0.02;
-marker.renderOrder = 2;
+marker.position.y = 0.016;
 scene.add(marker);
 
-/* ---------- post processing ---------- */
-const composer = new EffectComposer(renderer);
-composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(
-  new THREE.Vector2(innerWidth, innerHeight), LOW ? 0.3 : 0.42, 0.7, 0.92
-);
-composer.addPass(bloom);
-composer.addPass(new OutputPass());
-
 /* ======================================================================
-   9. Input
+   10. Input
    ====================================================================== */
 const keys = new Set();
 const MOVE_KEYS = { ArrowLeft:1, ArrowRight:1, ArrowUp:1, ArrowDown:1, KeyA:1, KeyD:1, KeyW:1, KeyS:1 };
 const SPEED = 5;
 
-let target = null;        // Vector3 on the floor
+let target = null;
 let queuedDoor = null;
 let hoverDoor = null;
 let activeDoor = null;
@@ -739,7 +477,7 @@ canvas.addEventListener('pointerdown', ev => {
 /* The on-screen arrows are both a control and a legend: pressing a real key
    lights the matching one, which is how you learn the keyboard works. */
 const pad = document.getElementById('pad');
-const padKeys = new Map();                       // 'ArrowUp' → button
+const padKeys = new Map();
 for (const btn of pad.querySelectorAll('.key')) padKeys.set(btn.dataset.key, btn);
 
 const KEY_ALIAS = { KeyW:'ArrowUp', KeyS:'ArrowDown', KeyA:'ArrowLeft', KeyD:'ArrowRight' };
@@ -761,7 +499,6 @@ function stopWalk(code){
 for (const [code, btn] of padKeys){
   btn.addEventListener('pointerdown', e => { e.preventDefault(); btn.setPointerCapture?.(e.pointerId); startWalk(code); });
   for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) btn.addEventListener(ev, () => stopWalk(code));
-  // buttons are focusable, so they answer to the keyboard too
   btn.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); startWalk(code); } });
   btn.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') stopWalk(code); });
 }
@@ -780,7 +517,7 @@ addEventListener('keyup', e => { if (MOVE_KEYS[e.code]) stopWalk(e.code); });
 addEventListener('blur', () => { for (const code of [...keys]) stopWalk(code); });
 
 /* ======================================================================
-   10. Popup
+   11. Popup
    ====================================================================== */
 const modal = document.getElementById('modal');
 const mTitle = document.getElementById('mTitle');
@@ -815,10 +552,6 @@ function enterDoor(d){
 /* ---------- the floating "press Enter" label ---------- */
 const promptEl = document.createElement('div');
 promptEl.id = 'prompt';
-promptEl.style.cssText = `position:fixed;z-index:5;pointer-events:none;transform:translate(-50%,-50%);
-  padding:.5em 1em;border-radius:999px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
-  color:#f2ece4;background:rgba(10,11,15,.62);border:1px solid rgba(240,185,120,.45);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;transition:opacity .25s`;
 promptEl.textContent = 'Press ⏎ to open';
 document.body.appendChild(promptEl);
 
@@ -849,15 +582,14 @@ document.addEventListener('click', e => {
 });
 
 /* ======================================================================
-   11. Frame loop
+   12. Frame loop
    ====================================================================== */
-const camPos = new THREE.Vector3(0, 3.5, 15);
-const camAim = new THREE.Vector3(0, 1.4, 0);
+const camPos = new THREE.Vector3(0, CAM.high, 15);
+const camAim = new THREE.Vector3(0, CAM.aim, 0);
 const tmp = new THREE.Vector3();
 const clock = new THREE.Clock();
 
 function update(dt, t){
-  // ---- steering ----
   let ax = 0, az = 0;
   if (keys.has('ArrowLeft') || keys.has('KeyA')) ax -= 1;
   if (keys.has('ArrowRight') || keys.has('KeyD')) ax += 1;
@@ -891,15 +623,13 @@ function update(dt, t){
     hero.position.x = clamp(hero.position.x + vx * dt, -BOUND.x, BOUND.x);
     hero.position.z = clamp(hero.position.z + vz * dt, BOUND.zMin, BOUND.zMax);
     yaw = Math.atan2(vx, vz);
-    phase += dt * 9.2 * (speed / SPEED);   // legs keep pace with the actual speed
+    phase += dt * 9.2 * (speed / SPEED);
   }
-  // shortest-path turn
   let dy = yaw - hero.rotation.y;
   while (dy > Math.PI) dy -= Math.PI * 2;
   while (dy < -Math.PI) dy += Math.PI * 2;
   hero.rotation.y += dy * Math.min(1, dt * 9);
 
-  // ---- walk cycle ----
   const L = hero.userData.limbs;
   const sw = Math.sin(phase) * 0.62 * moving;
   L.legL.rotation.x = sw;
@@ -910,22 +640,16 @@ function update(dt, t){
   hero.userData.upper.rotation.x = 0.08 * moving;
   hero.userData.upper.rotation.z = Math.sin(phase) * 0.035 * moving;
 
-  // the walk-to marker: sits on the destination, pulses, fades once we arrive
+  contact.position.set(hero.position.x, 0.01, hero.position.z);
+
   if (target){
-    marker.position.set(target.x, 0.02, target.z);
-    marker.material.opacity = Math.min(0.75, marker.material.opacity + dt * 4);
-    const pulse = 1 + Math.sin(t * 5) * 0.12;
-    marker.scale.setScalar(pulse);
+    marker.position.set(target.x, 0.016, target.z);
+    marker.material.opacity = Math.min(0.5, marker.material.opacity + dt * 3);
+    marker.scale.setScalar(1 + Math.sin(t * 5) * 0.1);
   } else if (marker.material.opacity > 0){
-    marker.material.opacity = Math.max(0, marker.material.opacity - dt * 2.2);
+    marker.material.opacity = Math.max(0, marker.material.opacity - dt * 2);
     marker.scale.multiplyScalar(1 + dt * 1.6);
   }
-
-  if (heroMirror) syncMirror(hero, heroMirror);
-  heroSpot.position.set(hero.position.x, HALL.h - 0.4, hero.position.z + 0.6);
-  heroSpot.target.position.copy(hero.position);
-  contact.position.set(hero.position.x, 0.012, hero.position.z);
-  heroPool.position.set(hero.position.x, 0.016, hero.position.z);
 
   // ---- which door are we at ----
   promptDoor = null;
@@ -935,27 +659,25 @@ function update(dt, t){
     if (dist < best){ best = dist; promptDoor = d; }
   }
 
-  // ---- doors ----
+  let anyOpen = false;
   for (const d of DOORS){
     d.open += (d.openTarget - d.open) * Math.min(1, dt * 3.4);
     d.hinge.rotation.y = -d.open * 1.85;
-    if (d.mirror) syncMirror(d.group, d.mirror);
-    d.portal.material.opacity = d.open * 0.85;
+    d.spill.material.opacity = d.open * 0.9;
+    d.glow.material.opacity = d.open * 0.55;
     if (d.open > 0.02){
+      anyOpen = true;
       d.group.getWorldPosition(tmp);
       portalLight.position.set(tmp.x, DOOR.h / 2, tmp.z);
-      portalLight.position.lerp(hero.position.clone().setY(DOOR.h / 2), 0.16);
-      portalLight.intensity = d.open * 34;
+      portalLight.intensity = d.open * 26;
     }
 
     const want = (d === hoverDoor || d === promptDoor || d === activeDoor) ? 1 : 0;
     d.hot += (want - d.hot) * Math.min(1, dt * 6);
-    d.frameMat.emissiveIntensity = 0.16 + d.hot * 0.75;
-    d.signMat.color.setScalar(1 + d.hot * 0.9);
-    d.spot.intensity = (LOW ? 26 : 48) * (1 + d.hot * 0.5);
-    d.pool.material.opacity = 0.13 + d.hot * 0.26 + d.open * 0.38;
+    d.frameMat.color.setHex(GREY).lerp(NAVY_COLOR, d.hot * 0.85);
+    d.signMat.opacity = 0.72 + d.hot * 0.28;
   }
-  if (!DOORS.some(d => d.open > 0.02)) portalLight.intensity = 0;
+  if (!anyOpen) portalLight.intensity = 0;
 
   // ---- the floating prompt ----
   const showPrompt = promptDoor && !activeDoor && promptDoor.open < 0.06;
@@ -975,15 +697,15 @@ function update(dt, t){
   );
   camAim.set(hero.position.x * 0.6, CAM.aim, hero.position.z + CAM.aimZ);
   camera.position.lerp(camPos, Math.min(1, dt * 3.2));
-  tmp.copy(camAim);
-  camera.lookAt(tmp);
+  camera.lookAt(camAim);
 }
+const NAVY_COLOR = new THREE.Color(NAVY);
 
 let booted = false;
 renderer.setAnimationLoop(() => {
   const dt = Math.min(0.05, clock.getDelta());
   update(dt, clock.elapsedTime);
-  composer.render();
+  renderer.render(scene, camera);
   if (!booted){
     booted = true;
     document.getElementById('loader').classList.add('done');
@@ -995,8 +717,6 @@ addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
-  composer.setSize(innerWidth, innerHeight);
-  bloom.setSize(innerWidth, innerHeight);
   // the hall's proportions are chosen for the orientation, so turning the
   // device sideways rebuilds it from scratch
   clearTimeout(resizeT);
@@ -1010,15 +730,15 @@ canvas.focus({ preventScroll: true });
 
 /* ?debug exposes the scene for automated checks */
 if (params.has('debug')){
-  window.__hall = { DOORS, camera, hero, scene, pickables,
+  window.__hall = { DOORS, camera, hero, scene, pickables, renderer,
     probe(x, y){
       const r = pick({ clientX: x, clientY: y });
       return { door: r.door ? r.door.id : null, point: r.point ? r.point.toArray().map(n => +n.toFixed(2)) : null };
     },
     screenOf(o){
-    const v = new THREE.Vector3();
-    o.getWorldPosition(v);
-    v.project(camera);
-    return { x: (v.x * 0.5 + 0.5) * innerWidth, y: (-v.y * 0.5 + 0.5) * innerHeight };
-  } };
+      const v = new THREE.Vector3();
+      o.getWorldPosition(v);
+      v.project(camera);
+      return { x: (v.x * 0.5 + 0.5) * innerWidth, y: (-v.y * 0.5 + 0.5) * innerHeight };
+    } };
 }
