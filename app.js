@@ -338,53 +338,57 @@ function buildHero(){
   const g = new THREE.Group();
   const limbs = {};
 
+  /* Built like a signage pictogram, because that is what stays legible at this
+     size and from this height: a round head on a short neck, one tapered
+     torso, and limbs that keep a visible gap from the body so the silhouette
+     reads as a person rather than a lump. */
   const upper = new THREE.Group();
-  upper.position.y = 0.72;                     // the hem of the coat
+  upper.position.y = 0.86;                     // the hips
   g.add(upper);
 
-  const profile = [
-    [0.000, -0.026], [0.108, -0.020], [0.152, 0.008], [0.163, 0.120],
-    [0.160, 0.300], [0.148, 0.450], [0.160, 0.580], [0.166, 0.690],
-    [0.148, 0.782], [0.092, 0.845], [0.058, 0.868],
-  ].map(([x, y]) => new THREE.Vector2(x, y));
-  const body = new THREE.Mesh(new THREE.LatheGeometry(profile, 18), mat.body);
-  body.scale.z = 0.86;
-  upper.add(body);
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.172, 0.40, 5, 14), mat.body);
+  torso.position.y = 0.33;
+  torso.scale.set(1.09, 1, 0.62);              // slim front to back
+  upper.add(torso);
 
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.152, 18, 12), mat.body);
-  head.position.y = 0.995;
-  head.scale.set(0.98, 1.08, 1);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.058, 0.1, 10), mat.body);
+  neck.position.y = 0.66;
+  upper.add(neck);
+
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.138, 20, 14), mat.body);
+  head.position.y = 0.79;
+  head.scale.set(1, 1.04, 0.96);
   upper.add(head);
 
+  // arms hang clear of the torso and reach the hip, angled out a touch so the
+  // gap survives from behind
   for (const s of [-1, 1]){
     const pivot = new THREE.Group();
-    pivot.position.set(s * 0.163, 0.755, 0);
-    const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.40, 3, 8), mat.body);
-    arm.position.y = -0.27;
+    // meeting the torso at the shoulder and angling out, so the silhouette
+    // stays continuous up top and the hands still clear the hips
+    pivot.position.set(s * 0.202, 0.545, 0);
+    pivot.rotation.z = -s * 0.11;
+    const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.04, 0.44, 4, 10), mat.body);
+    arm.position.y = -0.26;
     pivot.add(arm);
     upper.add(pivot);
     limbs[s < 0 ? 'armL' : 'armR'] = pivot;
   }
 
+  // legs with a gap between them, and a small foot to sit on the floor
   for (const s of [-1, 1]){
     const pivot = new THREE.Group();
-    pivot.position.set(s * 0.108, 0.84, 0);
-    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.076, 0.648, 3, 8), mat.body);
-    leg.position.y = -0.40;
+    pivot.position.set(s * 0.087, 0.86, 0);
+    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.058, 0.66, 4, 10), mat.body);
+    leg.position.y = -0.395;
     pivot.add(leg);
-    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.083, 10, 8), mat.body);
-    foot.position.set(0, -0.762, 0.028);
-    foot.scale.set(1, 0.62, 1.5);
+    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.066, 10, 8), mat.body);
+    foot.position.set(0, -0.775, 0.032);
+    foot.scale.set(1, 0.56, 1.55);
     pivot.add(foot);
     g.add(pivot);
     limbs[s < 0 ? 'legL' : 'legR'] = pivot;
   }
-
-  // satchel, same material, so it reads as part of the figure
-  const bag = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 8), mat.body);
-  bag.position.set(-0.168, 0.215, 0.01);
-  bag.scale.set(0.72, 0.78, 0.38);
-  upper.add(bag);
 
   g.userData.limbs = limbs;
   g.userData.upper = upper;
