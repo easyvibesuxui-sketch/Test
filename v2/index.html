@@ -21,219 +21,101 @@
     --ease:    cubic-bezier(0.22, 1, 0.36, 1);
     --ease-io: cubic-bezier(0.65, 0, 0.35, 1);
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   html, body { background: var(--ink); }
-  body {
-    font-family: var(--sans);
-    color: var(--bone);
-    -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
-  }
+  body { font-family: var(--sans); color: var(--bone); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
   ::selection { background: var(--gold); color: var(--ink); }
 
-  /* ============ full-bleed cinematic background ============ */
-  .stage {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    background: var(--ink);
-    overflow: hidden;
+  /* ============ scroll-scrubbed video background ============ */
+  .stage { position: fixed; inset: 0; z-index: 0; background: #000; overflow: hidden; }
+  .stage video {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; display: block; opacity: 0;
+    transition: opacity 0.8s var(--ease);
+    transform: scaleX(1);
   }
-  .layer {
-    position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0;
-    will-change: opacity, transform;
-    transform: scale(1.06);
-  }
-  /* one shared dark grade so every image melts into the same black and
-     the text stays legible — this is what makes the whole page read as
-     one continuous space rather than separate slides */
+  .stage video.ready { opacity: 1; }
+  .stage video.flip { transform: scaleX(-1); }
+  .black { position: fixed; inset: 0; z-index: 1; background: #000; opacity: 0; pointer-events: none; }
   .grade {
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
     background:
-      linear-gradient(90deg, rgba(8,7,10,0.92) 0%, rgba(8,7,10,0.55) 26%, rgba(8,7,10,0.12) 52%, rgba(8,7,10,0.0) 72%),
-      linear-gradient(0deg, rgba(8,7,10,0.85) 0%, rgba(8,7,10,0.15) 30%, rgba(8,7,10,0.15) 70%, rgba(8,7,10,0.78) 100%),
-      radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(8,7,10,0.6) 100%);
+      linear-gradient(0deg, rgba(8,7,10,0.78) 0%, rgba(8,7,10,0.12) 32%, rgba(8,7,10,0.12) 68%, rgba(8,7,10,0.72) 100%),
+      radial-gradient(125% 105% at 50% 45%, transparent 52%, rgba(8,7,10,0.66) 100%);
   }
   .grain {
-    position: fixed;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    opacity: 0.05;
+    position: fixed; inset: 0; z-index: 3; pointer-events: none; opacity: 0.045;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
   /* ============ header ============ */
-  .site-head {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 60;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 26px clamp(28px, 4.4vw, 64px);
-    transition: opacity 1.2s var(--ease) 0.4s;
-  }
+  .site-head { position: fixed; top: 0; left: 0; right: 0; z-index: 60; display: flex; align-items: center; justify-content: space-between; padding: 26px clamp(28px, 4.4vw, 64px); transition: opacity 1.2s var(--ease) 0.4s; }
   .is-loading .site-head { opacity: 0; }
-  .site-head__logo {
-    font-family: var(--serif);
-    font-weight: 700;
-    font-size: 19px;
-    letter-spacing: 0.18em;
-    color: var(--bone);
-    text-decoration: none;
-  }
-  .site-head__logo small {
-    display: block;
-    font-family: var(--sans);
-    font-weight: 500;
-    font-size: 7.5px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    opacity: 0.55;
-    margin-top: 3px;
-  }
+  .site-head__logo { font-family: var(--serif); font-weight: 700; font-size: 19px; letter-spacing: 0.18em; color: var(--bone); text-decoration: none; }
+  .site-head__logo small { display: block; font-family: var(--sans); font-weight: 500; font-size: 7.5px; letter-spacing: 0.3em; text-transform: uppercase; opacity: 0.55; margin-top: 3px; }
   .site-head__nav { display: flex; gap: clamp(14px, 2.4vw, 34px); }
-  .site-head__nav a {
-    color: var(--bone);
-    text-decoration: none;
-    font-size: 9.5px;
-    font-weight: 700;
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
-    opacity: 0.62;
-    transition: opacity 0.35s var(--ease);
-  }
+  .site-head__nav a { color: var(--bone); text-decoration: none; font-size: 9.5px; font-weight: 700; letter-spacing: 0.24em; text-transform: uppercase; opacity: 0.62; transition: opacity 0.35s var(--ease); }
   .site-head__nav a:hover { opacity: 1; }
   @media (max-width: 760px) { .site-head__nav { display: none; } }
 
   /* ============ gold rail ============ */
-  .rail {
-    position: fixed;
-    left: clamp(22px, 3vw, 44px);
-    top: 50%;
-    transform: translateY(-50%);
-    height: min(50vh, 440px);
-    z-index: 60;
-    transition: opacity 1.2s var(--ease) 0.8s;
-  }
+  .rail { position: fixed; left: clamp(22px, 3vw, 44px); top: 50%; transform: translateY(-50%); height: min(50vh, 440px); z-index: 60; transition: opacity 1.2s var(--ease) 0.8s; }
   .is-loading .rail { opacity: 0; }
   .rail__line { position: relative; width: 1px; height: 100%; background: rgba(236,231,219,0.16); }
-  .rail__fill {
-    position: absolute; inset: 0; transform-origin: 50% 0; transform: scaleY(0);
-    background: linear-gradient(180deg, rgba(207,168,92,0.4), var(--gold));
-  }
-  .rail__drop {
-    position: absolute; left: 50%; top: 0; width: 7px; height: 7px; border-radius: 50%;
-    background: var(--gold-soft); transform: translate(-50%, -50%);
-    box-shadow: 0 0 10px 2px rgba(230, 205, 143, 0.7), 0 0 24px 6px rgba(207, 168, 92, 0.3);
-  }
+  .rail__fill { position: absolute; inset: 0; transform-origin: 50% 0; transform: scaleY(0); background: linear-gradient(180deg, rgba(207,168,92,0.4), var(--gold)); }
+  .rail__drop { position: absolute; left: 50%; top: 0; width: 7px; height: 7px; border-radius: 50%; background: var(--gold-soft); transform: translate(-50%, -50%); box-shadow: 0 0 10px 2px rgba(230,205,143,0.7), 0 0 24px 6px rgba(207,168,92,0.3); }
   .rail__ticks { position: absolute; left: 14px; top: 0; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
-  .rail__ticks button {
-    background: none; border: none; cursor: pointer; text-align: left;
-    font-family: var(--sans); font-size: 8px; font-weight: 700; letter-spacing: 0.28em;
-    text-transform: uppercase; color: var(--bone); opacity: 0.3;
-    transition: opacity 0.4s var(--ease), color 0.4s var(--ease); padding: 2px 0; white-space: nowrap;
-  }
+  .rail__ticks button { background: none; border: none; cursor: pointer; text-align: left; font-family: var(--sans); font-size: 8px; font-weight: 700; letter-spacing: 0.26em; text-transform: uppercase; color: var(--bone); opacity: 0.3; transition: opacity 0.4s var(--ease), color 0.4s var(--ease); padding: 2px 0; white-space: nowrap; }
   .rail__ticks button:hover { opacity: 0.7; }
   .rail__ticks button.on { opacity: 1; color: var(--gold-soft); }
   @media (max-width: 900px) { .rail__ticks { display: none; } }
 
-  .counter {
-    position: fixed; right: clamp(26px, 4vw, 60px); bottom: clamp(24px, 4.4vh, 42px);
-    z-index: 60; font-family: var(--serif); font-size: 13px; letter-spacing: 0.2em; color: var(--bone-dim);
-    transition: opacity 1.2s var(--ease) 0.8s;
-  }
+  .counter { position: fixed; right: clamp(26px, 4vw, 60px); bottom: clamp(24px, 4.4vh, 42px); z-index: 60; font-family: var(--serif); font-size: 13px; letter-spacing: 0.2em; color: var(--bone-dim); transition: opacity 1.2s var(--ease) 0.8s; }
   .is-loading .counter { opacity: 0; }
   .counter b { color: var(--gold-soft); font-weight: 600; font-size: 17px; }
 
-  .cue {
-    position: fixed; bottom: clamp(24px, 4.4vh, 42px); left: 50%; transform: translateX(-50%);
-    z-index: 60; font-size: 8.5px; letter-spacing: 0.44em; text-transform: uppercase; color: var(--bone-dim);
-    transition: opacity 0.7s var(--ease);
-  }
+  .cue { position: fixed; bottom: clamp(24px, 4.4vh, 42px); left: 50%; transform: translateX(-50%); z-index: 60; font-size: 8.5px; letter-spacing: 0.44em; text-transform: uppercase; color: var(--bone-dim); transition: opacity 0.7s var(--ease); }
   .is-loading .cue, .cue.gone { opacity: 0; }
-  .cue::after {
-    content: ""; display: block; width: 1px; height: 40px; margin: 10px auto 0;
-    background: linear-gradient(180deg, var(--gold), transparent);
-    animation: cueDrop 2.2s var(--ease-io) infinite; transform-origin: top;
-  }
+  .cue::after { content: ""; display: block; width: 1px; height: 40px; margin: 10px auto 0; background: linear-gradient(180deg, var(--gold), transparent); animation: cueDrop 2.2s var(--ease-io) infinite; transform-origin: top; }
   @keyframes cueDrop { 0%{transform:scaleY(0)} 45%{transform:scaleY(1)} 100%{transform:scaleY(0);transform-origin:bottom} }
 
-  /* ============ content flow over the fixed stage ============ */
+  /* ============ content ============ */
   main { position: relative; z-index: 10; }
-  .panel {
-    min-height: 118vh;
-    display: flex;
-    align-items: center;
-    padding: 16vh clamp(30px, 9vw, 150px);
-  }
-  .panel:last-child { min-height: 108vh; }
+  .panel { min-height: 120vh; display: flex; align-items: center; padding: 16vh clamp(30px, 9vw, 150px); }
   .content { width: 100%; max-width: 1180px; margin: 0 auto; will-change: transform, opacity; }
 
-  .eyebrow {
-    font-size: 9px; font-weight: 700; letter-spacing: 0.5em; text-transform: uppercase;
-    color: var(--gold-soft); margin-bottom: clamp(18px, 3vh, 34px);
-  }
-  .eyebrow::before {
-    content: ""; display: inline-block; width: 40px; height: 1px; background: var(--gold);
-    vertical-align: middle; margin-right: 14px;
-  }
-  h1, h2 {
-    font-family: var(--serif); font-weight: 600; line-height: 1.08; letter-spacing: 0.005em;
-    color: var(--bone); text-wrap: balance; text-shadow: 0 3px 40px rgba(8,7,10,0.9);
-  }
+  .eyebrow { font-size: 9px; font-weight: 700; letter-spacing: 0.5em; text-transform: uppercase; color: var(--gold-soft); margin-bottom: clamp(18px, 3vh, 34px); }
+  .eyebrow::before { content: ""; display: inline-block; width: 40px; height: 1px; background: var(--gold); vertical-align: middle; margin-right: 14px; }
+  h1, h2 { font-family: var(--serif); font-weight: 600; line-height: 1.08; letter-spacing: 0.005em; color: var(--bone); text-wrap: balance; text-shadow: 0 3px 40px rgba(8,7,10,0.92); }
   .display-xl { font-size: clamp(34px, 5vw, 74px); font-weight: 700; }
   .display-l  { font-size: clamp(26px, 3.5vw, 52px); }
-  .lede {
-    font-size: clamp(12.5px, 1vw, 15px); font-weight: 400; line-height: 1.95; letter-spacing: 0.02em;
-    color: var(--bone-dim); max-width: 32em; margin-top: clamp(18px, 3vh, 34px);
-    text-shadow: 0 2px 20px rgba(8,7,10,0.95);
-  }
+  .quote { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: clamp(24px, 3.4vw, 50px); line-height: 1.3; color: var(--bone); text-wrap: balance; text-shadow: 0 3px 40px rgba(8,7,10,0.95); }
+  .lede { font-size: clamp(12.5px, 1vw, 15px); font-weight: 400; line-height: 1.95; letter-spacing: 0.02em; color: var(--bone-dim); max-width: 32em; margin-top: clamp(18px, 3vh, 34px); text-shadow: 0 2px 20px rgba(8,7,10,0.95); }
   .accent { color: var(--gold-soft); font-style: italic; }
 
-  /* reveal */
+  .split span { display: inline-block; opacity: 0; transform: translateY(0.5em) rotate(4deg); transition: opacity 0.7s var(--ease), transform 0.9s var(--ease); }
+  .in .split span { opacity: 1; transform: none; }
   .rv { display: block; overflow: hidden; }
   .rv > span { display: block; transform: translateY(115%); transition: transform 1.2s var(--ease); }
   .in .rv > span { transform: translateY(0); }
   .in .rv:nth-child(2) > span { transition-delay: 0.1s; }
   .fd { opacity: 0; transform: translateY(28px); transition: opacity 1s var(--ease), transform 1s var(--ease); }
   .in .fd { opacity: 1; transform: none; }
-  .in .fd.d1 { transition-delay: 0.22s; }
-  .in .fd.d2 { transition-delay: 0.34s; }
-  .in .fd.d3 { transition-delay: 0.46s; }
-  .in .fd.d4 { transition-delay: 0.58s; }
+  .in .fd.d1 { transition-delay: 0.22s; } .in .fd.d2 { transition-delay: 0.34s; }
+  .in .fd.d3 { transition-delay: 0.46s; } .in .fd.d4 { transition-delay: 0.58s; }
 
-  .s-hero .content { max-width: 900px; margin: 0 auto; text-align: center; }
-  .s-hero .eyebrow::before { display: none; }
-  .s-hero .lede { margin-left: auto; margin-right: auto; }
-  .s-admission .content { margin-left: auto; text-align: right; }
-  .s-admission .lede { margin-left: auto; }
-  .s-final .content { max-width: 820px; margin: 0 auto; text-align: center; }
+  .s-hero .content, .s-final .content, .s-quote .content { max-width: 900px; margin: 0 auto; text-align: center; }
+  .s-hero .eyebrow::before, .s-quote .eyebrow::before { display: none; }
+  .s-hero .lede, .s-final .lede { margin-left: auto; margin-right: auto; }
+  .s-admission .content, .s-campus .content { margin-left: auto; text-align: right; }
+  .s-admission .lede, .s-campus .lede { margin-left: auto; }
 
   .cta-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: clamp(26px, 4vh, 46px); }
   .s-hero .cta-row, .s-final .cta-row { justify-content: center; }
-  .btn {
-    position: relative; display: inline-block; padding: 14px 34px; font-size: 9.5px; font-weight: 700;
-    letter-spacing: 0.28em; text-transform: uppercase; text-decoration: none; border-radius: 999px;
-    overflow: hidden; z-index: 0; transition: color 0.45s var(--ease), border-color 0.45s var(--ease);
-  }
+  .btn { position: relative; display: inline-block; padding: 14px 34px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase; text-decoration: none; border-radius: 999px; overflow: hidden; z-index: 0; transition: color 0.45s var(--ease), border-color 0.45s var(--ease); }
   .btn--solid { color: var(--ink); background: var(--gold); }
   .btn--ghost { color: var(--bone); border: 1px solid rgba(236,231,219,0.32); background: rgba(8,7,10,0.25); }
-  .btn::after {
-    content: ""; position: absolute; inset: 0; background: var(--bone); border-radius: inherit;
-    transform: translateY(102%); transition: transform 0.5s var(--ease); z-index: -1;
-  }
+  .btn::after { content: ""; position: absolute; inset: 0; background: var(--bone); border-radius: inherit; transform: translateY(102%); transition: transform 0.5s var(--ease); z-index: -1; }
   .btn--solid::after { background: var(--gold-soft); }
   .btn:hover::after { transform: translateY(0); }
   .btn--ghost:hover { color: var(--ink); border-color: var(--bone); }
@@ -241,12 +123,7 @@
   .prog-list { list-style: none; max-width: 540px; margin-top: clamp(22px, 4vh, 44px); counter-reset: prog; }
   .prog-list li { border-top: 1px solid rgba(236,231,219,0.16); }
   .prog-list li:last-child { border-bottom: 1px solid rgba(236,231,219,0.16); }
-  .prog-list a {
-    counter-increment: prog; display: flex; align-items: baseline; gap: clamp(14px, 2.4vw, 34px);
-    padding: clamp(10px, 1.6vh, 15px) 6px; color: var(--bone); text-decoration: none;
-    font-family: var(--serif); font-size: clamp(16px, 1.7vw, 24px); font-weight: 600;
-    text-shadow: 0 1px 16px rgba(8,7,10,0.95); transition: padding-left 0.5s var(--ease), color 0.5s var(--ease);
-  }
+  .prog-list a { counter-increment: prog; display: flex; align-items: baseline; gap: clamp(14px, 2.4vw, 34px); padding: clamp(10px, 1.6vh, 15px) 6px; color: var(--bone); text-decoration: none; font-family: var(--serif); font-size: clamp(16px, 1.7vw, 24px); font-weight: 600; text-shadow: 0 1px 16px rgba(8,7,10,0.95); transition: padding-left 0.5s var(--ease), color 0.5s var(--ease); }
   .prog-list a::before { content: counter(prog, decimal-leading-zero); font-family: var(--sans); font-size: 8.5px; font-weight: 700; letter-spacing: 0.2em; color: var(--gold); }
   .prog-list a::after { content: "→"; margin-left: auto; font-family: var(--sans); font-weight: 300; opacity: 0; transform: translateX(-14px); transition: opacity 0.4s var(--ease), transform 0.4s var(--ease); color: var(--gold-soft); }
   .prog-list a:hover { padding-left: 18px; color: var(--gold-soft); }
@@ -269,34 +146,26 @@
   .contact-row b { display: block; font-weight: 800; font-size: 8px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--gold-soft); }
   .contact-row a { color: var(--bone); text-decoration: none; border-bottom: 1px solid var(--gold-dim); }
 
-  .site-foot {
-    position: relative; z-index: 10; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-    padding: 30px clamp(28px, 4.4vw, 64px); font-size: 8.5px; letter-spacing: 0.24em; text-transform: uppercase;
-    color: rgba(236,231,219,0.4); background: linear-gradient(0deg, #050406, transparent);
-  }
+  .site-foot { position: relative; z-index: 10; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 30px clamp(28px, 4.4vw, 64px); font-size: 8.5px; letter-spacing: 0.24em; text-transform: uppercase; color: rgba(236,231,219,0.4); background: linear-gradient(0deg, #050406, transparent); }
 
-  .curtain {
-    position: fixed; inset: 0; z-index: 999; background: var(--ink); display: grid; place-items: center;
-    transition: opacity 1s var(--ease) 0.3s, visibility 0s 1.3s;
-  }
+  .curtain { position: fixed; inset: 0; z-index: 999; background: var(--ink); display: grid; place-items: center; transition: opacity 1s var(--ease) 0.3s, visibility 0s 1.3s; }
   html:not(.is-loading) .curtain { opacity: 0; visibility: hidden; }
   .curtain__in { text-align: center; }
   .curtain span { font-family: var(--serif); font-weight: 700; letter-spacing: 0.34em; font-size: clamp(20px, 2.6vw, 34px); color: var(--gold); animation: breathe 1.6s var(--ease-io) infinite alternate; }
   .curtain i { display: block; width: 120px; height: 1px; margin: 18px auto 0; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
   @keyframes breathe { from { opacity: 0.3; } to { opacity: 1; } }
 
-  @media (prefers-reduced-motion: reduce) {
-    .rv > span, .fd { transition-duration: 0.01s !important; }
-    .layer { transform: none !important; }
-    .curtain span, .cue::after { animation: none; }
-  }
+  @media (prefers-reduced-motion: reduce) { .rv > span, .fd, .split span { transition-duration: 0.01s !important; } .curtain span, .cue::after { animation: none; } }
 </style>
 </head>
 <body>
 
 <div class="curtain" aria-hidden="true"><div class="curtain__in"><span>IBSU</span><i></i></div></div>
 
-<div class="stage" aria-hidden="true" id="stage"></div>
+<div class="stage" aria-hidden="true">
+  <video id="bg" muted playsinline preload="auto" crossorigin="anonymous"></video>
+</div>
+<div class="black" id="black" aria-hidden="true"></div>
 <div class="grade" aria-hidden="true"></div>
 <div class="grain" aria-hidden="true"></div>
 
@@ -316,24 +185,23 @@
     <button data-go="hero">01 Vision</button>
     <button data-go="programs">02 Programs</button>
     <button data-go="admission">03 Admission</button>
-    <button data-go="funding">04 Funding</button>
-    <button data-go="apply">05 Apply</button>
+    <button data-go="pause">04 Pause</button>
+    <button data-go="funding">05 Funding</button>
+    <button data-go="campus">06 Campus</button>
+    <button data-go="apply">07 Apply</button>
   </div>
 </div>
 
-<div class="counter"><b id="counterNum">01</b> / 05</div>
+<div class="counter"><b id="counterNum">01</b> / 07</div>
 <div class="cue" id="cue">Scroll</div>
 
 <main>
 
-  <section class="panel s-hero" id="hero" data-panel
-    data-img="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171105_15c7808f-86ac-4088-b031-fd47cb6cb227.png">
+  <!-- 01 · video start -->
+  <section class="panel s-hero" id="hero" data-panel>
     <div class="content" data-observe>
       <p class="eyebrow fd">Admissions 2026 · Tbilisi</p>
-      <h1 class="display-xl">
-        <span class="rv"><span>What if knowledge became</span></span>
-        <span class="rv"><span>your <em class="accent">greatest</em> power?</span></span>
-      </h1>
+      <h1 class="display-xl split" data-split>What if knowledge became your greatest power?</h1>
       <p class="lede fd d2">International Black Sea University — a space where big questions become big futures. Since 1995.</p>
       <div class="cta-row fd d3">
         <a class="btn btn--solid" href="#apply">Start your application</a>
@@ -342,8 +210,8 @@
     </div>
   </section>
 
-  <section class="panel s-programs" id="programs" data-panel
-    data-img="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_183040_3fe41937-d8ce-437b-8830-c67b55de6efc.png">
+  <!-- 02 · profile -->
+  <section class="panel s-programs" id="programs" data-panel>
     <div class="content" data-observe>
       <p class="eyebrow fd">02 · Bachelor programs</p>
       <h2 class="display-l"><span class="rv"><span>Choose your <em class="accent">path</em></span></span></h2>
@@ -359,8 +227,8 @@
     </div>
   </section>
 
-  <section class="panel s-admission" id="admission" data-panel
-    data-img="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_171122_03a902e0-c45e-4c61-a50c-6ca30806384d.png">
+  <!-- 03 · video end -->
+  <section class="panel s-admission" id="admission" data-panel>
     <div class="content" data-observe>
       <p class="eyebrow fd">03 · How to enroll</p>
       <h2 class="display-l"><span class="rv"><span>Three steps to</span></span><span class="rv"><span>your <em class="accent">enrollment</em></span></span></h2>
@@ -372,10 +240,18 @@
     </div>
   </section>
 
-  <section class="panel s-funding" id="funding" data-panel
-    data-img="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_183043_7885061f-edaf-4cf4-b90c-6f0b37707d69.png">
+  <!-- 04 · BLACK -->
+  <section class="panel s-quote" id="pause" data-panel>
     <div class="content" data-observe>
-      <p class="eyebrow fd">04 · Scholarships &amp; grants</p>
+      <p class="eyebrow fd">Est. 1995</p>
+      <p class="quote"><span class="rv"><span>Between a question</span></span><span class="rv"><span>and its answer —</span></span><span class="rv"><span>a <em class="accent">university.</em></span></span></p>
+    </div>
+  </section>
+
+  <!-- 05 · mirror start -->
+  <section class="panel s-funding" id="funding" data-panel>
+    <div class="content" data-observe>
+      <p class="eyebrow fd">05 · Scholarships &amp; grants</p>
       <h2 class="display-l"><span class="rv"><span>Knowledge that</span></span><span class="rv"><span><em class="accent">pays off</em></span></span></h2>
       <p class="lede fd d1">Your state grant is matched by an additional IBSU grant — your results become your funding.</p>
       <div class="grants">
@@ -386,11 +262,24 @@
     </div>
   </section>
 
-  <section class="panel s-final" id="apply" data-panel
-    data-img="https://d8j0ntlcm91z4.cloudfront.net/user_3Dj6K94I0vDMjhHSmJQANcMCu6H/hf_20260710_183045_1c8de996-a721-4a1c-8358-8c79c740bf15.png">
+  <!-- 06 · opposite profile -->
+  <section class="panel s-campus" id="campus" data-panel>
     <div class="content" data-observe>
-      <p class="eyebrow fd">05 · Join us</p>
-      <h2 class="display-xl"><span class="rv"><span>Are you <em class="accent">ready?</em></span></span></h2>
+      <p class="eyebrow fd">06 · Campus &amp; community</p>
+      <h2 class="display-l"><span class="rv"><span>A community that</span></span><span class="rv"><span><em class="accent">thinks together</em></span></span></h2>
+      <p class="lede fd d1">Studios, labs and libraries where ideas are argued, tested and built — alongside students from across the world.</p>
+      <div class="grants">
+        <div class="grants__item fd d2"><div class="grants__big" data-count="30">0<sup>+</sup></div><div class="grants__label"><b>Countries</b>on one campus</div></div>
+        <div class="grants__item fd d3"><div class="grants__big" data-count="25">0<sup>+</sup></div><div class="grants__label"><b>Student clubs</b>&amp; societies</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 · mirror end / center -->
+  <section class="panel s-final" id="apply" data-panel>
+    <div class="content" data-observe>
+      <p class="eyebrow fd">07 · Join us</p>
+      <h2 class="display-xl split" data-split>Are you ready?</h2>
       <div class="cta-row fd d2"><a class="btn btn--solid" href="https://ibsu.edu.ge/entrant/" target="_blank" rel="noopener">Become an entrant</a></div>
       <div class="contact-row fd d3">
         <div><b>Address</b>Tbilisi, David Aghmashenebeli Alley, 13 km</div>
@@ -402,10 +291,7 @@
 
 </main>
 
-<footer class="site-foot">
-  <span>© 2026 IBSU — design concept · v2</span>
-  <span>Unofficial redesign</span>
-</footer>
+<footer class="site-foot"><span>© 2026 IBSU — design concept · v2</span><span>Unofficial redesign</span></footer>
 
 <script>
 (() => {
@@ -414,16 +300,51 @@
   const lerp = (a, b, t) => a + (b - a) * t;
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const clamp01 = (v) => clamp(v, 0, 1);
+  const smooth = (t) => { t = clamp01(t); return t * t * (3 - 2 * t); };
 
-  const stage = document.getElementById("stage");
-  const panels = [...document.querySelectorAll("[data-panel]")].map((el) => {
-    const layer = document.createElement("div");
-    layer.className = "layer";
-    layer.style.backgroundImage = `url("${el.dataset.img}")`;
-    stage.appendChild(layer);
-    /* preload */
-    const img = new Image(); img.src = el.dataset.img;
-    return { el, layer, content: el.querySelector(".content"), revealed: false, o: 0, sc: 1.06 };
+  const VIDEO_SRC = "https://cdn.jsdelivr.net/gh/easyvibesuxui-sketch/test@a896c1613b7b9ec9fd7847f83c9444b1aca86c2e/v2/bg.mp4";
+  const video = document.getElementById("bg");
+  const blackEl = document.getElementById("black");
+  let dur = 0, videoReady = false, seeking = false;
+  video.addEventListener("loadedmetadata", () => { dur = video.duration || 0; });
+  video.addEventListener("loadeddata", () => {
+    videoReady = true; video.classList.add("ready");
+    try { video.currentTime = 0.001; } catch (e) {}
+  });
+  video.addEventListener("seeking", () => { seeking = true; });
+  video.addEventListener("seeked", () => { seeking = false; });
+  video.src = (window.__VIDEO_SRC__ || VIDEO_SRC);
+
+  /* per-segment choreography (7 sections, 6 segments):
+     0: sec1->2  forward scrub  ct 0.0->0.5   flip0 black0
+     1: sec2->3  forward scrub  ct 0.5->1.0   flip0 black0
+     2: sec3->4  hold end       ct 1.0        flip0 black 0->1
+     3: sec4->5  hold start     ct 0.0        flip1 black 1->0
+     4: sec5->6  mirror scrub   ct 0.0->0.5   flip1 black0
+     5: sec6->7  mirror scrub   ct 0.5->1.0   flip1 black0   */
+  function videoState(i, t) {
+    switch (i) {
+      case 0: return { ct: lerp(0.0, 0.5, t), flip: false, black: 0 };
+      case 1: return { ct: lerp(0.5, 1.0, t), flip: false, black: 0 };
+      case 2: return { ct: 1.0, flip: false, black: smooth(t) };
+      case 3: return { ct: 0.0, flip: true,  black: 1 - smooth(t) };
+      case 4: return { ct: lerp(0.0, 0.5, t), flip: true, black: 0 };
+      case 5: return { ct: lerp(0.5, 1.0, t), flip: true, black: 0 };
+      default: return i < 0 ? { ct: 0, flip: false, black: 0 } : { ct: 1, flip: true, black: 0 };
+    }
+  }
+
+  const panels = [...document.querySelectorAll("[data-panel]")];
+  const observed = panels.map((el) => ({ el, content: el.querySelector(".content"), revealed: false }));
+
+  document.querySelectorAll("[data-split]").forEach((el) => {
+    const text = el.textContent; el.textContent = "";
+    [...text].forEach((ch, i) => {
+      const s = document.createElement("span");
+      s.textContent = ch === " " ? " " : ch;
+      s.style.transitionDelay = (0.25 + i * 0.018) + "s";
+      el.appendChild(s);
+    });
   });
 
   const railFill = document.getElementById("railFill");
@@ -431,20 +352,14 @@
   const ticks = [...document.querySelectorAll("#railTicks button")];
   const counterNum = document.getElementById("counterNum");
   const cue = document.getElementById("cue");
-  const idByGo = {}; panels.forEach((p, i) => { idByGo[p.el.id] = i; });
-  function goTo(i) {
-    const el = panels[clamp(i, 0, panels.length - 1)].el;
-    el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
-  }
+  const idByGo = {}; panels.forEach((p, i) => { idByGo[p.id] = i; });
+  function goTo(i) { panels[clamp(i, 0, panels.length - 1)].scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" }); }
   ticks.forEach((b) => b.addEventListener("click", () => goTo(idByGo[b.dataset.go] ?? 0)));
-  document.addEventListener("click", (e) => {
-    const a = e.target.closest('a[href^="#"]'); if (!a) return;
-    const i = idByGo[a.getAttribute("href").slice(1)]; if (i === undefined) return;
-    e.preventDefault(); goTo(i);
-  });
+  document.addEventListener("click", (e) => { const a = e.target.closest('a[href^="#"]'); if (!a) return; const i = idByGo[a.getAttribute("href").slice(1)]; if (i === undefined) return; e.preventDefault(); goTo(i); });
 
   let vh = innerHeight;
   addEventListener("resize", () => { vh = innerHeight; });
+  let wantCt = 0;
 
   function frame() {
     const sy = scrollY;
@@ -454,34 +369,37 @@
     railDrop.style.top = (gp * 100) + "%";
     cue.classList.toggle("gone", sy > vh * 0.4);
 
-    let active = 0, best = Infinity;
-    panels.forEach((p, i) => {
-      const r = p.el.getBoundingClientRect();
-      const center = r.top + r.height / 2;
-      /* distance of this panel's centre from viewport centre, normalised */
-      const dist = (center - vh / 2) / vh;
-      const ad = Math.abs(dist);
-      if (ad < best) { best = ad; active = i; }
-
-      /* crossfade: full opacity when centred, fading out by ~0.85 vh away */
-      const targetO = clamp01(1 - ad / 0.85);
-      /* Ken Burns: slowly scale from 1.10 → 1.0 as it enters and settles */
-      const targetSc = 1.11 - 0.11 * clamp01(1 - ad / 1.1);
-      p.o = reduceMotion ? targetO : lerp(p.o, targetO, 0.12);
-      p.sc = reduceMotion ? targetSc : lerp(p.sc, targetSc, 0.06);
-      p.layer.style.opacity = p.o.toFixed(3);
-      p.layer.style.transform = `scale(${p.sc.toFixed(4)})`;
-
-      /* content parallax + reveal */
-      p.content.style.transform = `translate3d(0, ${(-dist * 5).toFixed(2)}vh, 0)`;
-      if (!p.revealed && ad < 0.42) {
-        p.revealed = true;
-        p.content.classList.add("in");
-        p.content.querySelectorAll("[data-count]").forEach(runCounter);
+    const centre = sy + vh / 2;
+    const cs = panels.map((el) => el.offsetTop + el.offsetHeight / 2);
+    let seg = 0, t = 0, active = 0;
+    if (centre <= cs[0]) { seg = -1; t = 0; active = 0; }
+    else if (centre >= cs[cs.length - 1]) { seg = cs.length - 1; t = 0; active = cs.length - 1; }
+    else {
+      for (let i = 0; i < cs.length - 1; i++) {
+        if (centre >= cs[i] && centre < cs[i + 1]) { seg = i; t = (centre - cs[i]) / (cs[i + 1] - cs[i]); break; }
       }
+      active = t < 0.5 ? seg : seg + 1;
+    }
+
+    const st = videoState(seg, t);
+    video.classList.toggle("flip", st.flip);
+    blackEl.style.opacity = st.black.toFixed(3);
+
+    wantCt = reduceMotion ? st.ct : lerp(wantCt, st.ct, 0.14);
+    if (videoReady && dur && !seeking) {
+      const target = clamp01(wantCt) * (dur - 0.05);
+      if (Math.abs(video.currentTime - target) > 0.033) {
+        try { video.currentTime = target; } catch (e) {}
+      }
+    }
+
+    observed.forEach((o) => {
+      const r = o.el.getBoundingClientRect();
+      const dist = (r.top + r.height / 2 - vh / 2) / vh;
+      o.content.style.transform = `translate3d(0, ${(-dist * 5).toFixed(2)}vh, 0)`;
+      const ad = Math.abs(dist);
+      if (!o.revealed && ad < 0.4) { o.revealed = true; o.content.classList.add("in"); o.content.querySelectorAll("[data-count]").forEach(runCounter); }
     });
-    /* keep the frontmost visible layer painted last */
-    panels.forEach((p) => { p.layer.style.zIndex = Math.round(p.o * 100); });
 
     ticks.forEach((b, i) => b.classList.toggle("on", i === active));
     counterNum.textContent = String(active + 1).padStart(2, "0");
@@ -491,10 +409,12 @@
 
   function runCounter(el) {
     if (el.dataset.done) return; el.dataset.done = "1";
-    const end = +el.dataset.count, t0 = performance.now(), dur = reduceMotion ? 1 : 1500;
+    const end = +el.dataset.count, t0 = performance.now(), dur2 = reduceMotion ? 1 : 1500;
+    const suffix = el.querySelector("sup") ? el.querySelector("sup").outerHTML : "";
+    const pre = el.textContent.trim().charAt(0) === "+" ? "+" : "";
     (function tick(now) {
-      const k = clamp01((now - t0) / dur), eased = 1 - Math.pow(1 - k, 3);
-      el.innerHTML = `+${Math.round(end * eased)}<sup>%</sup>`;
+      const k = clamp01((now - t0) / dur2), eased = 1 - Math.pow(1 - k, 3);
+      el.innerHTML = `${pre}${Math.round(end * eased)}${suffix}`;
       if (k < 1) requestAnimationFrame(tick);
     })(t0);
   }
