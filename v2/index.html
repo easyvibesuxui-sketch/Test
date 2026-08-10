@@ -302,10 +302,14 @@
   const clamp01 = (v) => clamp(v, 0, 1);
   const smooth = (t) => { t = clamp01(t); return t * t * (3 - 2 * t); };
 
-  const VIDEO_SRC = "https://cdn.jsdelivr.net/gh/easyvibesuxui-sketch/test@a896c1613b7b9ec9fd7847f83c9444b1aca86c2e/v2/bg.mp4";
+  const SHA = "a896c1613b7b9ec9fd7847f83c9444b1aca86c2e";
+  const SOURCES = window.__VIDEO_SRC__ ? [window.__VIDEO_SRC__] : [
+    "https://cdn.jsdelivr.net/gh/easyvibesuxui-sketch/test@" + SHA + "/v2/bg.mp4",
+    "https://raw.githubusercontent.com/easyvibesuxui-sketch/test/" + SHA + "/v2/bg.mp4"
+  ];
   const video = document.getElementById("bg");
   const blackEl = document.getElementById("black");
-  let dur = 0, videoReady = false, seeking = false;
+  let dur = 0, videoReady = false, seeking = false, si = 0;
   video.addEventListener("loadedmetadata", () => { dur = video.duration || 0; });
   video.addEventListener("loadeddata", () => {
     videoReady = true; video.classList.add("ready");
@@ -313,7 +317,8 @@
   });
   video.addEventListener("seeking", () => { seeking = true; });
   video.addEventListener("seeked", () => { seeking = false; });
-  video.src = (window.__VIDEO_SRC__ || VIDEO_SRC);
+  video.addEventListener("error", () => { if (si < SOURCES.length - 1) { si++; video.src = SOURCES[si]; video.load(); } });
+  video.src = SOURCES[0];
 
   /* per-segment choreography (7 sections, 6 segments):
      0: sec1->2  forward scrub  ct 0.0->0.5   flip0 black0
