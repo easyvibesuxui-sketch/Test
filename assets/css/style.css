@@ -3,6 +3,31 @@
    dark industrial / editorial · red + black
    ============================================================ */
 
+/* ---------- ABC Favorit ----------
+   Two widths carry the page. Extended (narrower of the two, width class 6)
+   takes every heading — Bold for the blocks, Book for anything large and quiet.
+   Expanded (width class 7) runs the body, nav and buttons.                    */
+@font-face{
+  font-family:"ABC Favorit Extended";
+  src:url("../fonts/ABCFavorit-Extended-Book.woff2") format("woff2");
+  font-weight:350;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:"ABC Favorit Extended";
+  src:url("../fonts/ABCFavorit-Extended-Bold.woff2") format("woff2");
+  font-weight:700;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:"ABC Favorit Expanded";
+  src:url("../fonts/ABCFavorit-Expanded-Regular.woff2") format("woff2");
+  font-weight:400;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:"ABC Favorit Expanded";
+  src:url("../fonts/ABCFavorit-Expanded-Medium.woff2") format("woff2");
+  font-weight:500;font-style:normal;font-display:swap;
+}
+
 :root{
   --black:#000000;
   --ink:#08090a;
@@ -17,9 +42,9 @@
   --red-hot:#ff3b2f;
   --red-deep:#8c0400;
 
-  --f-sans:"Archivo","Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
-  --f-cond:"Archivo Narrow","Archivo","Helvetica Neue",Arial,sans-serif;
-  --f-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --f-display:"ABC Favorit Extended","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --f-sans:"ABC Favorit Expanded","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
 
   --pad:clamp(20px,5vw,88px);
   --maxw:1560px;
@@ -50,19 +75,19 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
 
 /* ---------- type primitives ---------- */
 .display{
-  font-family:var(--f-sans);
-  font-weight:900;
+  font-family:var(--f-display);
+  font-weight:700;
   font-size:clamp(2.9rem,8.4vw,8.6rem);
   line-height:.86;
-  letter-spacing:-.045em;
+  letter-spacing:-.022em;
   text-transform:uppercase;
 }
 .display em{font-style:normal;color:var(--red)}
 .h2{
-  font-weight:900;
+  font-family:var(--f-display);font-weight:700;
   font-size:clamp(2.2rem,5.4vw,5rem);
   line-height:.92;
-  letter-spacing:-.04em;
+  letter-spacing:-.018em;
   text-transform:uppercase;
 }
 .h2 em{font-style:normal;color:var(--red)}
@@ -76,9 +101,11 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
   margin-bottom:1.6rem;
 }
 .sec-note{
+  font-family:var(--f-display);font-weight:350;
   color:var(--grey);
   max-width:52ch;
   font-size:clamp(1rem,1.25vw,1.15rem);
+  line-height:1.5;letter-spacing:-.004em;
   margin-top:1.6rem;
 }
 .eyebrow{
@@ -104,7 +131,7 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
   position:relative;display:inline-flex;align-items:center;justify-content:center;
   height:var(--bh);padding:0 30px;
   background:var(--red);color:#fff;
-  font-family:var(--f-cond);font-weight:700;font-size:.9rem;
+  font-family:var(--f-sans);font-weight:500;font-size:.88rem;
   letter-spacing:.14em;text-transform:uppercase;
   border:1px solid var(--red);border-radius:2px;
   overflow:hidden;isolation:isolate;
@@ -150,12 +177,12 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
   box-shadow:0 0 18px rgba(225,6,0,.75);
 }
 .brand-word{
-  font-weight:800;font-size:1.32rem;letter-spacing:-.045em;
+  font-family:var(--f-display);font-weight:700;font-size:1.32rem;letter-spacing:-.022em;
 }
 .nav{display:flex;gap:clamp(14px,2vw,34px);margin-left:auto}
 .nav a{
   position:relative;
-  font-family:var(--f-cond);font-weight:600;font-size:.82rem;
+  font-family:var(--f-sans);font-weight:500;font-size:.8rem;
   letter-spacing:.16em;text-transform:uppercase;color:var(--grey);
   padding:6px 0;transition:color .3s
 }
@@ -182,8 +209,8 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
 }
 .mobile-menu[hidden]{display:none}
 .mobile-menu a{
-  font-weight:900;font-size:clamp(2rem,9vw,3.4rem);
-  letter-spacing:-.04em;text-transform:uppercase;line-height:1.08;
+  font-family:var(--f-display);font-weight:700;font-size:clamp(2rem,9vw,3.4rem);
+  letter-spacing:-.018em;text-transform:uppercase;line-height:1.08;
   border-bottom:1px solid var(--line-soft);padding:14px 0;
 }
 .mobile-menu a:last-child{color:var(--red);border-bottom:0}
@@ -211,9 +238,11 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
 .split-lines .line{display:block;overflow:hidden}
 .split-lines .line>span,.split-lines .line{will-change:transform}
 .lede{
+  font-family:var(--f-display);font-weight:350;
   margin-top:clamp(1.3rem,2.4vw,2rem);
-  max-width:60ch;color:var(--grey);
-  font-size:clamp(1.02rem,1.35vw,1.24rem);
+  max-width:58ch;color:var(--grey);
+  font-size:clamp(1rem,1.3vw,1.2rem);
+  line-height:1.5;letter-spacing:-.004em;
 }
 .hero-cta{display:flex;flex-wrap:wrap;gap:14px;margin-top:clamp(1.5rem,2.5vw,2.1rem)}
 
@@ -226,8 +255,8 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
 .meta-item{padding:22px 22px 4px 0;border-right:1px solid var(--line-soft)}
 .meta-item:last-child{border-right:0}
 .meta-item b{
-  display:block;font-weight:900;font-size:clamp(1.7rem,3.4vw,2.9rem);
-  letter-spacing:-.04em;line-height:1;
+  display:block;font-family:var(--f-display);font-weight:700;font-size:clamp(1.7rem,3.4vw,2.9rem);
+  letter-spacing:-.02em;line-height:1;
 }
 .meta-item span{
   display:block;margin-top:.5rem;
@@ -257,8 +286,8 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
   animation:slide 42s linear infinite;
 }
 .marquee span{
-  font-weight:900;font-size:clamp(1.4rem,3vw,2.4rem);
-  letter-spacing:-.03em;text-transform:uppercase;color:#25292d;
+  font-family:var(--f-display);font-weight:700;font-size:clamp(1.4rem,3vw,2.4rem);
+  letter-spacing:-.015em;text-transform:uppercase;color:#25292d;
 }
 .marquee span:nth-child(8n+1){color:var(--red)}
 .marquee i{width:7px;height:7px;border-radius:50%;background:#1c1f22;flex:0 0 auto}
@@ -322,8 +351,8 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
   letter-spacing:.26em;color:var(--red);margin-bottom:.85rem;
 }
 .step h3{
-  font-weight:900;font-size:clamp(1.5rem,2.6vw,2.3rem);
-  letter-spacing:-.035em;text-transform:uppercase;margin-bottom:.8rem;
+  font-family:var(--f-display);font-weight:700;font-size:clamp(1.5rem,2.6vw,2.3rem);
+  letter-spacing:-.018em;text-transform:uppercase;margin-bottom:.8rem;
 }
 .step p{color:var(--grey);font-size:clamp(.98rem,1.15vw,1.08rem);max-width:40ch}
 
@@ -374,18 +403,18 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
   display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:1rem;
 }
 .dev-body h3{
-  font-weight:900;font-size:clamp(1.5rem,2.2vw,2rem);
-  letter-spacing:-.035em;text-transform:uppercase;
+  font-family:var(--f-display);font-weight:700;font-size:clamp(1.5rem,2.2vw,2rem);
+  letter-spacing:-.018em;text-transform:uppercase;
 }
 .tag{
   font-family:var(--f-mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
   color:var(--red);border:1px solid rgba(225,6,0,.4);padding:4px 9px;border-radius:2px;
 }
-.dev-lede{color:var(--grey);font-size:.98rem;margin-bottom:1.4rem}
+.dev-lede{color:var(--grey);font-size:.94rem;margin-bottom:1.4rem}
 .dev-specs{list-style:none;border-top:1px solid var(--line-soft)}
 .dev-specs li{
   padding:11px 0 11px 20px;border-bottom:1px solid var(--line-soft);
-  font-size:.88rem;color:#b9bfc4;position:relative;
+  font-size:.85rem;color:#b9bfc4;position:relative;
 }
 .dev-specs li::before{
   content:"";position:absolute;left:0;top:19px;width:8px;height:1px;background:var(--red);
@@ -409,8 +438,8 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
 }
 .statement blockquote{position:relative;max-width:var(--maxw);margin:0 auto}
 .statement p{
-  font-weight:900;font-size:clamp(1.85rem,5vw,4.4rem);
-  line-height:1.02;letter-spacing:-.04em;text-transform:uppercase;
+  font-family:var(--f-display);font-weight:700;font-size:clamp(1.85rem,5vw,4.4rem);
+  line-height:1.02;letter-spacing:-.018em;text-transform:uppercase;
 }
 .statement em{font-style:normal;color:var(--red)}
 .statement-strip{
@@ -421,7 +450,7 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
 .statement-strip div{padding:24px 20px 0 0;border-right:1px solid var(--line-soft)}
 .statement-strip div:last-child{border-right:0}
 .statement-strip b{
-  display:block;font-weight:900;font-size:clamp(1.5rem,2.8vw,2.4rem);letter-spacing:-.04em;
+  display:block;font-family:var(--f-display);font-weight:700;font-size:clamp(1.5rem,2.8vw,2.4rem);letter-spacing:-.02em;
 }
 .statement-strip span{
   display:block;margin-top:.45rem;font-family:var(--f-mono);font-size:.66rem;
@@ -442,10 +471,10 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
 .cap-icon{width:44px;height:44px;color:#6e747a;margin-bottom:26px;transition:color .4s}
 .cap:hover .cap-icon{color:var(--white)}
 .cap h3{
-  font-weight:800;font-size:1.3rem;letter-spacing:-.02em;
+  font-family:var(--f-display);font-weight:700;font-size:1.3rem;letter-spacing:-.02em;
   text-transform:uppercase;margin-bottom:.9rem;
 }
-.cap p{color:var(--grey);font-size:.96rem}
+.cap p{color:var(--grey);font-size:.93rem}
 
 /* ---------- compare ---------- */
 .table-wrap{max-width:var(--maxw);margin:0 auto;overflow-x:auto}
@@ -457,9 +486,9 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
   border-bottom:1px solid var(--red);
 }
 .cmp tbody th{
-  font-weight:900;font-size:1.18rem;letter-spacing:-.02em;text-transform:uppercase;width:170px;
+  font-family:var(--f-display);font-weight:700;font-size:1.18rem;letter-spacing:-.02em;text-transform:uppercase;width:170px;
 }
-.cmp tbody td{color:var(--grey);font-size:.94rem}
+.cmp tbody td{color:var(--grey);font-size:.91rem}
 .cmp tbody tr{transition:background .35s var(--ease)}
 .cmp tbody tr:hover{background:rgba(225,6,0,.07)}
 .cmp tbody tr:hover th{color:var(--red)}
@@ -476,15 +505,15 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
   text-transform:uppercase;color:var(--grey-dim);margin-bottom:1.4rem;
 }
 .soft h3{
-  font-weight:900;font-size:clamp(2.6rem,5vw,4.4rem);line-height:.9;
-  letter-spacing:-.05em;margin-bottom:1.4rem;
+  font-family:var(--f-display);font-weight:700;font-size:clamp(2.6rem,5vw,4.4rem);line-height:.9;
+  letter-spacing:-.025em;margin-bottom:1.4rem;
 }
 .soft:hover h3{color:var(--red);transition:color .4s}
 .soft p{color:var(--grey);margin-bottom:1.8rem;max-width:44ch}
 .soft ul{list-style:none;border-top:1px solid var(--line-soft)}
 .soft li{
   padding:13px 0 13px 22px;border-bottom:1px solid var(--line-soft);
-  font-size:.92rem;position:relative;
+  font-size:.89rem;position:relative;
 }
 .soft li::before{content:"";position:absolute;left:0;top:21px;width:9px;height:1px;background:var(--red)}
 .soft-side{background:var(--ink-2)}
@@ -496,8 +525,8 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
 .soft-side b{color:var(--white)}
 .side-trust{margin-top:2rem;padding-top:2rem;border-top:1px solid var(--line)}
 .side-trust b{
-  display:block;font-weight:900;font-size:clamp(2.4rem,4vw,3.4rem);
-  letter-spacing:-.04em;color:var(--white);line-height:1;margin-bottom:.4rem;
+  display:block;font-family:var(--f-display);font-weight:700;font-size:clamp(2.4rem,4vw,3.4rem);
+  letter-spacing:-.02em;color:var(--white);line-height:1;margin-bottom:.4rem;
 }
 
 /* ---------- cta ---------- */
@@ -514,8 +543,8 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
 }
 .cta>*{position:relative}
 .cta-title{
-  font-weight:900;font-size:clamp(2.4rem,7.6vw,7rem);line-height:.9;
-  letter-spacing:-.045em;text-transform:uppercase;margin-bottom:1.6rem;
+  font-family:var(--f-display);font-weight:700;font-size:clamp(2.4rem,7.6vw,7rem);line-height:.9;
+  letter-spacing:-.02em;text-transform:uppercase;margin-bottom:1.6rem;
 }
 .cta p{color:var(--grey);max-width:46ch;margin:0 auto}
 .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:2.6rem}
@@ -527,8 +556,8 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
   display:flex;flex-wrap:wrap;gap:28px;justify-content:space-between;align-items:flex-end;
 }
 .foot-claim{
-  font-weight:800;font-size:clamp(1.3rem,3vw,2.2rem);line-height:1.06;
-  letter-spacing:-.035em;text-transform:uppercase;text-align:right;
+  font-family:var(--f-display);font-weight:700;font-size:clamp(1.3rem,3vw,2.2rem);line-height:1.06;
+  letter-spacing:-.018em;text-transform:uppercase;text-align:right;
 }
 .foot-cols{
   max-width:var(--maxw);margin:0 auto;
