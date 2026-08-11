@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" width="640" height="420" role="img" aria-label="Main circuit board">
+  <defs>
+    <linearGradient id="pcbBody" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#12241d"/>
+      <stop offset=".5" stop-color="#0b1712"/>
+      <stop offset="1" stop-color="#060d0a"/>
+    </linearGradient>
+    <linearGradient id="chip" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#33373d"/>
+      <stop offset="1" stop-color="#131519"/>
+    </linearGradient>
+    <filter id="ledGlow" x="-200%" y="-200%" width="500%" height="500%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- board -->
+  <rect x="78" y="78" width="484" height="264" rx="20" fill="url(#pcbBody)" stroke="#1f3a2f" stroke-width="2"/>
+
+  <!-- gold traces -->
+  <g stroke="#c9a24a" stroke-width="1.6" fill="none" opacity=".85" stroke-linecap="round">
+    <path d="M104 120h120l24 24h96"/>
+    <path d="M104 150h86l30 30h150"/>
+    <path d="M104 190h60l28 28h120l22-22h96"/>
+    <path d="M104 230h140l26-26h110"/>
+    <path d="M104 268h180l30 30h140"/>
+    <path d="M120 300h96l26-26h180"/>
+    <path d="M330 108v52l26 26h140"/>
+    <path d="M420 108v40h118"/>
+  </g>
+  <g fill="#c9a24a" opacity=".9">
+    <circle cx="224" cy="144" r="3.2"/><circle cx="276" cy="180" r="3.2"/><circle cx="192" cy="218" r="3.2"/>
+    <circle cx="270" cy="204" r="3.2"/><circle cx="314" cy="298" r="3.2"/><circle cx="356" cy="186" r="3.2"/>
+  </g>
+
+  <!-- LTE modem module -->
+  <rect x="112" y="112" width="150" height="96" rx="8" fill="url(#chip)" stroke="#4a4e55" stroke-width="1.5"/>
+  <rect x="122" y="122" width="130" height="76" rx="4" fill="#0e1013" stroke="#2b2e33"/>
+  <g fill="#2f3339"><rect x="132" y="134" width="52" height="8" rx="2"/><rect x="132" y="150" width="86" height="6" rx="2"/><rect x="132" y="164" width="70" height="6" rx="2"/></g>
+
+  <!-- MCU -->
+  <rect x="300" y="216" width="96" height="96" rx="6" fill="url(#chip)" stroke="#4a4e55" stroke-width="1.5"/>
+  <g stroke="#8c9099" stroke-width="2">
+    <path d="M300 232h-14"/><path d="M300 250h-14"/><path d="M300 268h-14"/><path d="M300 286h-14"/>
+    <path d="M396 232h14"/><path d="M396 250h14"/><path d="M396 268h14"/><path d="M396 286h14"/>
+    <path d="M318 216v-14"/><path d="M336 216v-14"/><path d="M354 216v-14"/><path d="M372 216v-14"/>
+    <path d="M318 312v14"/><path d="M336 312v14"/><path d="M354 312v14"/><path d="M372 312v14"/>
+  </g>
+  <circle cx="312" cy="228" r="4" fill="#0d0f11"/>
+
+  <!-- GNSS chip -->
+  <rect x="300" y="112" width="70" height="62" rx="6" fill="url(#chip)" stroke="#4a4e55" stroke-width="1.5"/>
+  <rect x="430" y="128" width="58" height="46" rx="5" fill="url(#chip)" stroke="#4a4e55" stroke-width="1.5"/>
+
+  <!-- capacitors -->
+  <g>
+    <circle cx="440" cy="228" r="16" fill="#1a1d21" stroke="#585c63" stroke-width="2"/>
+    <path d="M440 212v32" stroke="#585c63" stroke-width="2"/>
+    <circle cx="484" cy="256" r="12" fill="#1a1d21" stroke="#585c63" stroke-width="2"/>
+    <circle cx="440" cy="284" r="12" fill="#1a1d21" stroke="#585c63" stroke-width="2"/>
+  </g>
+
+  <!-- resistors -->
+  <g fill="#22262b" stroke="#3d4148">
+    <rect x="150" y="238" width="26" height="12" rx="3"/><rect x="150" y="260" width="26" height="12" rx="3"/>
+    <rect x="150" y="282" width="26" height="12" rx="3"/><rect x="196" y="238" width="26" height="12" rx="3"/>
+    <rect x="196" y="260" width="26" height="12" rx="3"/><rect x="196" y="282" width="26" height="12" rx="3"/>
+  </g>
+
+  <!-- SIM socket -->
+  <rect x="424" y="300" width="112" height="30" rx="5" fill="#2a2e34" stroke="#585c63" stroke-width="1.5"/>
+  <rect x="434" y="307" width="92" height="16" rx="3" fill="#c9a24a" opacity=".55"/>
+
+  <!-- edge connector -->
+  <g fill="#c9a24a">
+    <rect x="96" y="330" width="10" height="20" rx="2"/><rect x="116" y="330" width="10" height="20" rx="2"/>
+    <rect x="136" y="330" width="10" height="20" rx="2"/><rect x="156" y="330" width="10" height="20" rx="2"/>
+    <rect x="176" y="330" width="10" height="20" rx="2"/><rect x="196" y="330" width="10" height="20" rx="2"/>
+  </g>
+
+  <!-- status LEDs -->
+  <g filter="url(#ledGlow)">
+    <circle cx="520" cy="106" r="5.5" fill="#E10600"/>
+    <circle cx="540" cy="106" r="5.5" fill="#ff5a4d" opacity=".75"/>
+  </g>
+</svg>

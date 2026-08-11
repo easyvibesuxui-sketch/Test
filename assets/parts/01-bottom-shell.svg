@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" width="640" height="420" role="img" aria-label="Bottom housing shell">
+  <defs>
+    <linearGradient id="bsBody" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a2c30"/>
+      <stop offset=".45" stop-color="#15171a"/>
+      <stop offset="1" stop-color="#0a0b0d"/>
+    </linearGradient>
+    <linearGradient id="bsInner" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d0e10"/>
+      <stop offset="1" stop-color="#191b1f"/>
+    </linearGradient>
+    <linearGradient id="bsEdge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4a4d53"/>
+      <stop offset=".5" stop-color="#26282c"/>
+      <stop offset="1" stop-color="#404349"/>
+    </linearGradient>
+  </defs>
+
+  <!-- outer tray -->
+  <rect x="40" y="40" width="560" height="340" rx="42" fill="url(#bsBody)" stroke="url(#bsEdge)" stroke-width="3"/>
+  <rect x="52" y="52" width="536" height="316" rx="34" fill="none" stroke="#000" stroke-opacity=".7" stroke-width="2"/>
+
+  <!-- inner cavity -->
+  <rect x="72" y="72" width="496" height="276" rx="26" fill="url(#bsInner)" stroke="#3a3d43" stroke-width="1.5"/>
+
+  <!-- structural ribs -->
+  <g stroke="#2e3136" stroke-width="6" stroke-linecap="round" opacity=".85">
+    <path d="M104 112h432"/>
+    <path d="M104 308h432"/>
+    <path d="M120 140v140"/>
+    <path d="M520 140v140"/>
+  </g>
+  <g stroke="#232629" stroke-width="2" opacity=".9">
+    <path d="M170 96v228"/><path d="M240 96v228"/><path d="M320 96v228"/><path d="M400 96v228"/><path d="M470 96v228"/>
+  </g>
+
+  <!-- mounting bosses -->
+  <g>
+    <circle cx="108" cy="108" r="17" fill="#202226" stroke="#4b4f55" stroke-width="2"/>
+    <circle cx="532" cy="108" r="17" fill="#202226" stroke="#4b4f55" stroke-width="2"/>
+    <circle cx="108" cy="312" r="17" fill="#202226" stroke="#4b4f55" stroke-width="2"/>
+    <circle cx="532" cy="312" r="17" fill="#202226" stroke="#4b4f55" stroke-width="2"/>
+    <circle cx="108" cy="108" r="7" fill="#0a0b0c"/><circle cx="532" cy="108" r="7" fill="#0a0b0c"/>
+    <circle cx="108" cy="312" r="7" fill="#0a0b0c"/><circle cx="532" cy="312" r="7" fill="#0a0b0c"/>
+  </g>
+
+  <!-- side mounting flanges -->
+  <rect x="8" y="150" width="40" height="120" rx="16" fill="#17191c" stroke="#3d4046" stroke-width="2"/>
+  <circle cx="28" cy="210" r="9" fill="#08090a" stroke="#4b4f55" stroke-width="2"/>
+  <rect x="592" y="150" width="40" height="120" rx="16" fill="#17191c" stroke="#3d4046" stroke-width="2"/>
+  <circle cx="612" cy="210" r="9" fill="#08090a" stroke="#4b4f55" stroke-width="2"/>
+
+  <!-- sealed cable gland -->
+  <rect x="278" y="366" width="84" height="34" rx="12" fill="#1b1d21" stroke="#4b4f55" stroke-width="2"/>
+  <g stroke="#3a3d43" stroke-width="2"><path d="M292 372v22"/><path d="M306 372v22"/><path d="M320 372v22"/><path d="M334 372v22"/><path d="M348 372v22"/></g>
+
+  <!-- red index mark -->
+  <rect x="288" y="78" width="64" height="6" rx="3" fill="#E10600"/>
+</svg>

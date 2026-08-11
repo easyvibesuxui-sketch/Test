@@ -1,658 +1,558 @@
 <!DOCTYPE html>
-<html lang="en" class="is-just-loaded">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
-<title>BlueYard Capital — Design Study</title>
-<style>
-  :root {
-    --headerlogoheight: 48px;
-    --font-stack: "Avenir Next", "Avenir", "AvenirLTPro-Light", -apple-system, "Segoe UI",
-                  "Helvetica Neue", Helvetica, Arial, sans-serif;
-    --ease: cubic-bezier(0.4, 0, 0.6, 1);
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  html, body {
-    height: 100%;
-    overflow: hidden;
-  }
-  body {
-    font-family: var(--font-stack);
-    background-color: #011251;
-    color: #fff;
-    -webkit-font-smoothing: antialiased;
-    user-select: none;
-  }
-
-  /* ---- movie: generative canvas standing in for the background films ---- */
-  .movie {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background-color: #011251;
-    overflow: hidden;
-  }
-  .movie canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
-  /* dark blue veil over the film, as on the original */
-  .movie::after {
-    pointer-events: none;
-    content: "";
-    position: fixed;
-    inset: 0;
-    background-color: #011251;
-    mix-blend-mode: darken;
-    opacity: 0.4;
-    z-index: 10;
-  }
-
-  /* ---- page banner ---- */
-  .page-banner {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%;
-    z-index: 400;
-    display: flex;
-    flex-flow: row nowrap;
-    align-items: center;
-    padding: 0 32px;
-    transition: opacity 0.5s 0.5s ease-in;
-  }
-  .is-just-loaded .page-banner { opacity: 0; transition: opacity 0s 0s linear !important; }
-  .page-banner__logo .logo {
-    display: flex;
-    align-items: center;
-    height: var(--headerlogoheight);
-    margin: 16px 0;
-    color: #fff;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 22px;
-    letter-spacing: 0.01em;
-  }
-  .page-banner__nav {
-    margin: 0 0 0 auto;
-    font-size: 18px;
-  }
-  .page-banner__nav li { display: inline-block; list-style: none; }
-  .page-banner__nav a {
-    display: block;
-    padding: 16px;
-    color: #fff;
-    text-decoration: none;
-    transition: all 0.3s var(--ease);
-  }
-  .page-banner__nav a:hover { opacity: 0.7; }
-
-  /* ---- qanda ---- */
-  .qanda {
-    z-index: 1;
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100vh;
-    color: #fff;
-    display: grid;
-    grid-template-areas: 'outer' 'nav' 'footer';
-    grid-template-rows: 1fr 64px 64px;
-    text-align: center;
-    transition: opacity 0.5s 0.5s ease-in;
-    transform: translateZ(0);
-  }
-  .is-just-loaded .qanda { opacity: 0; transition: opacity 0s 0s linear !important; }
-
-  .qanda__outer { grid-area: outer; align-self: center; margin: auto; }
-
-  .qanda__list {
-    position: relative;
-    list-style: none;
-    display: grid;
-    grid-template-areas: 'item';
-    place-items: center;
-    place-content: center;
-    padding: var(--headerlogoheight) 0 0 0;
-  }
-  .qanda__item {
-    grid-area: item;
-    max-width: 52.5em;
-    display: grid;
-    grid-template-rows: 7fr 7fr;
-    grid-template-areas: 'question' 'answer';
-    align-items: end;
-    pointer-events: none;
-  }
-  .qanda__item > * {
-    opacity: 0;
-    transition-property: opacity;
-    transition-timing-function: var(--ease);
-    transition-duration: 0.5s;
-    transition-delay: 0s;
-  }
-  .qanda__item.current { pointer-events: all; }
-  .qanda__item.current > * { opacity: 1; }
-  /* the original's timing: question drifts in after 1s, companies after 3s */
-  .qanda__item.current .qanda__question { transition-duration: 1s; transition-delay: 1s; }
-  .qanda__item.current .qanda__answer   { transition-duration: 3s; transition-delay: 3s; }
-  .is-just-loaded .qanda__item > *,
-  .is-just-loaded .qanda__item.current > * { opacity: 0; transition-duration: 0s; transition-delay: 0s; }
-
-  /* first slide has no answers: question sits centered across both rows */
-  .qanda__item:first-child .qanda__question {
-    grid-row-start: question-start;
-    grid-row-end: answer-end;
-    align-self: center;
-  }
-
-  .qanda__question {
-    grid-area: question;
-    font-size: 36px;
-    font-weight: 300;
-    line-height: 1.35;
-  }
-  .qanda__question a { color: inherit; text-decoration: none; }
-  .qanda__question span {
-    display: block;
-    max-width: 21em;
-    margin: 0 auto 16px;
-    padding: 0 32px;
-  }
-
-  .qanda__answer {
-    grid-area: answer;
-    align-self: start;
-    list-style: none;
-    max-width: 100%;
-    display: flex;
-    flex-flow: row wrap;
-    justify-content: center;
-    align-items: center;
-  }
-  .qanda__answer > li {
-    flex: 0 0 auto;
-    padding: 0.8vmin 1.6vmin;
-  }
-  /* white text wordmarks in place of the entity logos (which the site renders
-     all-white anyway via a CSS filter) */
-  .qanda__answer a {
-    display: block;
-    color: #fff;
-    text-decoration: none;
-    font-size: clamp(15px, 2.6vmin, 24px);
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-    transition: all 0.3s var(--ease);
-  }
-  .qanda__answer a:hover { opacity: 0.7; }
-  .qanda__answer .wm--caps  { text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; font-size: clamp(13px, 2.2vmin, 20px); }
-  .qanda__answer .wm--bold  { font-weight: 700; }
-  .qanda__answer .wm--light { font-weight: 300; letter-spacing: 0.08em; }
-  .qanda__answer .wm--mono  { font-family: Consolas, monospace; font-size: clamp(13px, 2.3vmin, 21px); }
-
-  /* ---- nav dashes ---- */
-  .qanda__nav {
-    grid-area: nav;
-    align-self: end;
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: center;
-  }
-  .qanda__nav-dot {
-    list-style: none;
-    width: calc(100% - 64px);
-    max-width: 42em;
-    display: flex;
-    flex-flow: row nowrap;
-  }
-  .qanda__nav-dot-item {
-    flex: 1 0 32px;
-    position: relative;
-    pointer-events: all;
-    cursor: pointer;
-    opacity: 0.2;
-    padding: 32px 8px;
-    transition: opacity 0.3s var(--ease);
-  }
-  .qanda__nav-dot-item::after {
-    display: block;
-    content: "";
-    background-color: #fff;
-    height: 2px;
-  }
-  .qanda__nav-dot-item.current { opacity: 1; cursor: default; }
-  .qanda__nav-dot-item:hover { opacity: 0.6; }
-  .qanda__nav-dot-item.current:hover { opacity: 1; }
-
-  /* ---- footer ---- */
-  .footer {
-    grid-area: footer;
-    padding: 32px;
-    display: flex;
-    align-items: center;
-  }
-  .footer__legal { margin: 0 16px 0 auto; font-size: 12px; transition: font-size 0.3s var(--ease); }
-  .footer__legal:hover { font-size: 16px; }
-  .footer__legal a { color: #fff; opacity: 0.7; text-decoration: none; white-space: nowrap; }
-  .footer__legal a:hover { opacity: 1; }
-  .footer__note { font-size: 11px; opacity: 0.45; letter-spacing: 0.04em; }
-
-  @media (max-width: 700px) {
-    .qanda__question { font-size: 22px; }
-    .page-banner__nav { font-size: 14px; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .qanda__item > *, .qanda__item.current > * { transition-duration: 0.2s !important; transition-delay: 0s !important; }
-  }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>syniotec — Telematics for construction machines</title>
+<meta name="description" content="IoT and telematics hardware for construction machinery: live location, operating hours and CAN bus data from every machine, attachment and container — streamed into SAM &amp; RAM.">
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Narrow:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23E10600'/%3E%3C/svg%3E">
 </head>
-<body id="blueyard" class="page body-index">
+<body>
 
-  <div class="page-banner">
-    <div class="page-banner__logo">
-      <a class="logo" href="#blueyard">BlueYard</a>
+<!-- ══════════════ icon sprite ══════════════ -->
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="dev-core" viewBox="0 0 120 120">
+    <rect x="18" y="30" width="84" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="3"/>
+    <rect x="28" y="40" width="64" height="40" rx="5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".45"/>
+    <path d="M18 60H4M102 52h14M102 68h14" stroke="var(--red)" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="40" cy="60" r="5" fill="var(--red)"/>
+    <path d="M56 52h30M56 60h20M56 68h26" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+  </symbol>
+  <symbol id="dev-edge" viewBox="0 0 120 120">
+    <rect x="22" y="34" width="76" height="52" rx="10" fill="none" stroke="currentColor" stroke-width="3"/>
+    <path d="M60 34V16" stroke="currentColor" stroke-width="3"/>
+    <path d="M48 16h24" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M52 10v6M68 10v6" stroke="var(--red)" stroke-width="3" stroke-linecap="round"/>
+    <path d="M36 60h22M66 52h18M66 68h18" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+    <circle cx="60" cy="60" r="4" fill="var(--red)"/>
+  </symbol>
+  <symbol id="dev-lite" viewBox="0 0 120 120">
+    <rect x="34" y="42" width="52" height="36" rx="8" fill="none" stroke="currentColor" stroke-width="3"/>
+    <path d="M34 54c-14 0-14-16-26-16M34 66c-14 0-14 16-26 16" fill="none" stroke="var(--red)" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="8" cy="38" r="4" fill="var(--red)"/><circle cx="8" cy="82" r="4" fill="var(--red)"/>
+    <circle cx="60" cy="60" r="6" fill="none" stroke="currentColor" stroke-width="3"/>
+    <path d="M86 60h20" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+  </symbol>
+  <symbol id="dev-link" viewBox="0 0 120 120">
+    <rect x="14" y="44" width="92" height="32" rx="16" fill="none" stroke="currentColor" stroke-width="3"/>
+    <circle cx="26" cy="60" r="5" fill="none" stroke="var(--red)" stroke-width="3"/>
+    <circle cx="94" cy="60" r="5" fill="none" stroke="var(--red)" stroke-width="3"/>
+    <path d="M44 60h32" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".6"/>
+    <path d="M60 44V32M50 36l10-10 10 10" fill="none" stroke="var(--red)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="dev-volt" viewBox="0 0 120 120">
+    <rect x="24" y="30" width="72" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="3"/>
+    <path d="M64 42l-14 22h12l-4 16 16-24H64l4-14z" fill="var(--red)"/>
+    <path d="M34 40v40M40 46v28" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+    <path d="M96 50h8v20h-8" fill="none" stroke="currentColor" stroke-width="3"/>
+  </symbol>
+  <symbol id="dev-solar" viewBox="0 0 120 120">
+    <rect x="20" y="52" width="80" height="40" rx="9" fill="none" stroke="currentColor" stroke-width="3"/>
+    <rect x="30" y="62" width="60" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2" opacity=".5"/>
+    <path d="M45 62v20M60 62v20M75 62v20" stroke="currentColor" stroke-width="2" opacity=".5"/>
+    <circle cx="60" cy="26" r="9" fill="none" stroke="var(--red)" stroke-width="3"/>
+    <path d="M60 8v6M60 38v4M42 26h-6M84 26h-6M47 13l-4-4M77 39l-4-4M73 13l4-4M43 43l4-4" stroke="var(--red)" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="dev-obd" viewBox="0 0 120 120">
+    <path d="M28 40h64l-10 44H38z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M40 54h40M42 66h36" stroke="var(--red)" stroke-width="3" stroke-linecap="round"/>
+    <path d="M60 40V22" stroke="currentColor" stroke-width="3"/>
+    <circle cx="60" cy="18" r="5" fill="none" stroke="currentColor" stroke-width="3"/>
+  </symbol>
+  <symbol id="dev-dot" viewBox="0 0 120 120">
+    <rect x="26" y="26" width="68" height="68" rx="10" fill="none" stroke="currentColor" stroke-width="3"/>
+    <rect x="38" y="38" width="16" height="16" rx="3" fill="var(--red)"/>
+    <rect x="66" y="38" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="3"/>
+    <rect x="38" y="66" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="3"/>
+    <rect x="68" y="68" width="10" height="10" rx="2" fill="currentColor" opacity=".6"/>
+  </symbol>
+  <symbol id="i-pin" viewBox="0 0 48 48">
+    <path d="M24 44s15-14.5 15-25A15 15 0 1 0 9 19c0 10.5 15 25 15 25z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="24" cy="19" r="5.5" fill="var(--red)"/>
+  </symbol>
+  <symbol id="i-fence" viewBox="0 0 48 48">
+    <circle cx="24" cy="24" r="17" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="5 5"/>
+    <circle cx="24" cy="24" r="5" fill="var(--red)"/>
+    <path d="M36 12l8-8" stroke="var(--red)" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-clock" viewBox="0 0 48 48">
+    <circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="3"/>
+    <path d="M24 13v11l8 6" fill="none" stroke="var(--red)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="i-can" viewBox="0 0 48 48">
+    <path d="M6 24h9l5-11 6 22 5-11h11" fill="none" stroke="var(--red)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="4" y="8" width="40" height="32" rx="6" fill="none" stroke="currentColor" stroke-width="3"/>
+  </symbol>
+  <symbol id="i-shield" viewBox="0 0 48 48">
+    <path d="M24 4l16 6v14c0 11-7 17-16 20-9-3-16-9-16-20V10z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M16 24l6 6 11-12" fill="none" stroke="var(--red)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="i-wrench" viewBox="0 0 48 48">
+    <path d="M31 6a11 11 0 0 0-9.4 16.7L6 38.3 9.7 42l15.6-15.6A11 11 0 1 0 31 6z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="31" cy="17" r="4" fill="var(--red)"/>
+  </symbol>
+</svg>
+
+<!-- ══════════════ progress + header ══════════════ -->
+<div class="scroll-rail"><span id="scrollBar"></span></div>
+
+<header class="site-head" id="siteHead">
+  <a class="brand" href="#top" aria-label="syniotec — home">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-word">syniotec</span>
+  </a>
+  <nav class="nav" id="nav">
+    <a href="#anatomy" data-nav>Anatomy</a>
+    <a href="#devices" data-nav>Devices</a>
+    <a href="#data" data-nav>Data</a>
+    <a href="#compare" data-nav>Compare</a>
+    <a href="#software" data-nav>Software</a>
+  </nav>
+  <a href="#contact" class="btn btn-sm">Book a demo</a>
+  <button class="burger" id="burger" aria-label="Menu" aria-expanded="false"><span></span><span></span></button>
+</header>
+
+<div class="mobile-menu" id="mobileMenu" hidden>
+  <a href="#anatomy">Anatomy</a>
+  <a href="#devices">Devices</a>
+  <a href="#data">Data</a>
+  <a href="#compare">Compare</a>
+  <a href="#software">Software</a>
+  <a href="#contact">Book a demo</a>
+</div>
+
+<main id="top">
+
+<!-- ══════════════ 01 · hero ══════════════ -->
+<section class="hero" id="hero">
+  <canvas class="hero-canvas" id="heroCanvas" aria-hidden="true"></canvas>
+  <div class="hero-grid" aria-hidden="true"></div>
+  <div class="hero-inner">
+    <p class="eyebrow reveal"><span class="dot"></span> IoT &amp; Telematics · Construction</p>
+    <h1 class="display split-lines">
+      <span class="line">Telematics for</span>
+      <span class="line"><em>construction</em></span>
+      <span class="line">machines</span>
+    </h1>
+    <p class="lede reveal" data-delay="120">
+      Eight hardware devices. One data layer. Live location, operating hours and CAN bus
+      information from every machine, attachment and container on your site — streamed
+      straight into SAM&nbsp;&amp;&nbsp;RAM.
+    </p>
+    <div class="hero-cta reveal" data-delay="200">
+      <a href="#anatomy" class="btn">Open a device</a>
+      <a href="#devices" class="btn btn-ghost">See the lineup</a>
     </div>
-    <nav class="page-banner__nav">
-      <ul>
-        <li><a href="https://medium.com/@BlueYard" target="_blank" rel="noopener">Updates</a></li>
-        <li><a href="https://twitter.com/blueyard" target="_blank" rel="noopener">Twitter</a></li>
-      </ul>
-    </nav>
   </div>
 
-  <header class="page-header" id="page-header">
+  <div class="hero-meta">
+    <div class="meta-item reveal" data-delay="260"><b data-count="80" data-suffix="+">0</b><span>companies &amp; partners</span></div>
+    <div class="meta-item reveal" data-delay="320"><b data-count="8">0</b><span>telematics devices</span></div>
+    <div class="meta-item reveal" data-delay="380"><b>AEMP 2.0</b><span>standard compliant</span></div>
+    <div class="meta-item reveal" data-delay="440"><b data-count="24" data-suffix="/7">0</b><span>live monitoring</span></div>
+  </div>
 
-    <div class="movie">
-      <canvas id="film"></canvas>
+  <a href="#anatomy" class="scroll-cue" aria-label="Scroll"><span></span>Scroll</a>
+</section>
+
+<!-- ══════════════ marquee ══════════════ -->
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <span>CORE</span><i></i><span>EDGE</span><i></i><span>LITE</span><i></i><span>LINK</span><i></i>
+    <span>LINK mini</span><i></i><span>VOLT</span><i></i><span>SOLAR</span><i></i><span>OBD</span><i></i><span>DOT</span><i></i>
+    <span>CORE</span><i></i><span>EDGE</span><i></i><span>LITE</span><i></i><span>LINK</span><i></i>
+    <span>LINK mini</span><i></i><span>VOLT</span><i></i><span>SOLAR</span><i></i><span>OBD</span><i></i><span>DOT</span><i></i>
+  </div>
+</div>
+
+<!-- ══════════════ 02 · anatomy / scroll assembly ══════════════ -->
+<section class="anatomy" id="anatomy">
+  <div class="anatomy-sticky">
+    <div class="anatomy-head">
+      <span class="sec-label">02 — Anatomy</span>
+      <h2 class="h2">Built to be<br>opened once.</h2>
     </div>
 
-    <section class="qanda">
-      <div class="qanda__outer">
-        <ul id="qanda__list" class="qanda__list qanda-parent">
+    <div class="stage" id="stage">
+      <div class="stage-glow" aria-hidden="true"></div>
+      <div class="rig" id="rig">
+        <!--
+          Each .layer is one physical part of the device, ordered bottom → top.
+          The assembly rig only cares about the order and the count, so a part can be
+          swapped for any other flat top-down image (e.g. a generated PNG/WebP with a
+          transparent or pure-black background) by replacing the src below — no JS change.
+        -->
+        <div class="stack" id="stack">
+          <img class="layer" data-layer="0" src="assets/parts/01-bottom-shell.svg" alt="Bottom housing shell">
+          <img class="layer" data-layer="1" src="assets/parts/02-pcb.svg" alt="Main circuit board">
+          <img class="layer" data-layer="2" src="assets/parts/03-power-module.svg" alt="GNSS antenna and battery module">
+          <img class="layer" data-layer="3" src="assets/parts/04-gasket.svg" alt="IP68 sealing gasket">
+          <img class="layer" data-layer="4" src="assets/parts/05-top-shell.svg" alt="Top housing shell">
+        </div>
+      </div>
+      <div class="stage-floor" aria-hidden="true"></div>
+    </div>
 
-          <li class="qanda__item current">
-            <h2 class="qanda__question">
-              <a href="https://medium.com/@BlueYard/blueyard-thesis-cac357725ee6" target="_blank" rel="noopener">
-                <span>Backing founders with transforming ideas — decentralizing markets and empowering humanity.</span>
-              </a>
-            </h2>
-            <ul class="qanda__answer"></ul>
-          </li>
+    <div class="anatomy-copy">
+      <ol class="steps" id="steps">
+        <li class="step is-active">
+          <span class="step-no">01</span>
+          <h3>Bottom shell</h3>
+          <p>Glass-fibre reinforced polymer tray with integrated mounting flanges and a sealed
+             cable gland. Bolted straight onto the machine frame.</p>
+        </li>
+        <li class="step">
+          <span class="step-no">02</span>
+          <h3>Main board</h3>
+          <p>LTE-M / NB-IoT modem, multi-constellation GNSS receiver and a CAN transceiver on
+             one board. Firmware arrives over the air.</p>
+        </li>
+        <li class="step">
+          <span class="step-no">03</span>
+          <h3>Power &amp; antenna</h3>
+          <p>Ceramic GNSS patch and a backup lithium cell. The device keeps reporting when the
+             machine battery is disconnected.</p>
+        </li>
+        <li class="step">
+          <span class="step-no">04</span>
+          <h3>IP68 seal</h3>
+          <p>A compression-moulded silicone gasket rated for dust, jet water and the pressure
+             washer at the yard.</p>
+        </li>
+        <li class="step">
+          <span class="step-no">05</span>
+          <h3>Top shell</h3>
+          <p>UV-stable housing with the status window. Shock resistant, vibration tested — and
+             invisible once it is on the machine.</p>
+        </li>
+      </ol>
+      <div class="assembly-bar"><span id="assemblyFill"></span></div>
+      <p class="assembly-hint" id="assemblyHint">Keep scrolling to assemble</p>
+    </div>
+  </div>
+</section>
 
-          <li class="qanda__item">
-            <h2 class="qanda__question"><span>What if nature became our most powerful technology?</span></h2>
-            <ul class="qanda__answer">
-              <li><a class="wm--bold"  href="http://meatable.com/" target="_blank" rel="noopener">meatable</a></li>
-              <li><a class="wm--mono"  href="http://bit.bio/" target="_blank" rel="noopener">bit.bio</a></li>
-              <li><a class="wm--caps"  href="http://seeqc.eu/" target="_blank" rel="noopener">SeeQC</a></li>
-              <li><a class="wm--light" href="http://positive.co/" target="_blank" rel="noopener">Positive</a></li>
-              <li><a class="wm--caps"  href="http://marvelfusion.io/" target="_blank" rel="noopener">Marvel Fusion</a></li>
-              <li><a class="wm--bold"  href="http://thinkhumm.com/" target="_blank" rel="noopener">humm</a></li>
-              <li><a class="wm--light" href="http://dance.co/" target="_blank" rel="noopener">Dance</a></li>
-            </ul>
-          </li>
+<!-- ══════════════ 03 · devices ══════════════ -->
+<section class="devices section" id="devices">
+  <div class="sec-top">
+    <span class="sec-label reveal">03 — The lineup</span>
+    <h2 class="h2 reveal">One box for every<br><em>asset on site.</em></h2>
+    <p class="sec-note reveal" data-delay="120">
+      From a 40-tonne excavator on the CAN bus down to a vibratory plate with no power supply
+      at all. Every device reports into the same platform.
+    </p>
+  </div>
 
-          <li class="qanda__item">
-            <h2 class="qanda__question"><span>What if the internet was reinvented for permissionless innovation?</span></h2>
-            <ul class="qanda__answer">
-              <li><a class="wm--caps"  href="http://protocol.ai/" target="_blank" rel="noopener">Protocol Labs</a></li>
-              <li><a class="wm--bold"  href="http://ipfs.io/" target="_blank" rel="noopener">IPFS</a></li>
-              <li><a class="wm--mono"  href="http://libp2p.io/" target="_blank" rel="noopener">libp2p</a></li>
-              <li><a class="wm--light" href="http://filecoin.io/" target="_blank" rel="noopener">Filecoin</a></li>
-              <li><a class="wm--caps"  href="http://zeppelin.solutions/" target="_blank" rel="noopener">Zeppelin</a></li>
-              <li><a class="wm--mono"  href="http://oscoin.io/" target="_blank" rel="noopener">oscoin</a></li>
-              <li><a class="wm--bold"  href="http://textile.io/" target="_blank" rel="noopener">Textile</a></li>
-            </ul>
-          </li>
-
-          <li class="qanda__item">
-            <h2 class="qanda__question"><span>What if software monopolies were untangled — and data set free?</span></h2>
-            <ul class="qanda__answer">
-              <li><a class="wm--bold"  href="http://pitch.com/" target="_blank" rel="noopener">Pitch</a></li>
-              <li><a class="wm--mono"  href="http://stdlib.com/" target="_blank" rel="noopener">stdlib</a></li>
-              <li><a class="wm--light" href="http://nextmatter.com/" target="_blank" rel="noopener">Next Matter</a></li>
-              <li><a class="wm--caps"  href="http://grid.is/" target="_blank" rel="noopener">GRID</a></li>
-              <li><a class="wm--bold"  href="http://vectary.com/" target="_blank" rel="noopener">VECTARY</a></li>
-              <li><a class="wm--caps"  href="http://spaceknow.com/" target="_blank" rel="noopener">SpaceKnow</a></li>
-            </ul>
-          </li>
-
-          <li class="qanda__item">
-            <h2 class="qanda__question"><span>What if state and money could be separated?</span></h2>
-            <ul class="qanda__answer">
-              <li><a class="wm--light" href="http://airtm.io/" target="_blank" rel="noopener">AirTM</a></li>
-              <li><a class="wm--bold"  href="http://decred.org/" target="_blank" rel="noopener">decred</a></li>
-              <li><a class="wm--caps"  href="http://centrifuge.io/" target="_blank" rel="noopener">Centrifuge</a></li>
-              <li><a class="wm--mono"  href="http://grin.mw/" target="_blank" rel="noopener">grin</a></li>
-              <li><a class="wm--light" href="http://gethaven.app/" target="_blank" rel="noopener">Haven</a></li>
-              <li><a class="wm--bold"  href="http://openbazaar.org/" target="_blank" rel="noopener">OB1</a></li>
-            </ul>
-          </li>
-
+  <div class="dev-grid">
+    <article class="dev-card reveal" data-tilt>
+      <div class="dev-visual"><svg><use href="#dev-core"/></svg></div>
+      <div class="dev-body">
+        <header><h3>CORE</h3><span class="tag">Wired · CAN bus</span></header>
+        <p class="dev-lede">Developed for vehicles where vehicle data, CAN bus information and usage analysis are crucial. Ideal for large construction machines.</p>
+        <ul class="dev-specs">
+          <li>1 positive + 3 negative trigger inputs</li>
+          <li>Analog inputs 0–16 V and 0–30 V</li>
+          <li>Digital output, open drain, 150 mA</li>
+          <li>Installed by screw connection, power or CAN</li>
         </ul>
       </div>
+      <span class="dev-index">01</span>
+    </article>
 
-      <div class="qanda__nav" id="qanda__nav">
-        <ul class="qanda__nav-dot qanda-parent">
-          <li class="qanda__nav-dot-item current"></li>
-          <li class="qanda__nav-dot-item"></li>
-          <li class="qanda__nav-dot-item"></li>
-          <li class="qanda__nav-dot-item"></li>
-          <li class="qanda__nav-dot-item"></li>
+    <article class="dev-card reveal" data-delay="80" data-tilt>
+      <div class="dev-visual"><svg><use href="#dev-edge"/></svg></div>
+      <div class="dev-body">
+        <header><h3>EDGE</h3><span class="tag">Plug &amp; play</span></header>
+        <p class="dev-lede">Connected to the power source of the machine plug-and-play. Suitable for equipment with its own supply, focused on operating hours and location.</p>
+        <ul class="dev-specs">
+          <li>No workshop time, no wiring loom</li>
+          <li>Operating hours recorded automatically</li>
+          <li>Live position and movement alarms</li>
+          <li>Moves with the machine, not the fleet</li>
         </ul>
       </div>
+      <span class="dev-index">02</span>
+    </article>
 
-      <footer class="footer">
-        <span class="footer__note">Design study — not affiliated with BlueYard Capital</span>
-        <div class="footer__legal"><a href="#">Legal Notice</a></div>
-      </footer>
-    </section>
+    <article class="dev-card reveal" data-delay="160" data-tilt>
+      <div class="dev-visual"><svg><use href="#dev-lite"/></svg></div>
+      <div class="dev-body">
+        <header><h3>LITE</h3><span class="tag">Live location</span></header>
+        <p class="dev-lede">The solution for machinery where only the real-time GPS location is required. Compact, easy to install, connected directly to the battery.</p>
+        <ul class="dev-specs">
+          <li>Precise live location data</li>
+          <li>Automatic theft alarm</li>
+          <li>Direct battery connection</li>
+          <li>Smallest wired footprint</li>
+        </ul>
+      </div>
+      <span class="dev-index">03</span>
+    </article>
 
-  </header>
+    <article class="dev-card reveal" data-tilt>
+      <div class="dev-visual"><svg><use href="#dev-link"/></svg></div>
+      <div class="dev-body">
+        <header><h3>LINK &amp; LINK mini</h3><span class="tag">Attachments</span></header>
+        <p class="dev-lede">For attachments and machines with no internal power supply — buckets, separators, vibratory plates. Robust, weatherproof, riveted on in minutes.</p>
+        <ul class="dev-specs">
+          <li>LTE-M and NB-IoT transmission</li>
+          <li>Replaceable batteries</li>
+          <li>Operating hours tracking &amp; recording</li>
+          <li>Installation by riveting</li>
+        </ul>
+      </div>
+      <span class="dev-index">04</span>
+    </article>
 
-<script>
-(() => {
-  "use strict";
+    <article class="dev-card reveal" data-delay="80" data-tilt>
+      <div class="dev-visual"><svg><use href="#dev-volt"/></svg></div>
+      <div class="dev-body">
+        <header><h3>VOLT</h3><span class="tag">Up to 5 years</span></header>
+        <p class="dev-lede">A GPS tracker with particularly long battery life for trailers and mobile objects without a power supply of their own.</p>
+        <ul class="dev-specs">
+          <li>Battery life up to 5 years</li>
+          <li>Up to 4 months with no external power</li>
+          <li>Automatic theft alarm</li>
+          <li>Weatherproof, magnetic mounting</li>
+        </ul>
+      </div>
+      <span class="dev-index">05</span>
+    </article>
 
-  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    <article class="dev-card reveal" data-delay="160" data-tilt>
+      <div class="dev-visual"><svg><use href="#dev-solar"/></svg></div>
+      <div class="dev-body">
+        <header><h3>SOLAR</h3><span class="tag">Self-powered</span></header>
+        <p class="dev-lede">Solar-powered tracking for containers, construction fences and other non-electrified assets. Fit it once and forget it.</p>
+        <ul class="dev-specs">
+          <li>Live GPS location, real-time tracking</li>
+          <li>Movement alarm when the container moves</li>
+          <li>Up to 3 months without direct sunlight</li>
+          <li>Simple installation on containers</li>
+        </ul>
+      </div>
+      <span class="dev-index">06</span>
+    </article>
 
-  /* =========================================================
-     Generative "films" — one procedural scene per slide,
-     standing in for the original's five background videos:
-     0 ocean foam · 1 blue sun · 2 constellations ·
-     3 building facade · 4 crowd
-     ========================================================= */
-  const canvas = document.getElementById("film");
-  const gl = canvas.getContext("webgl", { antialias: false, alpha: false });
+    <article class="dev-card reveal" data-tilt>
+      <div class="dev-visual"><svg><use href="#dev-obd"/></svg></div>
+      <div class="dev-body">
+        <header><h3>OBD</h3><span class="tag">Fleet vehicles</span></header>
+        <p class="dev-lede">The OBD-II connection supplies the device with power and enables OBD-II data to be read out. Straight into the port, no tools.</p>
+        <ul class="dev-specs">
+          <li>ISO 15765 data read-out</li>
+          <li>Legally mandated protocols supported</li>
+          <li>Vehicles built 2008 or later (USA)</li>
+          <li>Transferable between vehicles</li>
+        </ul>
+      </div>
+      <span class="dev-index">07</span>
+    </article>
 
-  const vsSrc = `
-    attribute vec2 aPos;
-    void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
-  `;
+    <article class="dev-card reveal" data-delay="80" data-tilt>
+      <div class="dev-visual"><svg><use href="#dev-dot"/></svg></div>
+      <div class="dev-body">
+        <header><h3>DOT · passive</h3><span class="tag">Small devices</span></header>
+        <p class="dev-lede">Passive telematics for small devices and hand tools. Scanned at handover, so even items without electronics stay in the inventory.</p>
+        <ul class="dev-specs">
+          <li>No battery, no maintenance</li>
+          <li>Scan on check-in and check-out</li>
+          <li>Digital handover report</li>
+          <li>Cheapest way to close the gaps</li>
+        </ul>
+      </div>
+      <span class="dev-index">08</span>
+    </article>
+  </div>
+</section>
 
-  const fsSrc = `
-    precision highp float;
-    uniform vec2  uRes;
-    uniform float uTime;
-    uniform float uModeA, uModeB, uBlend;
+<!-- ══════════════ 04 · statement ══════════════ -->
+<section class="statement">
+  <div class="statement-bg" aria-hidden="true" data-parallax="0.18"></div>
+  <blockquote class="reveal">
+    <p>A machine that cannot report where it is,<br>
+       <em>how long it ran</em> and what it burned<br>
+       is a machine you are guessing about.</p>
+  </blockquote>
+  <div class="statement-strip">
+    <div class="reveal"><b data-count="15" data-suffix=" s">0</b><span>position update in motion</span></div>
+    <div class="reveal" data-delay="80"><b>IP68</b><span>dust &amp; jet water rated</span></div>
+    <div class="reveal" data-delay="160"><b>LTE-M</b><span>NB-IoT fallback</span></div>
+    <div class="reveal" data-delay="240"><b>OTA</b><span>firmware over the air</span></div>
+  </div>
+</section>
 
-    float hash1(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
-    vec2 hash2(vec2 p) {
-      p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
-      return fract(sin(p) * 43758.5453123);
-    }
-    vec2 ghash(vec2 p) { return -1.0 + 2.0 * hash2(p); }
-    float noise(vec2 p) {
-      vec2 i = floor(p);
-      vec2 f = fract(p);
-      vec2 u = f * f * (3.0 - 2.0 * f);
-      return mix(
-        mix(dot(ghash(i + vec2(0.0, 0.0)), f - vec2(0.0, 0.0)),
-            dot(ghash(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0)), u.x),
-        mix(dot(ghash(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0)),
-            dot(ghash(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0)), u.x),
-        u.y);
-    }
-    float fbm(vec2 p) {
-      float v = 0.0, a = 0.55;
-      mat2 rot = mat2(0.8, 0.6, -0.6, 0.8);
-      for (int i = 0; i < 4; i++) {
-        v += a * noise(p);
-        p = rot * p * 1.9;
-        a *= 0.55;
-      }
-      return v;
-    }
+<!-- ══════════════ 05 · data / capabilities ══════════════ -->
+<section class="section caps" id="data">
+  <div class="sec-top">
+    <span class="sec-label reveal">04 — What comes back</span>
+    <h2 class="h2 reveal">The data your<br><em>fleet is already</em> producing.</h2>
+    <p class="sec-note reveal" data-delay="120">
+      All machine telematics data is transmitted to SAM &amp; RAM in real time and is available
+      in the app, on the map and in every report.
+    </p>
+  </div>
 
-    // 0 — ocean from above: dark teal water, veiny white foam
-    vec3 sceneOcean(vec2 p, vec2 uv, float t) {
-      vec2 drift = vec2(0.0, t * 0.02);
-      float swell = fbm(p * 1.6 + drift);
-      float veins = fbm(p * 4.5 + swell * 1.8 - vec2(t * 0.015, 0.0));
-      float foam = smoothstep(0.80, 0.97, 1.0 - abs(veins) * 2.0);   // thin bright veins only
-      float spray = smoothstep(0.55, 0.85, fbm(p * 9.0 + drift * 3.0)) * foam;
-      vec3 water = mix(vec3(0.02, 0.08, 0.13), vec3(0.08, 0.24, 0.32), swell * 0.5 + 0.5);
-      vec3 col = mix(water, vec3(0.80, 0.88, 0.92), clamp(foam * 0.85 + spray * 0.4, 0.0, 1.0));
-      return col;
-    }
+  <div class="cap-grid">
+    <article class="cap reveal">
+      <svg class="cap-icon"><use href="#i-pin"/></svg>
+      <h3>Live location</h3>
+      <p>Every machine on the map at any time, with the position history behind it. You always
+         know which site an asset is standing on.</p>
+    </article>
+    <article class="cap reveal" data-delay="70">
+      <svg class="cap-icon"><use href="#i-fence"/></svg>
+      <h3>Geofencing &amp; alarms</h3>
+      <p>Draw the site boundary once. Notifications trigger the moment a device leaves the
+         defined area or starts moving out of hours.</p>
+    </article>
+    <article class="cap reveal" data-delay="140">
+      <svg class="cap-icon"><use href="#i-clock"/></svg>
+      <h3>Operating hours</h3>
+      <p>Movements and operating hours are documented automatically — the basis for invoicing,
+         utilisation and rental settlement.</p>
+    </article>
+    <article class="cap reveal">
+      <svg class="cap-icon"><use href="#i-can"/></svg>
+      <h3>CAN bus data</h3>
+      <p>With CORE, the machine's own bus is read out: operating hours, speed, fuel consumption
+         and error codes for precise analysis.</p>
+    </article>
+    <article class="cap reveal" data-delay="70">
+      <svg class="cap-icon"><use href="#i-shield"/></svg>
+      <h3>Theft protection</h3>
+      <p>GPS tracking, geofencing and real-time notifications detect and report unusual
+         movement immediately — day or night.</p>
+    </article>
+    <article class="cap reveal" data-delay="140">
+      <svg class="cap-icon"><use href="#i-wrench"/></svg>
+      <h3>Maintenance intervals</h3>
+      <p>Service windows follow the real operating hours instead of the calendar, so inspections
+         land when the machine has earned them.</p>
+    </article>
+  </div>
+</section>
 
-    // 1 — churning blue sun with corona on black space
-    vec3 sceneSun(vec2 p, vec2 uv, float t, float aspect) {
-      vec2 c = p - vec2(aspect * 0.5, 0.42);
-      float d = length(c);
-      float R = 0.58;
-      float surf = fbm(c * 3.6 + fbm(c * 7.0 + t * 0.06) * 1.4 + vec2(0.0, t * 0.02));
-      vec3 fire = mix(vec3(0.10, 0.16, 0.45), vec3(0.80, 0.86, 1.0), smoothstep(-0.35, 0.55, surf));
-      float body = smoothstep(R, R - 0.015, d);
-      float limb = smoothstep(R, R * 0.25, d);          // limb darkening, brighter center
-      float corona = exp(-(d - R) * 5.5) * (1.0 - body);
-      float flare = 0.5 + 0.5 * fbm(vec2(atan(c.y, c.x) * 2.5, t * 0.1));
-      vec3 col = fire * body * (0.45 + 0.65 * limb);
-      col += vec3(0.45, 0.55, 0.95) * corona * flare * 0.8;
-      return col;
-    }
+<!-- ══════════════ 06 · compare ══════════════ -->
+<section class="section compare" id="compare">
+  <div class="sec-top">
+    <span class="sec-label reveal">05 — Choose</span>
+    <h2 class="h2 reveal">Pick the box<br><em>by the asset.</em></h2>
+  </div>
 
-    // 2 — slow constellation field on near-black navy
-    vec3 sceneStars(vec2 p, vec2 uv, float t) {
-      vec3 col = vec3(0.070, 0.085, 0.115);
-      for (int layer = 0; layer < 2; layer++) {
-        float fl = float(layer);
-        vec2 g = p * (10.0 + fl * 22.0) + vec2(t * (0.01 + fl * 0.012), fl * 7.3);
-        vec2 id = floor(g);
-        vec2 f = fract(g);
-        vec2 rp = hash2(id);
-        float keep = step(0.82 - fl * 0.12, hash1(id + 3.7));
-        float d = length(f - (0.2 + rp * 0.6));
-        float tw = 0.65 + 0.35 * sin(t * (0.8 + rp.x * 2.0) + rp.y * 6.28);
-        float star = smoothstep(0.10 - fl * 0.04, 0.0, d) * keep * tw;
-        col += vec3(0.85, 0.90, 1.0) * star * (0.9 - fl * 0.35);
-      }
-      return col;
-    }
+  <div class="table-wrap reveal">
+    <table class="cmp">
+      <thead>
+        <tr><th>Device</th><th>Power</th><th>Sends</th><th>Endurance</th><th>Best for</th></tr>
+      </thead>
+      <tbody>
+        <tr class="row"><th>CORE</th><td>Machine circuit</td><td>GPS · hours · CAN</td><td>Machine powered</td><td>Excavators, heavy machines</td></tr>
+        <tr class="row"><th>EDGE</th><td>Plug &amp; play</td><td>GPS · hours</td><td>Machine powered</td><td>Machines with own supply</td></tr>
+        <tr class="row"><th>LITE</th><td>Battery terminal</td><td>GPS</td><td>Machine powered</td><td>Location-only fleets</td></tr>
+        <tr class="row"><th>LINK</th><td>Replaceable cells</td><td>GPS · hours</td><td>Multi-year</td><td>Attachments, plates</td></tr>
+        <tr class="row"><th>VOLT</th><td>Internal battery</td><td>GPS</td><td>Up to 5 years</td><td>Trailers, mobile objects</td></tr>
+        <tr class="row"><th>SOLAR</th><td>Solar + buffer</td><td>GPS</td><td>3 months in the dark</td><td>Containers, site fences</td></tr>
+        <tr class="row"><th>OBD</th><td>OBD-II port</td><td>GPS · OBD-II</td><td>Vehicle powered</td><td>Vans and fleet cars</td></tr>
+        <tr class="row"><th>DOT</th><td>None — passive</td><td>Scan events</td><td>Unlimited</td><td>Hand tools, small devices</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
-    // 3 — concrete facade: columns of tall windows, slow pan
-    vec3 sceneFacade(vec2 p, vec2 uv, float t) {
-      vec2 g = vec2(p.x * 9.0 + t * 0.03, uv.y * 7.0);
-      vec2 id = floor(g);
-      vec2 f = fract(g);
-      // window cell inside each bay
-      float winX = step(0.22, f.x) * step(f.x, 0.86);
-      float winY = step(0.12, f.y) * step(f.y, 0.92);
-      float win = winX * winY;
-      float h = hash1(id);
-      vec3 concrete = vec3(0.55, 0.49, 0.42) * (0.9 + 0.1 * hash1(id * 1.7));
-      vec3 glass = h < 0.14 ? vec3(0.04, 0.04, 0.05)
-                            : vec3(0.42, 0.46, 0.50) * (0.85 + 0.3 * h);
-      // mullion split down each window
-      float mullion = smoothstep(0.02, 0.0, abs(f.x - 0.54));
-      vec3 col = mix(concrete, glass, win);
-      col = mix(col, concrete, mullion * win);
-      // sky strip up top
-      col = mix(col, vec3(0.78, 0.79, 0.80), smoothstep(0.86, 0.90, uv.y));
-      col *= 0.9 + 0.1 * sin(p.x * 40.0);   // fine vertical ribbing
-      return col;
-    }
+<!-- ══════════════ 07 · software ══════════════ -->
+<section class="section software" id="software">
+  <div class="sec-top">
+    <span class="sec-label reveal">06 — The platform</span>
+    <h2 class="h2 reveal">Hardware is half.<br><em>SAM &amp; RAM</em> are the rest.</h2>
+  </div>
 
-    // 4 — a crowd from above: dense jostling specks, a few flags
-    vec3 sceneCrowd(vec2 p, vec2 uv, float t) {
-      vec3 col = vec3(0.10, 0.105, 0.10);   // asphalt
-      for (int layer = 0; layer < 2; layer++) {
-        float fl = float(layer);
-        vec2 g = p * (34.0 + fl * 21.0) + vec2(fl * 13.7, fl * 5.1);
-        vec2 id = floor(g);
-        vec2 f = fract(g);
-        vec2 rp = hash2(id);
-        vec2 jitter = 0.14 * vec2(sin(t * 0.7 + rp.x * 6.28), cos(t * 0.6 + rp.y * 6.28));
-        float d = length(f - (0.25 + rp * 0.5 + jitter));
-        float dot_ = smoothstep(0.30, 0.10, d);
-        float pick = hash1(id + 9.1);
-        vec3 tone = pick < 0.70 ? vec3(0.75, 0.74, 0.70) * (0.5 + 0.5 * rp.x)   // shirts, caps
-                  : pick < 0.82 ? vec3(0.75, 0.15, 0.12)                         // red
-                  : pick < 0.92 ? vec3(0.85, 0.72, 0.15)                         // yellow
-                                : vec3(0.15, 0.25, 0.60);                        // blue
-        col = mix(col, tone, dot_ * (0.85 - fl * 0.25));
-      }
-      return col;
-    }
+  <div class="soft-grid">
+    <article class="soft reveal">
+      <span class="soft-tag">For construction companies</span>
+      <h3>SAM</h3>
+      <p>Digitise the management of your equipment and machines: an overview of locations,
+         operating hours, maintenance intervals and capacity utilisation — plus GPS tracking
+         with theft protection.</p>
+      <ul>
+        <li>Equipment &amp; machine management</li>
+        <li>Site documentation and reports</li>
+        <li>Utilisation and cost transparency</li>
+      </ul>
+    </article>
+    <article class="soft reveal" data-delay="120">
+      <span class="soft-tag">For rental companies</span>
+      <h3>RAM</h3>
+      <p>Built specifically for the construction equipment rental industry: analysis, tracking
+         and digital handover reports in one solution — from the first quote to the return of
+         the machine.</p>
+      <ul>
+        <li>Rental fleet and item management</li>
+        <li>Digital handover reports</li>
+        <li>Billing on real operating hours</li>
+      </ul>
+    </article>
+    <aside class="soft-side reveal" data-delay="200">
+      <p class="side-kicker">Open by design</p>
+      <p>The platform integrates third-party telematics systems, complies with the
+         <b>AEMP 2.0</b> standard and offers interfaces to third-party systems — so a mixed
+         fleet stays one fleet.</p>
+      <p class="side-trust"><b data-count="80" data-suffix="+">0</b> companies and partners already trust syniotec.</p>
+    </aside>
+  </div>
+</section>
 
-    vec3 scene(float mode, vec2 p, vec2 uv, float t, float aspect) {
-      if (mode < 0.5) return sceneOcean(p, uv, t);
-      if (mode < 1.5) return sceneSun(p, uv, t, aspect);
-      if (mode < 2.5) return sceneStars(p, uv, t);
-      if (mode < 3.5) return sceneFacade(p, uv, t);
-      return sceneCrowd(p, uv, t);
-    }
+<!-- ══════════════ 08 · cta ══════════════ -->
+<section class="cta" id="contact">
+  <div class="cta-glow" aria-hidden="true"></div>
+  <span class="sec-label reveal">07 — Next step</span>
+  <h2 class="cta-title reveal" data-delay="80">Put the first box<br>on the machine.</h2>
+  <p class="reveal" data-delay="160">Tell us what stands in your yard and we will tell you which device belongs on it.</p>
+  <div class="cta-row reveal" data-delay="240">
+    <a href="#contact" class="btn btn-lg">Book a demo</a>
+    <a href="#devices" class="btn btn-ghost btn-lg">Compare devices</a>
+  </div>
+</section>
 
-    void main() {
-      vec2 uv = gl_FragCoord.xy / uRes.xy;
-      float aspect = uRes.x / uRes.y;
-      vec2 p = vec2(uv.x * aspect, uv.y);
+</main>
 
-      vec3 col = scene(uModeA, p, uv, uTime, aspect);
-      if (uBlend > 0.001) {
-        vec3 colB = scene(uModeB, p, uv, uTime, aspect);
-        col = mix(col, colB, uBlend);
-      }
+<footer class="site-foot">
+  <div class="foot-top">
+    <a class="brand" href="#top">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-word">syniotec</span>
+    </a>
+    <p class="foot-claim">Construction site documentation<br>through software &amp; IoT.</p>
+  </div>
+  <div class="foot-cols">
+    <div>
+      <h4>Telematics</h4>
+      <a href="#devices">CORE</a><a href="#devices">EDGE</a><a href="#devices">LITE</a>
+      <a href="#devices">LINK &amp; LINK mini</a><a href="#devices">VOLT</a><a href="#devices">SOLAR</a>
+      <a href="#devices">OBD</a><a href="#devices">DOT · passive</a>
+    </div>
+    <div>
+      <h4>Software</h4>
+      <a href="#software">SAM · construction companies</a>
+      <a href="#software">RAM · rental companies</a>
+      <a href="#data">Equipment management</a>
+      <a href="#data">Theft protection</a>
+    </div>
+    <div>
+      <h4>Company</h4>
+      <a href="#top">About</a><a href="#compare">Prices</a><a href="#contact">Contact</a><a href="#contact">FAQs</a>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <p>© <span id="year">2026</span> syniotec — design study built from public product information.</p>
+    <p class="foot-note">Not an official syniotec property.</p>
+  </div>
+</footer>
 
-      float vig = smoothstep(1.5, 0.4, length(uv - 0.5));
-      col *= mix(0.75, 1.0, vig);
-      float dither = (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
-      gl_FragColor = vec4(col + dither, 1.0);
-    }
-  `;
-
-  function compile(type, src) {
-    const s = gl.createShader(type);
-    gl.shaderSource(s, src);
-    gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-      throw new Error(gl.getShaderInfoLog(s));
-    }
-    return s;
-  }
-
-  const prog = gl.createProgram();
-  gl.attachShader(prog, compile(gl.VERTEX_SHADER, vsSrc));
-  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fsSrc));
-  gl.linkProgram(prog);
-  gl.useProgram(prog);
-
-  const buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-  const aPos = gl.getAttribLocation(prog, "aPos");
-  gl.enableVertexAttribArray(aPos);
-  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-
-  const U = {};
-  for (const name of ["uRes", "uTime", "uModeA", "uModeB", "uBlend"]) {
-    U[name] = gl.getUniformLocation(prog, name);
-  }
-
-  function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
-    canvas.width = Math.floor(innerWidth * dpr);
-    canvas.height = Math.floor(innerHeight * dpr);
-    gl.viewport(0, 0, canvas.width, canvas.height);
-  }
-  addEventListener("resize", resize);
-  resize();
-
-  /* crossfade state: film A → film B over 1.2s (the original's timing) */
-  const FADE_MS = 1200;
-  let modeA = 0, modeB = 0, fadeStart = -1;
-
-  function showFilm(mode) {
-    if (mode === modeB) return;
-    modeA = currentBlend() >= 1 ? modeB : modeA;   // settle where we are
-    modeB = mode;
-    fadeStart = performance.now();
-  }
-  function currentBlend() {
-    if (fadeStart < 0) return 1;
-    return Math.min((performance.now() - fadeStart) / FADE_MS, 1);
-  }
-
-  let running = true;
-  const start = performance.now();
-
-  function frame(now) {
-    const t = (now - start) / 1000;
-    const blend = currentBlend();
-    if (blend >= 1 && modeA !== modeB) modeA = modeB;
-
-    gl.uniform2f(U.uRes, canvas.width, canvas.height);
-    gl.uniform1f(U.uTime, reduceMotion ? 20.0 : t);
-    gl.uniform1f(U.uModeA, modeA);
-    gl.uniform1f(U.uModeB, modeB);
-    gl.uniform1f(U.uBlend, modeA === modeB ? 0 : blend);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-    if (running) requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-
-  /* =========================================================
-     Q&A slideshow — same behavior as the original das.min.js:
-     10s auto-advance · arrows · swipe · dash click ·
-     pause on blur/hidden, resume on focus
-     ========================================================= */
-  const SLIDE_MS = 10000;
-  const slides = [...document.querySelectorAll(".qanda__item")];
-  const dots = [...document.querySelectorAll(".qanda__nav-dot-item")];
-  let index = 0;
-  let autoTimer = null;
-
-  function goTo(delta) {
-    if (!delta) return;
-    index = ((index + delta) % slides.length + slides.length) % slides.length;
-    slides.forEach((s, i) => s.classList.toggle("current", i === index));
-    dots.forEach((d, i) => d.classList.toggle("current", i === index));
-    showFilm(index);
-    armAuto();
-  }
-
-  function armAuto() {
-    clearTimeout(autoTimer);
-    autoTimer = setTimeout(() => goTo(1), SLIDE_MS);
-  }
-  function pauseAuto() { clearTimeout(autoTimer); }
-
-  // keyboard
-  document.addEventListener("keydown", (e) => {
-    if (e.keyCode === 37) { e.preventDefault(); goTo(-1); }
-    else if (e.keyCode === 39) { e.preventDefault(); goTo(1); }
-  });
-
-  // dash nav: jump by offset from the current slide
-  dots.forEach((dot, i) => {
-    dot.addEventListener("click", () => goTo(i - index));
-  });
-
-  // touch swipe (30px threshold, like the original)
-  let touchStartX = 0;
-  const zone = document.getElementById("page-header");
-  zone.addEventListener("touchstart", (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
-  zone.addEventListener("touchend", (e) => {
-    const dx = e.changedTouches[0].screenX - touchStartX;
-    if (Math.abs(dx) > 30) goTo(dx < 0 ? 1 : -1);
-  }, { passive: true });
-
-  // pause when the tab loses focus
-  addEventListener("blur", pauseAuto);
-  addEventListener("focus", armAuto);
-  document.onvisibilitychange = () => (document.hidden ? pauseAuto() : armAuto());
-
-  // load-in: everything fades up ~1s after load
-  setTimeout(() => document.documentElement.classList.remove("is-just-loaded"), 1000);
-  armAuto();
-})();
-</script>
-
+<script src="assets/js/main.js"></script>
 </body>
 </html>

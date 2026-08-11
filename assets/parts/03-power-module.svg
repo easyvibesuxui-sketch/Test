@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" width="640" height="420" role="img" aria-label="GNSS antenna and battery module">
+  <defs>
+    <linearGradient id="cellBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#33373d"/>
+      <stop offset=".35" stop-color="#16181c"/>
+      <stop offset="1" stop-color="#0a0b0d"/>
+    </linearGradient>
+    <linearGradient id="patch" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e9e4d6"/>
+      <stop offset=".5" stop-color="#cfc7b3"/>
+      <stop offset="1" stop-color="#a79f8c"/>
+    </linearGradient>
+    <linearGradient id="bracket" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#6f747c"/>
+      <stop offset=".5" stop-color="#3b3f45"/>
+      <stop offset="1" stop-color="#5c6169"/>
+    </linearGradient>
+  </defs>
+
+  <!-- carrier plate -->
+  <rect x="96" y="120" width="448" height="180" rx="18" fill="#101215" stroke="#2c2f35" stroke-width="2"/>
+  <g stroke="#1c1f23" stroke-width="2" opacity=".8">
+    <path d="M96 168h448"/><path d="M96 252h448"/>
+  </g>
+
+  <!-- GNSS ceramic patch antenna -->
+  <rect x="128" y="150" width="126" height="126" rx="8" fill="url(#bracket)" stroke="#7d828a" stroke-width="2"/>
+  <rect x="140" y="162" width="102" height="102" rx="5" fill="url(#patch)" stroke="#8b8474" stroke-width="1.5"/>
+  <circle cx="191" cy="213" r="7" fill="#3c3a33"/>
+  <circle cx="191" cy="213" r="3" fill="#c9a24a"/>
+  <g stroke="#b3ab97" stroke-width="1.2" opacity=".7">
+    <path d="M152 174h78"/><path d="M152 252h78"/>
+  </g>
+
+  <!-- lithium cell -->
+  <rect x="300" y="156" width="212" height="114" rx="34" fill="url(#cellBody)" stroke="#4a4e55" stroke-width="2"/>
+  <rect x="300" y="196" width="212" height="10" fill="#E10600" opacity=".9"/>
+  <rect x="316" y="170" width="180" height="18" rx="9" fill="#ffffff" opacity=".05"/>
+  <path d="M498 190v46" stroke="#5b6068" stroke-width="3" stroke-linecap="round"/>
+  <!-- terminal caps -->
+  <rect x="288" y="186" width="16" height="54" rx="6" fill="#5c6169" stroke="#8a9099" stroke-width="1.5"/>
+  <rect x="508" y="186" width="16" height="54" rx="6" fill="#5c6169" stroke="#8a9099" stroke-width="1.5"/>
+
+  <!-- red harness wire -->
+  <path d="M288 213c-26 0-32-46-58-46h-38" stroke="#E10600" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <path d="M288 213c-26 0-32-46-58-46h-38" stroke="#ff6b60" stroke-width="2" fill="none" stroke-linecap="round" opacity=".5"/>
+  <path d="M524 213c22 0 26 40 48 40h20" stroke="#2b2e33" stroke-width="7" fill="none" stroke-linecap="round"/>
+
+  <!-- connector head -->
+  <rect x="556" y="238" width="52" height="32" rx="7" fill="#1d2024" stroke="#5c6169" stroke-width="2"/>
+  <g fill="#c9a24a"><rect x="566" y="246" width="7" height="16" rx="2"/><rect x="580" y="246" width="7" height="16" rx="2"/><rect x="594" y="246" width="7" height="16" rx="2"/></g>
+
+  <!-- fixing screws -->
+  <g fill="#0c0d0f" stroke="#6a6f77" stroke-width="2">
+    <circle cx="116" cy="140" r="8"/><circle cx="524" cy="140" r="8"/>
+    <circle cx="116" cy="280" r="8"/><circle cx="524" cy="280" r="8"/>
+  </g>
+</svg>
