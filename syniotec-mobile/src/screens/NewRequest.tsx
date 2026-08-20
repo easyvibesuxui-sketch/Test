@@ -3,24 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { ButtonLarge } from '../components/Buttons';
 import { DetailSheet } from '../components/DetailSheet';
 import { FieldLabel } from '../components/Surfaces';
-import {
-  CalendarIcon,
-  InfoIcon,
-  ParentalLeaveIcon,
-  PlusIcon,
-  SchoolIcon,
-  SickIcon,
-  TrainingIcon,
-  VacationIcon,
-} from '../components/icons';
+import { CalendarIcon, PlusIcon } from '../components/icons';
+import { ReasonGlyph } from '../components/Artwork';
 
 const REASONS = [
-  { label: 'Sick', Icon: SickIcon },
-  { label: 'Vacation', Icon: VacationIcon },
-  { label: 'School', Icon: SchoolIcon },
-  { label: 'Training', Icon: TrainingIcon },
-  { label: 'Parental Leave', Icon: ParentalLeaveIcon },
-  { label: 'Other', Icon: InfoIcon },
+  'Sick',
+  'Vacation',
+  'School',
+  'Training',
+  'Parental Leave',
+  'Other',
 ] as const;
 
 function DateInput({ placeholder }: { placeholder: string }) {
@@ -66,7 +58,7 @@ export function NewRequest() {
       <section className="flex w-full flex-col gap-[8px]">
         <FieldLabel>Reason for request</FieldLabel>
         <div className="grid w-full grid-cols-2 gap-[20px]">
-          {REASONS.map(({ label, Icon }) => {
+          {REASONS.map((label) => {
             const active = reason === label;
             return (
               <button
@@ -74,14 +66,14 @@ export function NewRequest() {
                 type="button"
                 aria-pressed={active}
                 onClick={() => setReason(label)}
-                className={`flex h-[36px] items-center gap-[12px] justify-self-start rounded-card pr-[16px] pl-[8px] ${
+                className={`flex h-[36px] items-center gap-[12px] justify-self-start rounded-card py-[2px] pr-[16px] pl-[8px] ${
                   active
                     ? 'bg-eerie-black text-white'
                     : 'bg-white text-eerie-black'
                 }`}
               >
-                <Icon size={22} />
-                <span className="title-4">{label}</span>
+                <ReasonGlyph reason={label} size={32} />
+                <span className="title-4 whitespace-nowrap">{label}</span>
               </button>
             );
           })}

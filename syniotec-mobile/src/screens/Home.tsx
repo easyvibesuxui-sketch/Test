@@ -1,5 +1,6 @@
 import { ButtonLarge } from '../components/Buttons';
-import { ShiftCalendar, ArrowRight } from '../components/icons';
+import { ArrowRight } from '../components/icons';
+import { ShiftCalendarArt } from '../components/Artwork';
 import { TrackingScreen } from './Tracking';
 
 /** Figma node 2084:7357 — the start-of-shift state. */
@@ -7,7 +8,7 @@ export function Home() {
   return (
     <TrackingScreen
       tone="green"
-      art={<ShiftCalendar size={96} />}
+      art={<ShiftCalendarArt />}
       headline="Good morning"
       statusLabel="In 9 min"
       statusValue="your shift starts"

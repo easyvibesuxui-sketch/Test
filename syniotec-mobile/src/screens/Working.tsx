@@ -1,11 +1,12 @@
-import { ClockTwentyFour, PauseIcon, StopIcon } from '../components/icons';
+import { PauseIcon, StopIcon } from '../components/icons';
+import { ClockArt } from '../components/Artwork';
 import { TrackingAction, TrackingScreen } from './Tracking';
 
 /** Figma node 2084:8451 — the at-work state. */
 export function Working() {
   return (
     <TrackingScreen
-      art={<ClockTwentyFour size={96} />}
+      art={<ClockArt />}
       headline="Have a successful day"
       statusLabel="At work"
       statusValue="4 H and 47m"

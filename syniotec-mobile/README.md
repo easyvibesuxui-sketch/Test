@@ -69,23 +69,42 @@ converted from the OTF supplied with the project, and **Montserrat**
 (`Family/Family Body`) loads from Google Fonts. ABC Favorit is a commercial
 Dinamo typeface — it is included here under this project's licence only.
 
-## Known deviations from the Figma file
+## Assets
 
-The organisation's egress policy blocks `www.figma.com` for this environment, so
-the SVG and raster assets the MCP payload points at could not be downloaded.
-Everything below is drawn to match high-resolution renders of the same nodes,
-pulled through the MCP connector:
+`www.figma.com` is blocked by the egress policy in the environment this was
+built in, so the asset URLs that `get_design_context` and `download_assets`
+hand back could not be fetched over HTTP. The vectors are nonetheless the
+originals: the `use_figma` tool runs `node.exportAsync({ format: 'SVG_STRING' })`
+through the Plugin API and returns the markup as **text**, which travels over
+the MCP channel instead of HTTP. Everything in `src/assets/icons/` came across
+that way.
 
-1. **Icons and artwork are redrawn as inline SVG** in `components/icons.tsx` —
-   the shift calendar (node `2084:7387`), the 24-hour clock (`2084:8481`), the
-   break mug (`2084:8727`), the request-reason glyphs and the controls. Swap in
-   the exported assets once the host is reachable.
-2. **The wordmark is set as type**, not as the outlined logo asset
-   (`components/Logo.tsx`). It uses the real ABC Favorit Expanded, so it matches
-   node `2:73` closely, but it is text rather than the original vector.
-3. **The destination map is a placeholder.** `MapPlaceholder` in
-   `components/DetailSheet.tsx` draws the same 120px band — roads, water and a
-   marker — in place of the raster map tile.
+| File | Figma node |
+| --- | --- |
+| `logo-syniotec.svg` | `2:73` |
+| `art-shift-calendar.svg` | `2084:7387` |
+| `art-clock-24.svg` | `2084:8481` |
+| `art-cup.svg` | `2084:8730` |
+| `row-vacation.svg` | `2084:7840` |
+| `row-sick.svg` | `2084:7853` |
+| `reason-school.svg` | `2084:7767` |
+| `reason-training.svg` | `2084:7775` |
+| `reason-parental.svg` | `2084:7783` |
+| `reason-other.svg` | `2084:7792` |
+
+The chrome that the design draws as small generic UI marks — back and paging
+chevrons, the calendar button, play/pause/stop, plus and the direction pin —
+stays as inline SVG in `components/icons.tsx`, on the same 24px grid.
+
+## Known deviation
+
+**The destination map is a placeholder.** `MapPlaceholder` in
+`components/DetailSheet.tsx` draws the same 120px band — roads, water and a
+marker — in place of the raster tile behind node `2084:7658`. Unlike the
+vectors, a raster cannot come back as text: the tile is 66 KB as JPG and
+210 KB as PNG, and a tool result is truncated at 20 KB, so the bytes do not
+fit through the MCP channel. Export it from Figma and drop it into
+`src/assets/` to swap it in.
 
 Copy, dates and sample records are transcribed from the frames as-is, including
 the design's own spellings (“Softweare Asset manager”, “Pennding”, “Brake”).

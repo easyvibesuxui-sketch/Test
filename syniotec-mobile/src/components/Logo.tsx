@@ -1,14 +1,17 @@
+import logoUrl from '../assets/icons/logo-syniotec.svg';
+
 /**
- * The Syniotec wordmark (Figma node 2:73) — set in ABC Favorit Expanded
- * Medium, the same typeface the artwork is drawn from, at the 151×28 box the
- * header uses.
+ * The Syniotec wordmark, exported from Figma node 2:73 through the Plugin
+ * API (`exportAsync({ format: 'SVG_STRING' })`) at its native 151×28.
  */
 export function Logo({ className = '' }: { className?: string }) {
   return (
-    <span
-      className={`font-title inline-flex items-center text-[27px] leading-[28px] font-medium tracking-[-0.01em] text-white select-none ${className}`}
-    >
-      syniotec
-    </span>
+    <img
+      src={logoUrl}
+      alt="Syniotec"
+      width={151}
+      height={28}
+      className={className}
+    />
   );
 }

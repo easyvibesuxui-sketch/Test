@@ -1,7 +1,7 @@
 import type { DayMark } from '../components/Calendar';
 import { buildDayRun } from '../components/Calendar';
 import type { RequestItem } from '../components/RequestRow';
-import { SickIcon, VacationIcon } from '../components/icons';
+import { SickGlyph, VacationGlyph } from '../components/Artwork';
 
 /** Copy in the Figma frames is dated Sept–Oct 2025; the fixtures follow it. */
 export const YEAR = 2025;
@@ -35,13 +35,13 @@ export const SUMMARY_REQUESTS: RequestItem[] = [
     kind: 'Vacation',
     date: '23.Oct.2025',
     status: 'Pending',
-    icon: <VacationIcon size={24} />,
+    icon: <VacationGlyph />,
   },
   {
     kind: 'Sick day',
     date: '28.Oct.2025',
     status: 'Approved',
-    icon: <SickIcon size={24} />,
+    icon: <SickGlyph />,
   },
 ];
 
@@ -53,28 +53,28 @@ export const OPEN_REQUESTS: RequestItem[] = [
     kind: 'Vacation',
     date: '23.Oct.2025',
     status: 'Pending',
-    icon: <VacationIcon size={24} />,
+    icon: <VacationGlyph />,
   },
   {
     kind: 'Sick day',
     date: '28.Oct.2025',
     status: 'Approved',
     by: 'Max Mustermann',
-    icon: <SickIcon size={24} />,
+    icon: <SickGlyph />,
   },
   {
     kind: 'Sick day',
     date: '28.Oct.2025',
     status: 'Approved',
     by: 'Max Mustermann',
-    icon: <SickIcon size={24} />,
+    icon: <SickGlyph />,
   },
   {
     kind: 'Sick day',
     date: '28.Oct.2025',
     status: 'Approved',
     by: 'Max Mustermann',
-    icon: <SickIcon size={24} />,
+    icon: <SickGlyph />,
   },
 ];
 
@@ -83,7 +83,7 @@ export const REQUEST_HISTORY: RequestItem[] = [
     kind: 'Vacation',
     date: '23.Oct.2025',
     status: 'Finished',
-    icon: <VacationIcon size={24} />,
+    icon: <VacationGlyph />,
   },
   {
     kind: 'Sick day',
@@ -91,7 +91,7 @@ export const REQUEST_HISTORY: RequestItem[] = [
     status: 'Declined',
     note: SICK_NOTE,
     tone: 'rose',
-    icon: <SickIcon size={24} />,
+    icon: <SickGlyph />,
   },
   {
     kind: 'Sick day',
@@ -99,7 +99,7 @@ export const REQUEST_HISTORY: RequestItem[] = [
     status: 'Approved',
     note: SICK_NOTE,
     tone: 'plain',
-    icon: <SickIcon size={24} />,
+    icon: <SickGlyph />,
   },
   {
     kind: 'Sick day',
@@ -107,7 +107,7 @@ export const REQUEST_HISTORY: RequestItem[] = [
     status: 'Approved',
     note: SICK_NOTE,
     tone: 'plain',
-    icon: <SickIcon size={24} />,
+    icon: <SickGlyph />,
   },
   {
     kind: 'Sick day',
@@ -115,7 +115,7 @@ export const REQUEST_HISTORY: RequestItem[] = [
     status: 'Approved',
     note: SICK_NOTE,
     tone: 'rose',
-    icon: <SickIcon size={24} />,
+    icon: <SickGlyph />,
   },
 ];
 
