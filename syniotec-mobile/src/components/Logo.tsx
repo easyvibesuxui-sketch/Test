@@ -1,15 +1,14 @@
 /**
- * The Syniotec wordmark. The original is an outlined SVG asset in Figma that
- * this environment cannot fetch, so it is set as type with the accent square
- * the mark carries above the "i".
+ * The Syniotec wordmark (Figma node 2:73) — set in ABC Favorit Expanded
+ * Medium, the same typeface the artwork is drawn from, at the 151×28 box the
+ * header uses.
  */
 export function Logo({ className = '' }: { className?: string }) {
   return (
-    <div className={`relative select-none ${className}`}>
-      <span className="font-title text-[26px] leading-[28px] font-medium tracking-[0.02em] text-white">
-        syniotec
-      </span>
-      <span className="absolute -top-[2px] left-[45px] block h-[5px] w-[5px] bg-candy-apple" />
-    </div>
+    <span
+      className={`font-title inline-flex items-center text-[27px] leading-[28px] font-medium tracking-[-0.01em] text-white select-none ${className}`}
+    >
+      syniotec
+    </span>
   );
 }

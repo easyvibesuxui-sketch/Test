@@ -94,8 +94,11 @@ export function UserIcon({ className, size = 28 }: IconProps) {
   );
 }
 
-/** The alarm-clock mark on the "Good morning" start card. */
-export function AlarmClock({ className, size = 96 }: IconProps) {
+/**
+ * Artwork on the "Good morning" card (Figma node 2084:7387): a desk calendar
+ * with a briefcase in a magnifier over it.
+ */
+export function ShiftCalendar({ className, size = 96 }: IconProps) {
   return (
     <svg
       width={size}
@@ -105,25 +108,77 @@ export function AlarmClock({ className, size = 96 }: IconProps) {
       className={className}
       aria-hidden="true"
     >
-      <circle cx="48" cy="52" r="30" stroke="currentColor" strokeWidth="4" />
-      <path
-        d="M48 34v18l12 8"
+      <g
         stroke="currentColor"
-        strokeWidth="4"
-        strokeLinecap="round"
+        strokeWidth="3"
         strokeLinejoin="round"
-      />
-      <path
-        d="M22 24 12 32M74 24l10 8M36 84l-6 8M60 84l6 8"
-        stroke="currentColor"
-        strokeWidth="4"
         strokeLinecap="round"
-      />
+      >
+        <path d="M18 36h62l-5 52H8l10-52Z" />
+        <path d="M80 36v52" />
+        <path d="M62 82c5-5 10-4 14 6" />
+        <circle cx="30" cy="55" r="5" />
+        <circle cx="48" cy="55" r="5" />
+        <circle cx="66" cy="55" r="5" />
+        <circle cx="27" cy="72" r="5" />
+        <circle cx="45" cy="72" r="5" />
+        <circle cx="63" cy="72" r="5" />
+        <circle cx="37" cy="27" r="21" fill="#ffffff" />
+        <path d="M52 42 62 52" />
+        <rect x="26" y="22" width="23" height="15" rx="2.5" fill="#ffffff" />
+        <path d="M34 22v-3.5a2.5 2.5 0 0 1 2.5-2.5h2a2.5 2.5 0 0 1 2.5 2.5V22" />
+        <path d="M26 28h23" />
+      </g>
     </svg>
   );
 }
 
-/** The mug used by the break / "Enjoy your time" state. */
+/**
+ * Artwork on the at-work card (Figma node 2084:8481): a clock face with the
+ * 24-hour badge tucked into its lower right.
+ */
+export function ClockTwentyFour({ className, size = 96 }: IconProps) {
+  const ticks = Array.from({ length: 12 }, (_, i) => i * 30);
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 96 96"
+      fill="none"
+      className={className}
+      aria-hidden="true"
+    >
+      <g stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
+        <circle cx="44" cy="46" r="34" />
+        {ticks.map((angle) => (
+          <line
+            key={angle}
+            x1="44"
+            y1="18"
+            x2="44"
+            y2="24"
+            transform={`rotate(${angle} 44 46)`}
+          />
+        ))}
+        <path d="M44 26v20l14 8" strokeWidth="3" strokeLinejoin="round" />
+        <circle cx="72" cy="72" r="15" fill="#ffffff" />
+      </g>
+      <text
+        x="72"
+        y="78"
+        textAnchor="middle"
+        fontFamily="var(--font-title)"
+        fontSize="15"
+        fontWeight="500"
+        fill="currentColor"
+      >
+        24
+      </text>
+    </svg>
+  );
+}
+
+/** Artwork on the break card (Figma node 2084:8727): a cup on a saucer. */
 export function CoffeeCup({ className, size = 96 }: IconProps) {
   return (
     <svg
@@ -134,24 +189,17 @@ export function CoffeeCup({ className, size = 96 }: IconProps) {
       className={className}
       aria-hidden="true"
     >
-      <path
-        d="M18 40h48v22a18 18 0 0 1-18 18H36a18 18 0 0 1-18-18V40Z"
+      <g
         stroke="currentColor"
-        strokeWidth="4"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M66 46h6a10 10 0 0 1 0 20h-6"
-        stroke="currentColor"
-        strokeWidth="4"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M32 14c-3 5 3 8 0 13M48 12c-3 5 3 8 0 13M64 16c-2 4 2 6 0 10"
-        stroke="currentColor"
-        strokeWidth="3.5"
+        strokeWidth="2.6"
         strokeLinecap="round"
-      />
+        strokeLinejoin="round"
+      >
+        <path d="M22 42h48v14a24 24 0 0 1-24 24 24 24 0 0 1-24-24V42Z" />
+        <path d="M62 46c8 1 12 5 12 10s-5 9-12 10" />
+        <path d="M18 80c6 3 16 4 28 4s22-1 28-4" />
+        <path d="M38 34c-4-5 2-8-1-13M48 32c-4-5 2-8-1-13M58 34c-3-4 1-7-1-11" />
+      </g>
     </svg>
   );
 }
@@ -167,8 +215,9 @@ export function PlayIcon({ className, size = 20 }: IconProps) {
 export function PauseIcon({ className, size = 20 }: IconProps) {
   return (
     <svg {...base(size)} className={className} aria-hidden="true">
-      <rect x="7" y="5" width="4" height="14" rx="1.2" fill="currentColor" />
-      <rect x="13" y="5" width="4" height="14" rx="1.2" fill="currentColor" />
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="9.2" y="8.4" width="2" height="7.2" rx="0.8" fill="currentColor" />
+      <rect x="12.8" y="8.4" width="2" height="7.2" rx="0.8" fill="currentColor" />
     </svg>
   );
 }
@@ -176,7 +225,16 @@ export function PauseIcon({ className, size = 20 }: IconProps) {
 export function StopIcon({ className, size = 20 }: IconProps) {
   return (
     <svg {...base(size)} className={className} aria-hidden="true">
-      <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
+      <rect
+        x="8.8"
+        y="8.8"
+        width="6.4"
+        height="6.4"
+        rx="1.4"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
     </svg>
   );
 }

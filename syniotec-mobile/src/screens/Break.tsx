@@ -16,13 +16,13 @@ export function Break() {
             label="End Day"
             to="/"
             variant="outline"
-            icon={<StopIcon size={16} />}
+            icon={<StopIcon size={20} />}
           />
           <TrackingAction
             label="Resume"
             to="/working"
             variant="dark"
-            icon={<PlayIcon size={16} />}
+            icon={<PlayIcon size={20} />}
           />
         </>
       }

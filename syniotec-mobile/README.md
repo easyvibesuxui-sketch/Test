@@ -61,20 +61,28 @@ The Figma text styles (`Titles/Title 3–5`, `Text/Body XS`, `Text/Body S 2`,
 `Text/Caption 1–2`) are expressed as the `title-3`, `title-4`, `title-5`,
 `body-xs`, `body-s`, `caption-1` and `caption-2` utilities.
 
+## Typography
+
+Both families in the design are in place: **ABC Favorit Expanded Medium**
+(`Family/Family Title`) ships as `src/assets/fonts/ABCFavoritExpanded-Medium.woff2`,
+converted from the OTF supplied with the project, and **Montserrat**
+(`Family/Family Body`) loads from Google Fonts. ABC Favorit is a commercial
+Dinamo typeface — it is included here under this project's licence only.
+
 ## Known deviations from the Figma file
 
-Both come from assets the build environment cannot reach — the network policy
-blocks direct requests to `figma.com`, so the SVG and raster assets the MCP
-payload points at could not be downloaded.
+The organisation's egress policy blocks `www.figma.com` for this environment, so
+the SVG and raster assets the MCP payload points at could not be downloaded.
+Everything below is drawn to match high-resolution renders of the same nodes,
+pulled through the MCP connector:
 
-1. **Icons and the wordmark are redrawn.** Every glyph in `components/icons.tsx`
-   is hand-authored inline SVG on the same 24px grid as the original, and
-   `components/Logo.tsx` sets the wordmark as type. Swap in the exported assets
-   when they are available.
-2. **`ABC Favorit Expanded` is not bundled.** It is a licensed typeface, so
-   `--font-title` falls back to a wide grotesque stack. Replace the first entry
-   in that stack once the webfont is licensed for this project. `Montserrat`
-   (the body family) loads from Google Fonts as in the design.
+1. **Icons and artwork are redrawn as inline SVG** in `components/icons.tsx` —
+   the shift calendar (node `2084:7387`), the 24-hour clock (`2084:8481`), the
+   break mug (`2084:8727`), the request-reason glyphs and the controls. Swap in
+   the exported assets once the host is reachable.
+2. **The wordmark is set as type**, not as the outlined logo asset
+   (`components/Logo.tsx`). It uses the real ABC Favorit Expanded, so it matches
+   node `2:73` closely, but it is text rather than the original vector.
 3. **The destination map is a placeholder.** `MapPlaceholder` in
    `components/DetailSheet.tsx` draws the same 120px band — roads, water and a
    marker — in place of the raster map tile.

@@ -1,6 +1,19 @@
 @import "tailwindcss";
 
 /*
+ * ABC Favorit Expanded Medium — the title family specified in the Figma file,
+ * supplied by the project and subset to woff2. It is a commercial Dinamo
+ * typeface, so it ships here only under this project's licence.
+ */
+@font-face {
+  font-family: "ABC Favorit Expanded";
+  src: url("./assets/fonts/ABCFavoritExpanded-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
  * Design tokens mirrored 1:1 from the Figma file "Sam-in-Mobile"
  * (page "Timetracking David", node 2084:7356), pulled via the Figma MCP
  * connector with get_variable_defs. Token names keep their Figma names so
@@ -25,13 +38,8 @@
   /* Surface used by the "Tracker" rows inside cards */
   --color-tracker: #f2f6fa;
 
-  /* --- Type families ---
-   * "ABC Favorit Expanded" is a licensed typeface and is not redistributable,
-   * so the title family falls back to a wide grotesque stack. Swap the first
-   * entry for the real webfont once it is licensed for this project.
-   */
-  --font-title: "ABC Favorit Expanded", "Archivo Expanded", "Helvetica Neue",
-    Arial, sans-serif;
+  /* --- Type families (Figma "Family/Family Title" and "Family/Family Body") --- */
+  --font-title: "ABC Favorit Expanded", "Helvetica Neue", Arial, sans-serif;
   --font-body: "Montserrat", system-ui, -apple-system, sans-serif;
 
   /* --- Type scale (Figma "Font Size/n") --- */
