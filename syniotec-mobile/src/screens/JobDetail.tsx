@@ -4,7 +4,7 @@ import {
   DetailSheet,
   GetDirectionButton,
   LocationBlock,
-  MapPlaceholder,
+  DestinationMap,
   ProjectField,
   RequesterBlock,
   StartEndBlock,
@@ -26,7 +26,7 @@ export function JobDetail() {
       <section className="flex w-full flex-col gap-[8px]">
         <FieldLabel>Destination</FieldLabel>
         <div className="flex w-full flex-col">
-          <MapPlaceholder />
+          <DestinationMap />
           <div className="flex w-full flex-col rounded-b-card bg-white">
             <div className="flex w-full flex-col gap-[12px] border-b border-cultured px-[12px] pt-[12px] pb-[24px]">
               <ProjectField value="Halensee Roadworks" />

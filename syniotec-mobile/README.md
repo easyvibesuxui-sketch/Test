@@ -96,15 +96,25 @@ The chrome that the design draws as small generic UI marks — back and paging
 chevrons, the calendar button, play/pause/stop, plus and the direction pin —
 stays as inline SVG in `components/icons.tsx`, on the same 24px grid.
 
-## Known deviation
+## The destination map
 
-**The destination map is a placeholder.** `MapPlaceholder` in
-`components/DetailSheet.tsx` draws the same 120px band — roads, water and a
-marker — in place of the raster tile behind node `2084:7658`. Unlike the
-vectors, a raster cannot come back as text: the tile is 66 KB as JPG and
-210 KB as PNG, and a tool result is truncated at 20 KB, so the bytes do not
-fit through the MCP channel. Export it from Figma and drop it into
-`src/assets/` to swap it in.
+Node `2084:7658` fills its slot with a raster tile of **Google Maps in the
+default roadmap style**. Unlike the vectors, a raster cannot come back as
+text — the tile is 66 KB as JPG and 210 KB as PNG, and a tool result is
+truncated at 20 KB — so `DestinationMap` in `components/DetailSheet.tsx`
+draws a stand-in in that same default palette: pale land, green cover, blue
+water, a white local-road mesh over orange arterials, a green route shield
+and a grey place label.
+
+It takes a `src` prop, so the real tile drops straight in — either exported
+from Figma, or served live from the Static Maps API:
+
+```tsx
+<DestinationMap
+  src={`https://maps.googleapis.com/maps/api/staticmap?center=Halensee,Berlin&zoom=13&size=408x120&scale=2&key=${key}`}
+  label="Halensee"
+/>
+```
 
 Copy, dates and sample records are transcribed from the frames as-is, including
 the design's own spellings (“Softweare Asset manager”, “Pennding”, “Brake”).

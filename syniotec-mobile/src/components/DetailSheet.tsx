@@ -49,32 +49,139 @@ export function DetailSheet({
   );
 }
 
+/** Google Maps' default roadmap palette, sampled from the Figma tile. */
+const MAP = {
+  land: '#eceae4',
+  builtUp: '#e6e3dc',
+  vegetation: '#cfe4bd',
+  water: '#a3d2f0',
+  localRoad: '#ffffff',
+  localCasing: '#dedad2',
+  arterial: '#f6c98a',
+  arterialCasing: '#e8b268',
+  highway: '#f3b25c',
+  highwayCasing: '#dd9a44',
+  shield: '#3f9b5c',
+  label: '#5f5f5f',
+} as const;
+
 /**
- * Stand-in for the destination map. The Figma frame uses a raster map tile
- * that this environment cannot fetch, so the placeholder draws the same
- * shape — roads, water and a marker — at the same 120px height.
+ * The destination map.
+ *
+ * The Figma frame (node 2084:7658) fills this slot with a raster tile of
+ * Google Maps in its default roadmap style. Rasters cannot be exported back
+ * through the MCP text channel and figma.com is blocked by egress policy, so
+ * `src` is left unset here and the component draws a stand-in in that same
+ * default palette — pale land, green cover, blue water, a white local-road
+ * mesh over orange arterials, and a place label.
+ *
+ * Pass `src` to swap in the real thing: either the tile exported from Figma,
+ * or a live Google Static Maps URL, e.g.
+ * `https://maps.googleapis.com/maps/api/staticmap?center=Halensee,Berlin&zoom=13&size=408x120&scale=2&key=…`
  */
-export function MapPlaceholder() {
+export function DestinationMap({
+  src,
+  label = 'Halensee',
+}: {
+  src?: string;
+  label?: string;
+}) {
   return (
-    <div className="h-[120px] w-full overflow-hidden rounded-t-card border-2 border-white bg-[#e8ece7]">
-      <svg
-        viewBox="0 0 408 120"
-        preserveAspectRatio="none"
-        className="size-full"
-        role="img"
-        aria-label="Map of the destination"
-      >
-        <rect width="408" height="120" fill="#eaefe9" />
-        <path d="M300 0h108v120H300Z" fill="#bcd9e8" />
-        <path
-          d="M0 74h300M0 30h230M118 0v120M244 0v120"
-          stroke="#ffffff"
-          strokeWidth="7"
+    <div
+      className="h-[120px] w-full overflow-hidden rounded-t-card border-2 border-white"
+      style={{ backgroundColor: MAP.land }}
+    >
+      {src ? (
+        <img
+          src={src}
+          alt={`Map showing ${label}`}
+          className="size-full object-cover"
         />
-        <path d="M0 52h408" stroke="#f6d98b" strokeWidth="9" />
-        <circle cx="176" cy="63" r="9" fill="#ff1900" />
-        <circle cx="176" cy="63" r="3.2" fill="#ffffff" />
-      </svg>
+      ) : (
+        <svg
+          viewBox="0 0 408 120"
+          className="size-full"
+          role="img"
+          aria-label={`Map showing ${label}`}
+        >
+          <rect width="408" height="120" fill={MAP.land} />
+
+          {/* Vegetation and built-up blocks. */}
+          <path d="M0 0h96v46H0Z" fill={MAP.vegetation} opacity="0.85" />
+          <path d="M18 78h74v42H18Z" fill={MAP.vegetation} opacity="0.7" />
+          <path d="M286 0h40v30h-40Z" fill={MAP.vegetation} opacity="0.6" />
+          <path d="M150 44h96v40h-96Z" fill={MAP.builtUp} />
+
+          {/* Water along the right edge, as in the tile. */}
+          <path
+            d="M352 0h56v120h-56c8-20 4-38-2-58s-2-42 2-62Z"
+            fill={MAP.water}
+          />
+
+          {/* Local road mesh: white fill over a soft casing. */}
+          <g
+            stroke={MAP.localCasing}
+            strokeWidth="4"
+            fill="none"
+            strokeLinecap="round"
+          >
+            <path d="M0 30h352M0 66h352M0 98h352M62 0v120M138 0v120M212 0v120M286 0v120M330 0v120" />
+          </g>
+          <g
+            stroke={MAP.localRoad}
+            strokeWidth="2.4"
+            fill="none"
+            strokeLinecap="round"
+          >
+            <path d="M0 30h352M0 66h352M0 98h352M62 0v120M138 0v120M212 0v120M286 0v120M330 0v120" />
+          </g>
+
+          {/* Arterials and the highway running to the water. */}
+          <g fill="none" strokeLinecap="round">
+            <path
+              d="M0 50h352"
+              stroke={MAP.arterialCasing}
+              strokeWidth="7.5"
+            />
+            <path d="M0 50h352" stroke={MAP.arterial} strokeWidth="5" />
+            <path
+              d="M176 0v52c0 26 26 34 52 40s60 12 84 28"
+              stroke={MAP.highwayCasing}
+              strokeWidth="8"
+            />
+            <path
+              d="M176 0v52c0 26 26 34 52 40s60 12 84 28"
+              stroke={MAP.highway}
+              strokeWidth="5.5"
+            />
+          </g>
+
+          {/* Route shield and place label, as the tile shows them. */}
+          <circle cx="374" cy="70" r="9" fill={MAP.shield} />
+          <text
+            x="374"
+            y="74"
+            textAnchor="middle"
+            fontSize="10"
+            fontFamily="Montserrat, sans-serif"
+            fontWeight="600"
+            fill="#ffffff"
+          >
+            19
+          </text>
+          <text
+            x="196"
+            y="40"
+            textAnchor="middle"
+            fontSize="13"
+            fontFamily="Montserrat, sans-serif"
+            fontWeight="600"
+            fill={MAP.label}
+          >
+            {label}
+          </text>
+        </svg>
+      )}
     </div>
   );
 }
