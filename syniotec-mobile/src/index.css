@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens mirrored 1:1 from the Figma file "Sam-in-Mobile"
+ * (page "Timetracking David", node 2084:7356), pulled via the Figma MCP
+ * connector with get_variable_defs. Token names keep their Figma names so
+ * the mapping stays auditable.
+ */
+@theme {
+  /* --- Colour --- */
+  --color-eerie-black: #151515;
+  --color-jet: #343434;
+  --color-dark-sienna: #411817;
+  --color-silver-chalice: #a7b0b3;
+  --color-cultured: #f1f1f1;
+  --color-smoke: #fbfbfb;
+  --color-snow: #fffcfc;
+  --color-candy-apple: #ff1900;
+  --color-amber: #fe7d00;
+  --color-honey: #ffb30f;
+  --color-xanthous: #f4b642;
+  --color-mantis: #71c562;
+  --color-dodger-blue: #459af7;
+  --color-misty-rose: #ffe7e5;
+  /* Surface used by the "Tracker" rows inside cards */
+  --color-tracker: #f2f6fa;
+
+  /* --- Type families ---
+   * "ABC Favorit Expanded" is a licensed typeface and is not redistributable,
+   * so the title family falls back to a wide grotesque stack. Swap the first
+   * entry for the real webfont once it is licensed for this project.
+   */
+  --font-title: "ABC Favorit Expanded", "Archivo Expanded", "Helvetica Neue",
+    Arial, sans-serif;
+  --font-body: "Montserrat", system-ui, -apple-system, sans-serif;
+
+  /* --- Type scale (Figma "Font Size/n") --- */
+  --text-fs1: 10px;
+  --text-fs2: 12px;
+  --text-fs3: 14px;
+  --text-fs4: 16px;
+
+  --radius-card: 8px;
+  --radius-tracker: 12px;
+  --radius-sheet: 40px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-eerie-black);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Figma text styles, expressed once so screens stay declarative. */
+@utility title-3 {
+  font-family: var(--font-title);
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 500;
+}
+@utility title-4 {
+  font-family: var(--font-title);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+@utility title-5 {
+  font-family: var(--font-title);
+  font-size: 12px;
+  line-height: 15px;
+  font-weight: 500;
+}
+@utility body-xs {
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+@utility body-s {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 500;
+}
+@utility caption-1 {
+  font-family: var(--font-body);
+  font-size: 10px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+@utility caption-2 {
+  font-family: var(--font-body);
+  font-size: 10px;
+  line-height: 15px;
+  font-weight: 400;
+}
+
+/* The phone shell hides its scrollbar the way the design implies. */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
