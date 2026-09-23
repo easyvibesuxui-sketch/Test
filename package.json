@@ -1,0 +1,12 @@
+{
+  "name": "syniotec-telematics",
+  "private": true,
+  "description": "Static site. The only build step bundles the 3D device (src/) into assets/js/device3d.js.",
+  "scripts": {
+    "build": "esbuild src/device3d.js --bundle --minify --format=iife --target=es2019 --legal-comments=none --outfile=assets/js/device3d.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "three": "^0.180.0"
+  }
+}

@@ -226,6 +226,8 @@
     var layers = Array.prototype.slice.call(stack.querySelectorAll('.layer'));
     var N = layers.length, mid = (N - 1) / 2;
     var lastStep = -1;
+    var stageEl = document.getElementById('stage');
+    var stage3d = function () { return stageEl && stageEl.classList.contains('has-3d'); };
 
     /* exploded pose per layer: [lateralX, lateralY, spinDeg] */
     var pose = [
@@ -251,11 +253,11 @@
       var rx = lerp(66, 52, e);
       var rz = lerp(-40, -16, e);
       var sc = lerp(.74, .96, e);
-      stack.style.transform =
+      if (!stage3d()) stack.style.transform =
         'rotateX(' + rx.toFixed(2) + 'deg) rotateZ(' + rz.toFixed(2) + 'deg) scale(' + sc.toFixed(3) + ')';
 
-      /* each part lands in turn, bottom shell first */
-      for (var i = 0; i < N; i++) {
+      /* each part lands in turn, bottom shell first (SVG fallback only) */
+      for (var i = 0; i < N && !stage3d(); i++) {
         var start = i * 0.125;
         var t = easeOut(clamp((p - start) / 0.44, 0, 1));
         var z  = lerp((i - mid) * gapOpen, (i - mid) * gapShut, t);
