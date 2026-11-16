@@ -26,7 +26,7 @@
     user-select: none;
   }
 
-  /* ---- movie: generative canvas standing in for the background films ---- */
+  /* ---- movie: Kling-generated films over a generative fallback canvas ---- */
   .movie {
     position: fixed;
     inset: 0;
@@ -41,6 +41,26 @@
     height: 100%;
     display: block;
   }
+  /* films crossfade exactly like the original: in over 1.2s, out instantly after 1.2s */
+  .movie video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 1;
+    transition: opacity 0s 1.2s var(--ease);
+  }
+  .movie video.current {
+    opacity: 1;
+    z-index: 2;
+    transition: opacity 1.2s var(--ease);
+  }
+  .movie video.is-broken { display: none; }
+  .is-just-loaded .movie video { opacity: 0; }
+
   /* dark blue veil over the film, as on the original */
   .movie::after {
     pointer-events: none;
@@ -105,6 +125,7 @@
     text-align: center;
     transition: opacity 0.5s 0.5s ease-in;
     transform: translateZ(0);
+    text-shadow: 0 1px 14px rgba(1, 18, 81, 0.55), 0 0 2px rgba(1, 18, 81, 0.35);
   }
   .is-just-loaded .qanda { opacity: 0; transition: opacity 0s 0s linear !important; }
 
@@ -269,6 +290,11 @@
 
     <div class="movie">
       <canvas id="film"></canvas>
+      <video class="current" muted playsinline preload="auto" poster="video/blueyard__0.jpg"><source src="video/blueyard__0.webm" type="video/webm"><source src="video/blueyard__0.mp4" type="video/mp4"></video>
+      <video muted playsinline preload="metadata" poster="video/blueyard__1.jpg"><source src="video/blueyard__1.webm" type="video/webm"><source src="video/blueyard__1.mp4" type="video/mp4"></video>
+      <video muted playsinline preload="metadata" poster="video/blueyard__2.jpg"><source src="video/blueyard__2.webm" type="video/webm"><source src="video/blueyard__2.mp4" type="video/mp4"></video>
+      <video muted playsinline preload="metadata" poster="video/blueyard__3.jpg"><source src="video/blueyard__3.webm" type="video/webm"><source src="video/blueyard__3.mp4" type="video/mp4"></video>
+      <video muted playsinline preload="metadata" poster="video/blueyard__4.jpg"><source src="video/blueyard__4.webm" type="video/webm"><source src="video/blueyard__4.mp4" type="video/mp4"></video>
     </div>
 
     <section class="qanda">
@@ -586,6 +612,14 @@
     const blend = currentBlend();
     if (blend >= 1 && modeA !== modeB) modeA = modeB;
 
+    // skip the fallback shader while a real film fully covers the screen
+    const film = films[index];
+    const covered = film && !film.classList.contains("is-broken") && film.readyState >= 2;
+    if (covered && blend >= 1) {
+      if (running) requestAnimationFrame(frame);
+      return;
+    }
+
     gl.uniform2f(U.uRes, canvas.width, canvas.height);
     gl.uniform1f(U.uTime, reduceMotion ? 20.0 : t);
     gl.uniform1f(U.uModeA, modeA);
@@ -603,6 +637,37 @@
      pause on blur/hidden, resume on focus
      ========================================================= */
   const SLIDE_MS = 10000;
+
+  /* films: stretch each clip across the slide (+1s fade), like the original's
+     playbackRate = duration / 11s; if a clip fails, the shader shows through */
+  const films = [...document.querySelectorAll(".movie video")];
+  films.forEach((v) => {
+    const last = [...v.querySelectorAll("source")].pop();
+    (last || v).addEventListener("error", () => v.classList.add("is-broken"));
+  });
+  function playFilm(v) {
+    if (!v || v.classList.contains("is-broken")) return;
+    if (v.duration > 0) {
+      v.playbackRate = Math.max(0.25, v.duration / ((SLIDE_MS + 1000) / 1000));
+      v.currentTime = 0;
+    } else {
+      v.addEventListener("loadedmetadata", () => {
+        v.playbackRate = Math.max(0.25, v.duration / ((SLIDE_MS + 1000) / 1000));
+      }, { once: true });
+    }
+    const p = v.play();
+    if (p && p.catch) p.catch(() => {});
+  }
+  function pauseFilm(v) { if (v) v.pause(); }
+  function showVideo(i) {
+    const prev = films.find((v) => v.classList.contains("current"));
+    films.forEach((v, k) => v.classList.toggle("current", k === i));
+    if (prev && prev !== films[i]) setTimeout(() => pauseFilm(prev), 1000);
+    if (films[i]) films[i].preload = "auto";
+    if (films[i + 1]) films[i + 1].preload = "auto";
+    playFilm(films[i]);
+  }
+
   const slides = [...document.querySelectorAll(".qanda__item")];
   const dots = [...document.querySelectorAll(".qanda__nav-dot-item")];
   let index = 0;
@@ -614,6 +679,7 @@
     slides.forEach((s, i) => s.classList.toggle("current", i === index));
     dots.forEach((d, i) => d.classList.toggle("current", i === index));
     showFilm(index);
+    showVideo(index);
     armAuto();
   }
 
@@ -621,7 +687,14 @@
     clearTimeout(autoTimer);
     autoTimer = setTimeout(() => goTo(1), SLIDE_MS);
   }
-  function pauseAuto() { clearTimeout(autoTimer); }
+  function pauseAuto() {
+    clearTimeout(autoTimer);
+    pauseFilm(films[index]);
+  }
+  function resumeAuto() {
+    playFilm(films[index]);
+    armAuto();
+  }
 
   // keyboard
   document.addEventListener("keydown", (e) => {
@@ -645,11 +718,12 @@
 
   // pause when the tab loses focus
   addEventListener("blur", pauseAuto);
-  addEventListener("focus", armAuto);
-  document.onvisibilitychange = () => (document.hidden ? pauseAuto() : armAuto());
+  addEventListener("focus", resumeAuto);
+  document.onvisibilitychange = () => (document.hidden ? pauseAuto() : resumeAuto());
 
   // load-in: everything fades up ~1s after load
   setTimeout(() => document.documentElement.classList.remove("is-just-loaded"), 1000);
+  showVideo(0);
   armAuto();
 })();
 </script>
