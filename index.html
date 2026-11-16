@@ -1,732 +1,1282 @@
 <!DOCTYPE html>
-<html lang="en" class="is-just-loaded">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
-<title>BlueYard Capital — Design Study</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hadal House — Archive of the Deep</title>
+<meta name="description" content="A fictional archive of deep-sea legends, sorted by the depth they come from.">
 <style>
   :root {
-    --headerlogoheight: 48px;
-    --font-stack: "Avenir Next", "Avenir", "AvenirLTPro-Light", -apple-system, "Segoe UI",
-                  "Helvetica Neue", Helvetica, Arial, sans-serif;
-    --ease: cubic-bezier(0.4, 0, 0.6, 1);
+    /* the descent: one colour per depth band, interpolated on scroll */
+    --foam:     #EEF2F0;
+    --twilight: #1E4A61;
+    --midnight: #0A192A;
+    --abyss:    #060A13;
+    --hadal:    #020306;
+
+    --ink:      #0A1114;
+    --ink-soft: rgba(10, 17, 20, 0.62);
+    --ink-line: rgba(10, 17, 20, 0.14);
+    --pale:      #E6EEF0;
+    --pale-soft: rgba(230, 238, 240, 0.62);
+    --pale-line: rgba(230, 238, 240, 0.14);
+
+    --lume:     #7CF5D6;   /* bioluminescence: the one accent */
+
+    /* status colours carry meaning, not decoration */
+    --st-sighted:     #7CF5D6;
+    --st-recorded:    #9CC8FF;
+    --st-unconfirmed: #F2C77E;
+    --st-lost:        #C7A2A8;
+
+    --sans: "Avenir Next", "Avenir", "Segoe UI Variable Display", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+    --pad: clamp(16px, 3.2vw, 40px);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --bg: var(--foam);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  html, body {
-    height: 100%;
-    overflow: hidden;
-  }
+  html { -webkit-text-size-adjust: 100%; }
   body {
-    font-family: var(--font-stack);
-    background-color: #011251;
-    color: #fff;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
-    user-select: none;
+    overflow-x: hidden;
   }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--lume); outline-offset: 3px; border-radius: 2px; }
 
-  /* ---- movie: Kling-generated films over a generative fallback canvas ---- */
-  .movie {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background-color: #011251;
-    overflow: hidden;
-  }
-  .movie canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
-  /* films crossfade exactly like the original: in over 1.2s, out instantly after 1.2s */
-  .movie video {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  /* dark bands flip the ink */
+  .is-deep { color: var(--pale); }
+
+  /* ================= fixed layers ================= */
+  #scene {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
     pointer-events: none;
-    opacity: 0;
-    z-index: 1;
-    transition: opacity 0s 1.2s var(--ease);
-  }
-  .movie video.current {
-    opacity: 1;
-    z-index: 2;
-    transition: opacity 1.2s var(--ease);
-  }
-  .movie video.is-broken { display: none; }
-  .is-just-loaded .movie video { opacity: 0; }
-
-  /* dark blue veil over the film, as on the original */
-  .movie::after {
-    pointer-events: none;
-    content: "";
-    position: fixed;
-    inset: 0;
-    background-color: #011251;
-    mix-blend-mode: darken;
-    opacity: 0.4;
-    z-index: 10;
-  }
-
-  /* ---- page banner ---- */
-  .page-banner {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%;
-    z-index: 400;
-    display: flex;
-    flex-flow: row nowrap;
-    align-items: center;
-    padding: 0 32px;
-    transition: opacity 0.5s 0.5s ease-in;
-  }
-  .is-just-loaded .page-banner { opacity: 0; transition: opacity 0s 0s linear !important; }
-  .page-banner__logo .logo {
-    display: flex;
-    align-items: center;
-    height: var(--headerlogoheight);
-    margin: 16px 0;
-    color: #fff;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 22px;
-    letter-spacing: 0.01em;
-  }
-  .page-banner__nav {
-    margin: 0 0 0 auto;
-    font-size: 18px;
-  }
-  .page-banner__nav li { display: inline-block; list-style: none; }
-  .page-banner__nav a {
     display: block;
-    padding: 16px;
-    color: #fff;
-    text-decoration: none;
-    transition: all 0.3s var(--ease);
-  }
-  .page-banner__nav a:hover { opacity: 0.7; }
-
-  /* ---- qanda ---- */
-  .qanda {
-    z-index: 1;
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100vh;
-    color: #fff;
-    display: grid;
-    grid-template-areas: 'outer' 'nav' 'footer';
-    grid-template-rows: 1fr 64px 64px;
-    text-align: center;
-    transition: opacity 0.5s 0.5s ease-in;
-    transform: translateZ(0);
-    text-shadow: 0 1px 14px rgba(1, 18, 81, 0.55), 0 0 2px rgba(1, 18, 81, 0.35);
-  }
-  .is-just-loaded .qanda { opacity: 0; transition: opacity 0s 0s linear !important; }
-
-  .qanda__outer { grid-area: outer; align-self: center; margin: auto; }
-
-  .qanda__list {
-    position: relative;
-    list-style: none;
-    display: grid;
-    grid-template-areas: 'item';
-    place-items: center;
-    place-content: center;
-    padding: var(--headerlogoheight) 0 0 0;
-  }
-  .qanda__item {
-    grid-area: item;
-    max-width: 52.5em;
-    display: grid;
-    grid-template-rows: 7fr 7fr;
-    grid-template-areas: 'question' 'answer';
-    align-items: end;
-    pointer-events: none;
-  }
-  .qanda__item > * {
-    opacity: 0;
-    transition-property: opacity;
-    transition-timing-function: var(--ease);
-    transition-duration: 0.5s;
-    transition-delay: 0s;
-  }
-  .qanda__item.current { pointer-events: all; }
-  .qanda__item.current > * { opacity: 1; }
-  /* the original's timing: question drifts in after 1s, companies after 3s */
-  .qanda__item.current .qanda__question { transition-duration: 1s; transition-delay: 1s; }
-  .qanda__item.current .qanda__answer   { transition-duration: 3s; transition-delay: 3s; }
-  .is-just-loaded .qanda__item > *,
-  .is-just-loaded .qanda__item.current > * { opacity: 0; transition-duration: 0s; transition-delay: 0s; }
-
-  /* first slide has no answers: question sits centered across both rows */
-  .qanda__item:first-child .qanda__question {
-    grid-row-start: question-start;
-    grid-row-end: answer-end;
-    align-self: center;
   }
 
-  .qanda__question {
-    grid-area: question;
-    font-size: 36px;
-    font-weight: 300;
-    line-height: 1.35;
-  }
-  .qanda__question a { color: inherit; text-decoration: none; }
-  .qanda__question span {
+  .chrome { position: fixed; z-index: 30; color: var(--ink); transition: color .5s var(--ease); }
+  body.deep .chrome { color: var(--pale); }
+
+  .logo {
+    top: var(--pad); left: var(--pad);
     display: block;
-    max-width: 21em;
-    margin: 0 auto 16px;
-    padding: 0 32px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 21px;
+    line-height: 0.98;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
   }
 
-  .qanda__answer {
-    grid-area: answer;
-    align-self: start;
-    list-style: none;
-    max-width: 100%;
-    display: flex;
-    flex-flow: row wrap;
-    justify-content: center;
-    align-items: center;
+  .topright {
+    top: var(--pad); right: var(--pad);
+    display: flex; align-items: center; gap: 14px;
   }
-  .qanda__answer > li {
-    flex: 0 0 auto;
-    padding: 0.8vmin 1.6vmin;
-  }
-  /* white text wordmarks in place of the entity logos (which the site renders
-     all-white anyway via a CSS filter) */
-  .qanda__answer a {
-    display: block;
-    color: #fff;
-    text-decoration: none;
-    font-size: clamp(15px, 2.6vmin, 24px);
-    letter-spacing: 0.04em;
+  .gauge {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
-    transition: all 0.3s var(--ease);
   }
-  .qanda__answer a:hover { opacity: 0.7; }
-  .qanda__answer .wm--caps  { text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; font-size: clamp(13px, 2.2vmin, 20px); }
-  .qanda__answer .wm--bold  { font-weight: 700; }
-  .qanda__answer .wm--light { font-weight: 300; letter-spacing: 0.08em; }
-  .qanda__answer .wm--mono  { font-family: Consolas, monospace; font-size: clamp(13px, 2.3vmin, 21px); }
+  .gauge b { font-weight: 500; }
+  .menu-btn {
+    width: 48px; height: 48px;
+    display: grid; place-items: center;
+    background: var(--foam);
+    color: var(--ink);
+    border-radius: 2px;
+    transition: background .5s var(--ease), color .5s var(--ease);
+  }
+  body.deep .menu-btn { background: rgba(230,238,240,.08); color: var(--pale); box-shadow: inset 0 0 0 1px var(--pale-line); }
+  .menu-btn i, .menu-btn i::before, .menu-btn i::after {
+    display: block; width: 18px; height: 1.5px; background: currentColor; position: relative;
+    transition: transform .4s var(--ease), opacity .3s;
+  }
+  .menu-btn i::before, .menu-btn i::after { content: ""; position: absolute; left: 0; }
+  .menu-btn i::before { top: -6px; }
+  .menu-btn i::after  { top: 6px; width: 12px; }
+  body.menu-open .menu-btn i { background: transparent; }
+  body.menu-open .menu-btn i::before { transform: translateY(6px) rotate(45deg); }
+  body.menu-open .menu-btn i::after  { transform: translateY(-6px) rotate(-45deg); width: 18px; }
 
-  /* ---- nav dashes ---- */
-  .qanda__nav {
-    grid-area: nav;
-    align-self: end;
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: center;
+  .rail {
+    right: 6px; top: 8px; bottom: 8px;
+    width: 4px;
+    pointer-events: none;
   }
-  .qanda__nav-dot {
+  .rail span {
+    position: absolute; left: 0; top: 0;
+    width: 4px; height: 36px;
+    border-radius: 4px;
+    background: currentColor;
+    will-change: transform;
+  }
+
+  .ticker {
+    left: var(--pad); bottom: var(--pad);
+    display: flex; align-items: center; gap: 12px;
+    width: min(420px, calc(100vw - 2 * var(--pad) - 150px));
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .ticker .live { display: flex; align-items: center; gap: 7px; flex: none; }
+  .ticker .live::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--lume);
+    box-shadow: 0 0 10px var(--lume);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { opacity: .35; } }
+  .ticker .track { overflow: hidden; flex: 1; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+  .ticker .run { display: inline-flex; gap: 48px; white-space: nowrap; animation: run 26s linear infinite; }
+  @keyframes run { to { transform: translateX(-50%); } }
+
+  .totop {
+    right: var(--pad); bottom: var(--pad);
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+    text-decoration: none;
+    opacity: 0; transform: translateY(8px); pointer-events: none;
+    transition: opacity .4s var(--ease), transform .4s var(--ease), color .5s var(--ease);
+  }
+  body.scrolled .totop { opacity: 1; transform: none; pointer-events: auto; }
+  .totop em {
+    width: 32px; height: 32px; display: grid; place-items: center; font-style: normal;
+    box-shadow: inset 0 0 0 1px currentColor; opacity: .7;
+  }
+
+  .fade {
+    position: fixed; left: 0; right: 0; z-index: 20; pointer-events: none;
+    background: linear-gradient(var(--dir), var(--bg) 35%, transparent);
+  }
+  .fade--top { top: 0; height: 120px; --dir: 180deg; }
+  .fade--bottom { bottom: 0; height: 96px; --dir: 0deg; }
+
+  /* ================= menu ================= */
+  .menu {
+    position: fixed; inset: 0; z-index: 25;
+    background: var(--hadal);
+    color: var(--pale);
+    padding: calc(var(--pad) + 90px) var(--pad) var(--pad);
+    display: grid;
+    grid-template-columns: 1fr;
+    align-content: start;
+    gap: 40px;
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path .7s var(--ease);
+    overflow-y: auto;
+  }
+  .menu[hidden] { display: none; }
+  body.menu-open .menu { clip-path: inset(0 0 0 0); }
+  body.menu-open .chrome { color: var(--pale); }
+  body.menu-open .menu-btn { background: rgba(230,238,240,.08); color: var(--pale); }
+  .menu ol { list-style: none; border-top: 1px solid var(--pale-line); }
+  .menu li a {
+    display: grid; grid-template-columns: 56px 1fr auto; align-items: baseline; gap: 16px;
+    padding: 18px 0; text-decoration: none;
+    border-bottom: 1px solid var(--pale-line);
+    font-size: clamp(26px, 4.4vw, 54px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.05;
+  }
+  .menu li a small, .menu li a span {
+    font-family: var(--mono); font-size: 12px; font-weight: 400; letter-spacing: .06em; color: var(--pale-soft);
+  }
+  .menu li a:hover { color: var(--lume); }
+  .menu .sub { display: flex; flex-wrap: wrap; gap: 8px 28px; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+  .menu .sub a { text-decoration: none; color: var(--pale-soft); }
+  .menu .sub a:hover { color: var(--pale); }
+
+  /* ================= loader ================= */
+  .loader {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--foam);
+    display: grid; place-items: center;
+    transition: opacity .6s var(--ease), visibility .6s;
+  }
+  .loader.done { opacity: 0; visibility: hidden; }
+  .loader .count {
+    position: absolute; bottom: 28px; left: 0; right: 0; text-align: center;
+    font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums;
+  }
+  .scene3d { width: 140px; height: 140px; perspective: 600px; }
+  .cube {
+    width: 100%; height: 100%; position: relative; transform-style: preserve-3d;
+    animation: spin 2.4s cubic-bezier(.65,0,.35,1) infinite;
+  }
+  .cube__face {
+    position: absolute; inset: 0;
+    background: var(--ink); color: var(--foam);
+    display: grid; place-items: center; text-align: center;
+    font-weight: 700; font-size: 26px; line-height: .98; letter-spacing: .02em; text-transform: uppercase;
+    border: 2px solid var(--ink);
+    backface-visibility: hidden;
+  }
+  .cube__face--front  { transform: rotateY(0)       translateZ(70px); }
+  .cube__face--right  { transform: rotateY(90deg)   translateZ(70px); }
+  .cube__face--back   { transform: rotateY(180deg)  translateZ(70px); }
+  .cube__face--left   { transform: rotateY(-90deg)  translateZ(70px); }
+  .cube__face small { font-family: var(--mono); font-size: 13px; font-weight: 400; letter-spacing: .1em; }
+  @keyframes spin {
+    0%, 15%   { transform: rotateY(0); }
+    35%, 50%  { transform: rotateY(-90deg); }
+    70%, 85%  { transform: rotateY(-180deg); }
+    100%      { transform: rotateY(-360deg); }
+  }
+
+  /* ================= layout ================= */
+  main { position: relative; z-index: 2; }
+  .grid12 {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: clamp(12px, 1.6vw, 24px);
+    padding: 0 var(--pad);
+  }
+  section { position: relative; }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .is-deep .kicker { color: var(--pale-soft); }
+
+  /* hero */
+  .hero { min-height: 100svh; align-content: center; padding-top: 120px; padding-bottom: 120px; }
+  .hero .kicker { grid-column: 1 / -1; margin-bottom: 28px; }
+  .hero h1 {
+    grid-column: 1 / span 8;
+    font-size: clamp(44px, 7.4vw, 120px);
+    line-height: .95;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  .hero h1 em { font-family: var(--serif); font-weight: 400; font-style: italic; letter-spacing: -0.02em; }
+  .hero .lede {
+    grid-column: 1 / span 5;
+    margin-top: 40px;
+    display: grid; gap: 16px;
+    font-size: clamp(17px, 1.35vw, 20px);
+    color: var(--ink-soft);
+    max-width: 34em;
+  }
+  .hero .lede strong { color: var(--ink); font-weight: 600; }
+  .hero .actions { grid-column: 1 / -1; margin-top: 36px; }
+
+  .button {
+    position: relative; display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+    text-decoration: none; padding: 6px 0; overflow: hidden;
+  }
+  .button::before {
+    content: ""; position: absolute; left: 0; bottom: 0; width: 100%; height: 1px;
+    background: currentColor; opacity: .3;
+  }
+  .button::after {
+    content: ""; position: absolute; left: 0; bottom: 0; width: 100%; height: 1px;
+    background: currentColor; transform: translateX(-101%); transition: transform .4s var(--ease);
+  }
+  .button:hover::after { transform: none; }
+  .button span { transition: transform .4s var(--ease); }
+  .button:hover span { transform: translateX(4px); }
+
+  /* section head */
+  .band { padding-top: clamp(120px, 18vh, 200px); padding-bottom: clamp(80px, 12vh, 140px); }
+  .band-head { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; row-gap: 20px; margin-bottom: 56px; }
+  .band-head .kicker { grid-column: 1 / -1; display: flex; gap: 24px; flex-wrap: wrap; }
+  .band-head h2 {
+    grid-column: 1 / span 7;
+    font-size: clamp(38px, 5.6vw, 88px); line-height: .96; letter-spacing: -0.03em; font-weight: 600;
+    text-wrap: balance;
+  }
+  .band-head p {
+    grid-column: 1 / span 6;
+    font-size: 18px; color: var(--ink-soft); max-width: 32em;
+  }
+  .is-deep .band-head p { color: var(--pale-soft); }
+
+  /* ================= cards ================= */
+  .cards {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(12px, 1.6vw, 24px);
     list-style: none;
-    width: calc(100% - 64px);
-    max-width: 42em;
-    display: flex;
-    flex-flow: row nowrap;
   }
-  .qanda__nav-dot-item {
-    flex: 1 0 32px;
+  .card {
     position: relative;
-    pointer-events: all;
+    display: flex; flex-direction: column;
+    border-top: 1px solid var(--ink-line);
+    padding-top: 12px;
     cursor: pointer;
-    opacity: 0.2;
-    padding: 32px 8px;
-    transition: opacity 0.3s var(--ease);
+    text-align: left;
+    width: 100%;
   }
-  .qanda__nav-dot-item::after {
-    display: block;
-    content: "";
-    background-color: #fff;
-    height: 2px;
+  .is-deep .card { border-top-color: var(--pale-line); }
+  .card__top {
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 12px;
   }
-  .qanda__nav-dot-item.current { opacity: 1; cursor: default; }
-  .qanda__nav-dot-item:hover { opacity: 0.6; }
-  .qanda__nav-dot-item.current:hover { opacity: 1; }
+  .flag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 8px 3px 7px; border-radius: 99px;
+    box-shadow: inset 0 0 0 1px currentColor;
+  }
+  .flag::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .flag[data-s="sighted"]     { color: var(--st-sighted); }
+  .flag[data-s="recorded"]    { color: var(--st-recorded); }
+  .flag[data-s="unconfirmed"] { color: var(--st-unconfirmed); }
+  .flag[data-s="lost"]        { color: var(--st-lost); }
+  /* on the pale surface the bright flag colours need a dark ground */
+  .is-surface .flag { background: var(--ink); box-shadow: none; }
 
-  /* ---- footer ---- */
-  .footer {
-    grid-area: footer;
-    padding: 32px;
-    display: flex;
-    align-items: center;
+  .card__tile {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 2px;
+    background: #050A12;
   }
-  .footer__legal { margin: 0 16px 0 auto; font-size: 12px; transition: font-size 0.3s var(--ease); }
-  .footer__legal:hover { font-size: 16px; }
-  .footer__legal a { color: #fff; opacity: 0.7; text-decoration: none; white-space: nowrap; }
-  .footer__legal a:hover { opacity: 1; }
-  .footer__note { font-size: 11px; opacity: 0.45; letter-spacing: 0.04em; }
+  .card__tile canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    transition: transform .8s var(--ease), opacity .5s var(--ease);
+  }
+  .card__legend {
+    position: absolute; inset: 0;
+    display: grid; align-content: end;
+    padding: 18px;
+    color: var(--pale);
+    font-family: var(--serif); font-style: italic;
+    font-size: clamp(15px, 1.15vw, 18px); line-height: 1.4;
+    background: linear-gradient(180deg, rgba(2,3,6,0) 10%, rgba(2,3,6,.86) 70%);
+    opacity: 0; transform: translateY(10px);
+    transition: opacity .45s var(--ease), transform .45s var(--ease);
+  }
+  .card:hover .card__tile canvas, .card:focus-visible .card__tile canvas { transform: scale(1.06); opacity: .75; }
+  .card:hover .card__legend, .card:focus-visible .card__legend { opacity: 1; transform: none; }
+  .card__name { margin-top: 14px; font-size: clamp(18px, 1.4vw, 22px); font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+  .card__more { margin-top: 6px; align-self: flex-start; }
+  @media (hover: none) {
+    .card__legend { opacity: 1; transform: none; background: linear-gradient(180deg, rgba(2,3,6,0) 30%, rgba(2,3,6,.88) 80%); }
+  }
 
-  @media (max-width: 700px) {
-    .qanda__question { font-size: 22px; }
-    .page-banner__nav { font-size: 14px; }
+  .after {
+    grid-column: 1 / -1;
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 24px;
+    margin-top: 72px; padding-top: 24px; border-top: 1px solid var(--ink-line);
+  }
+  .after p { font-size: clamp(22px, 2.4vw, 34px); letter-spacing: -0.02em; line-height: 1.15; max-width: 22em; font-weight: 500; }
+
+  /* who we are */
+  .who .body { grid-column: 1 / span 7; font-size: clamp(20px, 2vw, 28px); line-height: 1.35; letter-spacing: -0.01em; }
+  .who .body strong { color: var(--lume); font-weight: 500; }
+  .who .teams { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 80px; }
+  .who h3 { font-family: var(--mono); font-size: 12px; font-weight: 400; letter-spacing: .1em; text-transform: uppercase; color: var(--pale-soft); padding-bottom: 12px; border-bottom: 1px solid var(--pale-line); }
+  .who ul { list-style: none; }
+  .who li { padding: 12px 0; border-bottom: 1px solid var(--pale-line); font-size: 18px; display: flex; justify-content: space-between; gap: 16px; }
+  .who li span { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--pale-soft); }
+
+  footer {
+    position: relative; z-index: 2; color: var(--pale-soft);
+    padding: 64px var(--pad) 110px;
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px 32px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  }
+  footer nav { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  footer a { text-decoration: none; }
+  footer a:hover { color: var(--pale); }
+
+  /* ================= legend sheet ================= */
+  dialog.sheet {
+    margin: auto;
+    width: min(880px, calc(100vw - 2 * var(--pad)));
+    max-height: calc(100svh - 2 * var(--pad));
+    border: 0; padding: 0;
+    background: var(--hadal); color: var(--pale);
+    box-shadow: 0 0 0 1px var(--pale-line), 0 40px 120px rgba(0,0,0,.6);
+    overflow: auto;
+  }
+  dialog.sheet::backdrop { background: rgba(2,3,6,.7); }
+  dialog.sheet[open] { animation: rise .5s var(--ease); }
+  @keyframes rise { from { opacity: 0; transform: translateY(24px); } }
+  .sheet__in { display: grid; grid-template-columns: 1fr 1fr; }
+  .sheet__art { position: relative; aspect-ratio: 1; background: #050A12; }
+  .sheet__art canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .sheet__text { padding: 32px; display: flex; flex-direction: column; gap: 18px; }
+  .sheet__text h2 { font-size: clamp(28px, 3.4vw, 42px); line-height: 1; letter-spacing: -0.03em; font-weight: 600; }
+  .sheet__text .tale { font-family: var(--serif); font-style: italic; font-size: 20px; line-height: 1.45; }
+  .sheet__text dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; margin-top: auto; font-family: var(--mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+  .sheet__text dt { color: var(--pale-soft); }
+  .sheet__close { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; font-size: 22px; color: var(--pale); background: rgba(2,3,6,.6); border-radius: 2px; }
+  .sheet__manifesto { padding: 48px clamp(24px, 5vw, 64px); display: grid; gap: 18px; font-size: 19px; line-height: 1.55; max-width: 40em; }
+  .sheet__manifesto h2 { font-size: clamp(32px, 4vw, 52px); letter-spacing: -0.03em; line-height: 1; margin-bottom: 8px; }
+  .sheet__manifesto p:last-child { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--pale-soft); margin-top: 8px; }
+
+  /* ================= reveal ================= */
+  .rv { opacity: 0; transform: translateY(28px); transition: opacity 1s var(--ease), transform 1s var(--ease); }
+  .rv.in { opacity: 1; transform: none; }
+
+  /* ================= responsive ================= */
+  @media (max-width: 1080px) {
+    .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .band-head h2 { grid-column: 1 / -1; }
+    .band-head p { grid-column: 1 / span 9; }
+    .hero h1 { grid-column: 1 / span 11; }
+    .hero .lede { grid-column: 1 / span 8; }
+    .who .body { grid-column: 1 / span 10; }
+  }
+  @media (max-width: 760px) {
+    body { font-size: 16px; }
+    #scene { opacity: .6; }
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hero h1, .hero .lede, .who .body { grid-column: 1 / -1; }
+    .who .teams { grid-template-columns: 1fr; }
+    .gauge { display: none; }
+    .sheet__in { grid-template-columns: 1fr; }
+    .sheet__art { aspect-ratio: 16 / 10; }
+    .card__legend { padding: 12px; font-size: 14px; }
+    .ticker { width: calc(100vw - 2 * var(--pad) - 60px); }
+    .totop small { display: none; }
+  }
+  @media (max-width: 420px) {
+    .cards { grid-template-columns: 1fr; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .qanda__item > *, .qanda__item.current > * { transition-duration: 0.2s !important; transition-delay: 0s !important; }
+    .rv { opacity: 1; transform: none; transition: none; }
+    .ticker .run, .cube, .ticker .live::before { animation: none; }
+    .menu { transition: none; }
   }
 </style>
 </head>
-<body id="blueyard" class="page body-index">
+<body>
 
-  <div class="page-banner">
-    <div class="page-banner__logo">
-      <a class="logo" href="#blueyard">BlueYard</a>
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="scene3d">
+    <div class="cube">
+      <div class="cube__face cube__face--front">Hadal<br>House</div>
+      <div class="cube__face cube__face--right"><small>11,034 m</small></div>
+      <div class="cube__face cube__face--back">Hadal<br>House</div>
+      <div class="cube__face cube__face--left"><small>est. 1887</small></div>
     </div>
-    <nav class="page-banner__nav">
-      <ul>
-        <li><a href="https://medium.com/@BlueYard" target="_blank" rel="noopener">Updates</a></li>
-        <li><a href="https://twitter.com/blueyard" target="_blank" rel="noopener">Twitter</a></li>
-      </ul>
-    </nav>
   </div>
+  <div class="count" id="count">000%</div>
+</div>
 
-  <header class="page-header" id="page-header">
+<canvas id="scene" aria-hidden="true"></canvas>
+<div class="fade fade--top" aria-hidden="true"></div>
+<div class="fade fade--bottom" aria-hidden="true"></div>
 
-    <div class="movie">
-      <canvas id="film"></canvas>
-      <video class="current" muted playsinline preload="auto" poster="video/blueyard__0.jpg"><source src="video/blueyard__0.webm" type="video/webm"><source src="video/blueyard__0.mp4" type="video/mp4"></video>
-      <video muted playsinline preload="metadata" poster="video/blueyard__1.jpg"><source src="video/blueyard__1.webm" type="video/webm"><source src="video/blueyard__1.mp4" type="video/mp4"></video>
-      <video muted playsinline preload="metadata" poster="video/blueyard__2.jpg"><source src="video/blueyard__2.webm" type="video/webm"><source src="video/blueyard__2.mp4" type="video/mp4"></video>
-      <video muted playsinline preload="metadata" poster="video/blueyard__3.jpg"><source src="video/blueyard__3.webm" type="video/webm"><source src="video/blueyard__3.mp4" type="video/mp4"></video>
-      <video muted playsinline preload="metadata" poster="video/blueyard__4.jpg"><source src="video/blueyard__4.webm" type="video/webm"><source src="video/blueyard__4.mp4" type="video/mp4"></video>
+<a class="chrome logo" href="#top" aria-label="Hadal House, back to the surface">Hadal<br>House</a>
+
+<div class="chrome topright">
+  <div class="gauge" aria-live="off">Depth <b id="depth">0</b> m</div>
+  <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu" aria-label="Open site navigation"><i></i></button>
+</div>
+
+<div class="chrome rail" aria-hidden="true"><span id="railThumb"></span></div>
+
+<div class="chrome ticker" aria-label="Latest sighting">
+  <span class="live">Live</span>
+  <div class="track"><div class="run" id="tickerRun"></div></div>
+</div>
+
+<a class="chrome totop" href="#top"><small>Back to the surface</small><em>↑</em></a>
+
+<nav class="menu" id="menu" aria-label="Site navigation" hidden>
+  <ol id="menuList"></ol>
+  <div class="sub">
+    <a href="#" data-manifesto>Manifesto</a>
+    <a href="#">Field notes</a>
+    <a href="#">Submit a sighting</a>
+    <a href="#">Legal</a>
+  </div>
+</nav>
+
+<main id="top">
+  <section class="grid12 hero is-surface" data-depth="0" data-state="pearl">
+    <p class="kicker rv">Hadal House · Archive of the deep · Est. 1887</p>
+    <h1 class="rv">Will it <em>surface,</em> or will it sleep?</h1>
+    <div class="lede rv">
+      <p>The deep sea is the largest unread library on Earth. Fishermen, sonar crews and divers have been adding to it for centuries, one half-believed story at a time.</p>
+      <p>At Hadal House we keep only two kinds of legends: <strong>the ones that are rising, and the ones that should be left asleep.</strong></p>
     </div>
+    <div class="actions rv"><a class="button" href="#" data-manifesto><span>Read the manifesto</span> →</a></div>
+  </section>
 
-    <section class="qanda">
-      <div class="qanda__outer">
-        <ul id="qanda__list" class="qanda__list qanda-parent">
+  <section class="grid12 band is-surface" id="told" data-depth="150" data-state="pearl">
+    <div class="band-head">
+      <p class="kicker rv"><span>Most-told legends</span><span>Surface – 200 m</span></p>
+      <h2 class="rv">Stories sailors still lower their voices for.</h2>
+      <p class="rv">Eight entries asked about more than any others. Hover a card to hear the legend; open it for the full record.</p>
+    </div>
+    <ul class="cards" id="told-cards"></ul>
+    <div class="after rv">
+      <p>1,140 legends in the archive. Twenty-three are told here, sorted by the depth they come from.</p>
+      <a class="button" href="#twilight"><span>Begin the descent</span> ↓</a>
+    </div>
+  </section>
 
-          <li class="qanda__item current">
-            <h2 class="qanda__question">
-              <a href="https://medium.com/@BlueYard/blueyard-thesis-cac357725ee6" target="_blank" rel="noopener">
-                <span>Backing founders with transforming ideas — decentralizing markets and empowering humanity.</span>
-              </a>
-            </h2>
-            <ul class="qanda__answer"></ul>
-          </li>
+  <div id="zones"></div>
 
-          <li class="qanda__item">
-            <h2 class="qanda__question"><span>What if nature became our most powerful technology?</span></h2>
-            <ul class="qanda__answer">
-              <li><a class="wm--bold"  href="http://meatable.com/" target="_blank" rel="noopener">meatable</a></li>
-              <li><a class="wm--mono"  href="http://bit.bio/" target="_blank" rel="noopener">bit.bio</a></li>
-              <li><a class="wm--caps"  href="http://seeqc.eu/" target="_blank" rel="noopener">SeeQC</a></li>
-              <li><a class="wm--light" href="http://positive.co/" target="_blank" rel="noopener">Positive</a></li>
-              <li><a class="wm--caps"  href="http://marvelfusion.io/" target="_blank" rel="noopener">Marvel Fusion</a></li>
-              <li><a class="wm--bold"  href="http://thinkhumm.com/" target="_blank" rel="noopener">humm</a></li>
-              <li><a class="wm--light" href="http://dance.co/" target="_blank" rel="noopener">Dance</a></li>
-            </ul>
-          </li>
+  <section class="grid12 band who is-deep" id="who" data-depth="11034" data-state="eye-rest">
+    <div class="band-head">
+      <p class="kicker rv"><span>05</span><span>Who we are</span><span>11,034 m</span></p>
+      <h2 class="rv">The keepers.</h2>
+    </div>
+    <p class="body rv">A small, stubborn archive in a decommissioned lighthouse on the North Atlantic, founded in 1887 by a harbour master who kept a second logbook for things he couldn't explain. Today we hold <strong>1,140 legends</strong>, <strong>312 sonar recordings</strong> and one jar of ink nobody will open. We take sightings from anyone, at any depth.</p>
+    <div class="teams">
+      <div class="rv"><h3>Keepers of the archive</h3><ul id="keepers"></ul></div>
+      <div class="rv"><h3>Divers &amp; listeners</h3><ul id="crew"></ul></div>
+    </div>
+  </section>
+</main>
 
-          <li class="qanda__item">
-            <h2 class="qanda__question"><span>What if the internet was reinvented for permissionless innovation?</span></h2>
-            <ul class="qanda__answer">
-              <li><a class="wm--caps"  href="http://protocol.ai/" target="_blank" rel="noopener">Protocol Labs</a></li>
-              <li><a class="wm--bold"  href="http://ipfs.io/" target="_blank" rel="noopener">IPFS</a></li>
-              <li><a class="wm--mono"  href="http://libp2p.io/" target="_blank" rel="noopener">libp2p</a></li>
-              <li><a class="wm--light" href="http://filecoin.io/" target="_blank" rel="noopener">Filecoin</a></li>
-              <li><a class="wm--caps"  href="http://zeppelin.solutions/" target="_blank" rel="noopener">Zeppelin</a></li>
-              <li><a class="wm--mono"  href="http://oscoin.io/" target="_blank" rel="noopener">oscoin</a></li>
-              <li><a class="wm--bold"  href="http://textile.io/" target="_blank" rel="noopener">Textile</a></li>
-            </ul>
-          </li>
+<footer>
+  <span>© 2026 Hadal House — a fictional archive. Every creature, place and story here is invented.</span>
+  <nav aria-label="Footer">
+    <a href="#" data-manifesto>Manifesto</a>
+    <a href="#">Submit a sighting</a>
+    <a href="#">Legal</a>
+  </nav>
+</footer>
 
-          <li class="qanda__item">
-            <h2 class="qanda__question"><span>What if software monopolies were untangled — and data set free?</span></h2>
-            <ul class="qanda__answer">
-              <li><a class="wm--bold"  href="http://pitch.com/" target="_blank" rel="noopener">Pitch</a></li>
-              <li><a class="wm--mono"  href="http://stdlib.com/" target="_blank" rel="noopener">stdlib</a></li>
-              <li><a class="wm--light" href="http://nextmatter.com/" target="_blank" rel="noopener">Next Matter</a></li>
-              <li><a class="wm--caps"  href="http://grid.is/" target="_blank" rel="noopener">GRID</a></li>
-              <li><a class="wm--bold"  href="http://vectary.com/" target="_blank" rel="noopener">VECTARY</a></li>
-              <li><a class="wm--caps"  href="http://spaceknow.com/" target="_blank" rel="noopener">SpaceKnow</a></li>
-            </ul>
-          </li>
-
-          <li class="qanda__item">
-            <h2 class="qanda__question"><span>What if state and money could be separated?</span></h2>
-            <ul class="qanda__answer">
-              <li><a class="wm--light" href="http://airtm.io/" target="_blank" rel="noopener">AirTM</a></li>
-              <li><a class="wm--bold"  href="http://decred.org/" target="_blank" rel="noopener">decred</a></li>
-              <li><a class="wm--caps"  href="http://centrifuge.io/" target="_blank" rel="noopener">Centrifuge</a></li>
-              <li><a class="wm--mono"  href="http://grin.mw/" target="_blank" rel="noopener">grin</a></li>
-              <li><a class="wm--light" href="http://gethaven.app/" target="_blank" rel="noopener">Haven</a></li>
-              <li><a class="wm--bold"  href="http://openbazaar.org/" target="_blank" rel="noopener">OB1</a></li>
-            </ul>
-          </li>
-
-        </ul>
-      </div>
-
-      <div class="qanda__nav" id="qanda__nav">
-        <ul class="qanda__nav-dot qanda-parent">
-          <li class="qanda__nav-dot-item current"></li>
-          <li class="qanda__nav-dot-item"></li>
-          <li class="qanda__nav-dot-item"></li>
-          <li class="qanda__nav-dot-item"></li>
-          <li class="qanda__nav-dot-item"></li>
-        </ul>
-      </div>
-
-      <footer class="footer">
-        <span class="footer__note">Design study — not affiliated with BlueYard Capital</span>
-        <div class="footer__legal"><a href="#">Legal Notice</a></div>
-      </footer>
-    </section>
-
-  </header>
+<dialog class="sheet" id="sheet" aria-label="Legend record">
+  <button class="sheet__close" id="sheetClose" aria-label="Close">×</button>
+  <div id="sheetBody"></div>
+</dialog>
 
 <script>
-(() => {
-  "use strict";
+// Hadal House — the archive. Every creature, place and story here is invented.
+const LORE = {
+  zones: [
+    {
+      id: "twilight", num: "01", name: "Twilight Zone", range: "200 – 1,000 m", top: 200, state: "jelly",
+      title: "Where the last blue light gives out.",
+      intro: "Creatures here still remember the sun, and most of their legends are about the people above who forgot them.",
+      creatures: [
+        { name: "The Lantern Widow", depth: 640, status: "sighted",
+          legend: "Lights one lamp in the water for every sailor who never came home. The boats of Skerholm still sail dark past the ninth reef." },
+        { name: "Glasshearts", depth: 410, status: "recorded",
+          legend: "A shoal of clear fish whose hearts glow only when someone in the boat above is lying. Old net-menders call it the honest tide." },
+        { name: "The Vespertine Choir", depth: 880, status: "recorded",
+          legend: "Squid that rise every dusk singing at a pitch only whales and widows can hear. Hydrophones have caught the chorus twice." },
+        { name: "Old Salt Moth", depth: 300, status: "sighted",
+          legend: "A moth-winged ray that eats logbooks dropped overboard and remembers every entry. Ask it nicely and it will tell you where a ship went down." },
+        { name: "Captain Halfmoon", depth: 520, status: "unconfirmed",
+          legend: "A sunfish the size of a chapel, carrying a drowned lighthouse keeper on its back. The keeper still trims a lamp that is no longer lit." },
+        { name: "The Ninefold Mirror", depth: 760, status: "lost",
+          legend: "Hatchetfish that school into a mirror and show you your face as it will look in thirty years. Nobody who looked ever fished again." }
+      ]
+    },
+    {
+      id: "midnight", num: "02", name: "Midnight Zone", range: "1,000 – 4,000 m", top: 1000, state: "lights",
+      title: "Every light down here is alive.",
+      intro: "No sunlight reaches this far. Each glow is made by something living, and each one means something: a lure, a warning, a name.",
+      creatures: [
+        { name: "The Bellringer of Karst Deep", depth: 1912, status: "recorded",
+          legend: "A siphonophore forty metres long. In 1962 a sonar crew logged it ringing on the hour, every hour, for nine days." },
+        { name: "Mother Coil", depth: 3300, status: "unconfirmed",
+          legend: "An eel so long that her slow turning drives the deep currents. When she sleeps, the tides stall and the harbours go quiet." },
+        { name: "The Unlit Bishop", depth: 2450, status: "sighted",
+          legend: "A cloaked squid that turns itself inside out over passing ships. Whether that is a blessing or a curse depends on who is telling it." },
+        { name: "The Ledger Crab", depth: 1480, status: "sighted",
+          legend: "Keeps a tally of every anchor dropped into its kingdom and sends the bill in storms. Some fishing villages still pay in iron." },
+        { name: "Inkwraith", depth: 2800, status: "recorded",
+          legend: "A cephalopod that writes in ink clouds. Three of its letters, caught in jars by a Lisbon whaler, have never been read." },
+        { name: "The Quiet Engine", depth: 3950, status: "lost",
+          legend: "A pulse heard under the Atlantic for eleven years, then never again. Most say it was machinery. The archive says it was a heart." }
+      ]
+    },
+    {
+      id: "abyss", num: "03", name: "Abyss", range: "4,000 – 6,000 m", top: 4000, state: "urchin",
+      title: "Patience is the only law.",
+      intro: "A cold plain the size of continents, fed by a slow snow of everything that dies above. The legends here are long, and nothing in them hurries.",
+      creatures: [
+        { name: "The Pale Shepherd", depth: 4700, status: "sighted",
+          legend: "A blind sea cucumber that herds lesser creatures across the plain toward food no one else can sense. It has never once been wrong." },
+        { name: "The Snow Gardener", depth: 5200, status: "recorded",
+          legend: "Gathers the falling marine snow and plants glass sponges in the shapes of constellations that will not rise for another thousand years." },
+        { name: "Gulper of Promises", depth: 4300, status: "sighted",
+          legend: "Swallows whole anything thrown into the sea with a wish. Divers say its stomach glows with coins, rings and unsent letters." },
+        { name: "The Abyssal Clockmaker", depth: 5600, status: "recorded",
+          legend: "A tripod fish that stands still on its stilts for a hundred years, keeping time for the drowned. When it moves, someone above is born." },
+        { name: "Saltglass Wyrm", depth: 5050, status: "unconfirmed",
+          legend: "Lives at the edge of a brine lake on the sea floor — a second sea beneath the sea — and guards whatever sank into it." }
+      ]
+    },
+    {
+      id: "hadal", num: "04", name: "Hadal Trenches", range: "6,000 – 11,000 m", top: 6000, state: "eye",
+      title: "Named for the underworld.",
+      intro: "The pressure here would fold a submarine like paper. Very few have looked, and what they saw does not agree.",
+      creatures: [
+        { name: "The Last Hand", depth: 10900, status: "unconfirmed",
+          legend: "A pale shape like an open palm, photographed once at the bottom of a trench. The camera that took it was never recovered." },
+        { name: "Trenchmother", depth: 8100, status: "sighted",
+          legend: "A snailfish queen whose eggs glow like small moons. Every century, the old fishermen say, one of them floats all the way up." },
+        { name: "The Listener", depth: 10200, status: "recorded",
+          legend: "Something at the bottom answers sonar pings with the same ping, exactly one second late. It has never once missed." },
+        { name: "The Amphipod King", depth: 7400, status: "sighted",
+          legend: "A shrimp-like giant that crowns itself with the ribs of whales fallen from the world above, and wears a new crown each age." },
+        { name: "The Unnamed", depth: 11034, status: "lost",
+          legend: "No two people who have drawn it agree on its shape. Every map of the deepest trench leaves the same small patch blank." }
+      ]
+    }
+  ],
+  told: ["The Bellringer of Karst Deep", "The Lantern Widow", "The Last Hand", "Mother Coil",
+         "The Listener", "Glasshearts", "Gulper of Promises", "Trenchmother"],
+  keepers: [["Ilse Marrow", "Head archivist"], ["Tobiah Quill", "Logbooks"], ["Odalys Venn", "Sonar library"],
+            ["Bram Holloway", "Charts"], ["Nnenna Saltmarsh", "Oral histories"], ["Reuben Ashgrove", "The ink jar"]],
+  crew: [["Mirela Fathom", "Saturation diver"], ["Kasimir Dune", "Hydrophones"], ["Wren Okonjo", "Submersible pilot"],
+         ["Halvard Brine", "Trawler liaison"], ["Sefa Tolland", "Night listener"], ["June Ravel", "Sightings desk"]],
+  ticker: ["Sonar station 7 hears ringing at 1,912 m — the Bellringer is awake again",
+           "Trawler Aud Marie reports a lamp lit below the ninth reef",
+           "New sighting submitted from 4,300 m: something glowing, full of coins"]
+};
 
-  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const STATUS = { sighted: "Sighted", recorded: "Recorded", unconfirmed: "Unconfirmed", lost: "Lost" };
+const fmt = (n) => n.toLocaleString("en-US");
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* =========================================================
-     Generative "films" — one procedural scene per slide,
-     standing in for the original's five background videos:
-     0 ocean foam · 1 blue sun · 2 constellations ·
-     3 building facade · 4 crowd
-     ========================================================= */
-  const canvas = document.getElementById("film");
-  const gl = canvas.getContext("webgl", { antialias: false, alpha: false });
+/* ======================= sigils: one generated mark per creature ======================= */
+function hashStr(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { return () => ((seed = Math.imul(seed ^ (seed >>> 15), 2246822507) ^ Math.imul(seed ^ (seed >>> 13), 3266489909), (seed ^= seed >>> 16) >>> 0) / 4294967296); }
 
-  const vsSrc = `
-    attribute vec2 aPos;
-    void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
-  `;
+const ZONE_INK = {
+  twilight: ["#0E3A52", "#7FD8FF", "#C9F3FF"],
+  midnight: ["#071423", "#7CF5D6", "#E8FFF8"],
+  abyss:    ["#07070F", "#B79CFF", "#EDE6FF"],
+  hadal:    ["#030305", "#FF8A6B", "#FFE9E1"]
+};
 
-  const fsSrc = `
+function drawSigil(canvas, creature, zoneId) {
+  const S = 360;
+  canvas.width = S; canvas.height = S;
+  const g = canvas.getContext("2d");
+  const r = rng(hashStr(creature.name));
+  const [bg, glow, core] = ZONE_INK[zoneId];
+  const grd = g.createRadialGradient(S * .5, S * .45, 10, S * .5, S * .5, S * .75);
+  grd.addColorStop(0, bg); grd.addColorStop(1, "#010204");
+  g.fillStyle = grd; g.fillRect(0, 0, S, S);
+
+  // marine snow
+  for (let i = 0; i < 90; i++) {
+    g.fillStyle = `rgba(255,255,255,${0.04 + r() * 0.12})`;
+    g.fillRect(r() * S, r() * S, 1 + r() * 1.4, 1 + r() * 1.4);
+  }
+
+  const dot = (x, y, rad, a = 1) => {
+    const d = g.createRadialGradient(x, y, 0, x, y, rad * 5);
+    d.addColorStop(0, core); d.addColorStop(.2, glow); d.addColorStop(1, "rgba(0,0,0,0)");
+    g.globalAlpha = a; g.fillStyle = d;
+    g.beginPath(); g.arc(x, y, rad * 5, 0, 6.2832); g.fill(); g.globalAlpha = 1;
+  };
+  g.strokeStyle = glow; g.lineCap = "round";
+  const cx = S * (.42 + r() * .16), cy = S * (.42 + r() * .16);
+
+  if (zoneId === "twilight") {
+    // a bell of arcs trailing light-threads: jelly forms
+    g.save(); g.translate(cx, cy); g.rotate((r() - .5) * .7); g.translate(-cx, -cy);
+    const w = S * (.14 + r() * .16);
+    for (let k = 0; k < 4; k++) {
+      g.globalAlpha = .55 - k * .1; g.lineWidth = 1.2;
+      g.beginPath(); g.ellipse(cx, cy, w - k * 9, w * .62 - k * 6, 0, Math.PI, 0); g.stroke();
+    }
+    const n = 3 + Math.floor(r() * 9);
+    for (let i = 0; i < n; i++) {
+      const x0 = cx - w + (2 * w) * (i + .5) / n;
+      g.globalAlpha = .45; g.lineWidth = .9; g.beginPath(); g.moveTo(x0, cy);
+      let x = x0, y = cy; const len = S * (.18 + r() * .25), sw = 6 + r() * 12, ph = r() * 6;
+      for (let t = 0; t <= 1; t += .05) { y = cy + t * len; x = x0 + Math.sin(t * 7 + ph) * sw * t; g.lineTo(x, y); }
+      g.stroke(); dot(x, y, 1.4, .8);
+    }
+    g.globalAlpha = 1; dot(cx, cy - w * .3, 2.8);
+    g.restore();
+  } else if (zoneId === "midnight") {
+    // a chain of lights: siphonophore / lure lines
+    let x = 0, y = 0, a = r() * 6.28; const curl = (r() - .5) * .5, raw = [];
+    for (let i = 0; i < 28; i++) { a += curl + (r() - .5) * .8; x += Math.cos(a); y += Math.sin(a); raw.push([x, y]); }
+    const xs = raw.map((p) => p[0]), ys = raw.map((p) => p[1]);
+    const minX = Math.min(...xs), minY = Math.min(...ys), w = Math.max(...xs) - minX || 1, h = Math.max(...ys) - minY || 1;
+    const sc = (S * .62) / Math.max(w, h), ox = (S - w * sc) / 2, oy = (S - h * sc) / 2;
+    const pts = raw.map(([px, py]) => [ox + (px - minX) * sc, oy + (py - minY) * sc]);
+    g.lineWidth = .8; g.globalAlpha = .35; g.beginPath(); pts.forEach(([px, py], i) => (i ? g.lineTo(px, py) : g.moveTo(px, py))); g.stroke();
+    g.globalAlpha = 1;
+    const every = 3 + Math.floor(r() * 3);
+    pts.forEach(([px, py], i) => dot(px, py, i % every === 0 ? 2.4 : 1.1, i % every === 0 ? 1 : .65));
+  } else if (zoneId === "abyss") {
+    // radial spines from a dim body: urchin / tripod / sea-floor forms
+    const legs = r() < .4;                       // some are tripods on stilts, some are urchins
+    const n = legs ? 3 + Math.floor(r() * 3) : 14 + Math.floor(r() * 26), base = S * (.05 + r() * .05);
+    const tilt = r() * 6.28, reach = legs ? .3 : .12 + r() * .1;
+    g.lineWidth = legs ? 1.4 : 1;
+    for (let i = 0; i < n; i++) {
+      const a = tilt + (i / n) * 6.2832 + r() * (legs ? .5 : .2), len = base + S * (reach + r() * (legs ? .08 : .2));
+      g.globalAlpha = .25 + r() * .4;
+      g.beginPath(); g.moveTo(cx + Math.cos(a) * base, cy + Math.sin(a) * base);
+      g.lineTo(cx + Math.cos(a) * len, cy + Math.sin(a) * len); g.stroke();
+      if (r() > .6) dot(cx + Math.cos(a) * len, cy + Math.sin(a) * len, 1.2, .8);
+    }
+    g.globalAlpha = 1; dot(cx, cy, 3.2);
+  } else {
+    // a single watching ring: trench forms
+    const R = S * (.12 + r() * .12), rings = 1 + Math.floor(r() * 4), pupil = r();
+    for (let k = 0; k < rings; k++) { g.globalAlpha = .45 - k * .1; g.lineWidth = 1; g.beginPath(); g.arc(cx, cy, R + 10 + k * 13, 0, 6.2832); g.stroke(); }
+    g.globalAlpha = 1;
+    const ir = g.createRadialGradient(cx, cy, R * .1, cx, cy, R);
+    ir.addColorStop(0, "rgba(0,0,0,0)"); ir.addColorStop(.3, glow); ir.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = ir; g.beginPath(); g.arc(cx, cy, R, 0, 6.2832); g.fill();
+    g.fillStyle = "#000"; g.beginPath();
+    if (pupil < .4) g.ellipse(cx, cy, R * .12, R * .5, 0, 0, 6.2832);          // vertical slit
+    else if (pupil < .65) g.ellipse(cx, cy, R * .5, R * .14, 0, 0, 6.2832);   // horizontal bar
+    else g.arc(cx, cy, R * .36, 0, 6.2832);                                     // wide round
+    g.fill();
+    dot(cx - R * .22, cy - R * .22, 1.4, .9);
+    const motes = Math.floor(r() * 7);
+    for (let i = 0; i < motes; i++) { const a = r() * 6.28, d = R * (1.6 + r() * 1.2); dot(cx + Math.cos(a) * d, cy + Math.sin(a) * d, .9, .6); }
+  }
+}
+
+/* ======================= build the page ======================= */
+const byName = {};
+LORE.zones.forEach((z) => z.creatures.forEach((c) => (byName[c.name] = { ...c, zone: z })));
+
+function cardHTML(c, zone) {
+  return `<li><button class="card rv" data-name="${c.name}" aria-label="${c.name}: open the legend">
+    <span class="card__top"><span>${fmt(c.depth)} m</span><span class="flag" data-s="${c.status}">${STATUS[c.status]}</span></span>
+    <span class="card__tile"><canvas data-sigil="${c.name}" data-zone="${zone.id}"></canvas><span class="card__legend">${c.legend}</span></span>
+    <span class="card__name">${c.name}</span>
+    <span class="button card__more"><span>Read the legend</span> →</span>
+  </button></li>`;
+}
+
+document.getElementById("told-cards").innerHTML = LORE.told.map((n) => cardHTML(byName[n], byName[n].zone)).join("");
+
+document.getElementById("zones").outerHTML = LORE.zones.map((z) => `
+  <section class="grid12 band is-deep" id="${z.id}" data-depth="${z.top}" data-state="${z.state}">
+    <div class="band-head">
+      <p class="kicker rv"><span>${z.num}</span><span>${z.name}</span><span>${z.range}</span></p>
+      <h2 class="rv">${z.title}</h2>
+      <p class="rv">${z.intro}</p>
+    </div>
+    <ul class="cards">${[...z.creatures].sort((a, b) => a.depth - b.depth).map((c) => cardHTML(c, z)).join("")}</ul>
+  </section>`).join("");
+
+document.getElementById("keepers").innerHTML = LORE.keepers.map(([n, r]) => `<li>${n}<span>${r}</span></li>`).join("");
+document.getElementById("crew").innerHTML = LORE.crew.map(([n, r]) => `<li>${n}<span>${r}</span></li>`).join("");
+
+const tickerItems = LORE.ticker.map((t) => `<span>${t}</span>`).join("");
+document.getElementById("tickerRun").innerHTML = tickerItems + tickerItems;
+
+document.getElementById("menuList").innerHTML = LORE.zones.map((z) =>
+  `<li><a href="#${z.id}"><small>${z.num}</small>${z.name}<span>${z.range}</span></a></li>`).join("") +
+  `<li><a href="#who"><small>05</small>Who we are<span>11,034 m</span></a></li>`;
+
+document.querySelectorAll("canvas[data-sigil]").forEach((cv) => drawSigil(cv, byName[cv.dataset.sigil], cv.dataset.zone));
+
+/* ======================= legend sheet + manifesto ======================= */
+const sheet = document.getElementById("sheet");
+const sheetBody = document.getElementById("sheetBody");
+function openSheet(html) {
+  sheetBody.innerHTML = html;
+  if (typeof sheet.showModal === "function") sheet.showModal(); else sheet.setAttribute("open", "");
+}
+function closeSheet() { if (sheet.open) sheet.close ? sheet.close() : sheet.removeAttribute("open"); }
+document.getElementById("sheetClose").addEventListener("click", closeSheet);
+sheet.addEventListener("click", (e) => { if (e.target === sheet) closeSheet(); });
+
+document.addEventListener("click", (e) => {
+  const card = e.target.closest(".card");
+  if (card) {
+    const c = byName[card.dataset.name];
+    openSheet(`<div class="sheet__in">
+      <div class="sheet__art"><canvas id="sheetArt"></canvas></div>
+      <div class="sheet__text">
+        <p class="kicker" style="color:var(--pale-soft)">${c.zone.num} · ${c.zone.name}</p>
+        <h2>${c.name}</h2>
+        <p class="tale">${c.legend}</p>
+        <dl>
+          <dt>Depth</dt><dd>${fmt(c.depth)} m</dd>
+          <dt>Zone</dt><dd>${c.zone.range}</dd>
+          <dt>Status</dt><dd><span class="flag" data-s="${c.status}">${STATUS[c.status]}</span></dd>
+        </dl>
+      </div></div>`);
+    drawSigil(document.getElementById("sheetArt"), c, c.zone.id);
+    return;
+  }
+  if (e.target.closest("[data-manifesto]")) {
+    e.preventDefault();
+    setMenu(false);
+    openSheet(`<div class="sheet__manifesto">
+      <h2>Manifesto</h2>
+      <p>Less than a quarter of the sea floor has been mapped in detail. The rest is known the way the oldest things are known: by people telling each other what they think they saw.</p>
+      <p>We don't decide which stories are true. We write down who told them, at what depth, and what the water was doing. Some legends are rising: more sightings every year, more boats changing course. Some are sinking back into sleep, and we think a few of them should be left there.</p>
+      <p>If you've heard something below the light, tell us. Every record starts with one voice.</p>
+      <p>— The keepers, Hadal House</p>
+    </div>`);
+  }
+});
+
+/* ======================= menu ======================= */
+const menu = document.getElementById("menu");
+const menuBtn = document.getElementById("menuBtn");
+function setMenu(open) {
+  if (open) menu.hidden = false;
+  requestAnimationFrame(() => document.body.classList.toggle("menu-open", open));
+  menuBtn.setAttribute("aria-expanded", String(open));
+  menuBtn.setAttribute("aria-label", open ? "Close site navigation" : "Open site navigation");
+  if (!open) setTimeout(() => { if (!document.body.classList.contains("menu-open")) menu.hidden = true; }, 700);
+}
+menuBtn.addEventListener("click", () => setMenu(!document.body.classList.contains("menu-open")));
+menu.addEventListener("click", (e) => { if (e.target.closest("a[href^='#']") && !e.target.closest("[data-manifesto]")) setMenu(false); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") setMenu(false); });
+
+/* ======================= reveal on scroll ======================= */
+const io = new IntersectionObserver((entries) => {
+  for (const e of entries) if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+}, { rootMargin: "0px 0px -8% 0px" });
+document.querySelectorAll(".rv").forEach((el, i) => {
+  if (el.classList.contains("card")) el.style.transitionDelay = `${(i % 4) * 70}ms`;
+  io.observe(el);
+});
+
+/* ======================= scroll model: depth, colour, scene state ======================= */
+const sections = [...document.querySelectorAll("main > section")];
+const COLORS = { pearl: "#EEF2F0", jelly: "#1E4A61", lights: "#0A192A", urchin: "#060A13", eye: "#020306", "eye-rest": "#020306" };
+const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+let marks = [];   // [{y, depth, color[], state}]
+function measure() {
+  marks = sections.map((s) => ({
+    y: s.offsetTop,
+    depth: +s.dataset.depth,
+    color: hex(COLORS[s.dataset.state]),
+    state: s.dataset.state
+  }));
+  // depth continues past the last section start down to the page bottom
+  marks.push({ y: document.documentElement.scrollHeight - innerHeight, depth: 11034, color: hex(COLORS.eye), state: "eye-rest" });
+}
+addEventListener("resize", measure);
+addEventListener("load", measure);
+measure();
+
+// position along the descent as (index, fraction) — colour changes over the band before each section
+function locate(y) {
+  for (let i = 0; i < marks.length - 1; i++) {
+    if (y < marks[i + 1].y) return [i, Math.max(0, Math.min(1, (y - marks[i].y) / Math.max(1, marks[i + 1].y - marks[i].y)))];
+  }
+  return [marks.length - 1, 0];
+}
+const smooth = (t) => t * t * (3 - 2 * t);
+
+const depthEl = document.getElementById("depth");
+const thumb = document.getElementById("railThumb");
+let lastDepth = -1, lastDeep = null, lastBg = "";
+function updateChrome(y) {
+  const vy = y + innerHeight * 0.45;
+  const [i, f] = locate(vy);
+  const a = marks[i], b = marks[Math.min(i + 1, marks.length - 1)];
+  // colour shifts across the last 45% of each band so a section's own colour holds while you read it
+  const k = smooth(Math.max(0, (f - 0.55) / 0.45));
+  const c = a.color.map((v, j) => Math.round(v + (b.color[j] - v) * k));
+  const bg = `rgb(${c[0]},${c[1]},${c[2]})`;
+  if (bg !== lastBg) { document.body.style.setProperty("--bg", bg); lastBg = bg; }
+  const lum = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255;
+  const deep = lum < 0.42;
+  if (deep !== lastDeep) { document.body.classList.toggle("deep", deep); lastDeep = deep; }
+
+  const [di, df] = locate(y);
+  const da = marks[di], db = marks[Math.min(di + 1, marks.length - 1)];
+  const depth = Math.round(da.depth + (db.depth - da.depth) * df);
+  if (depth !== lastDepth) { depthEl.textContent = fmt(Math.max(0, depth)).padStart(6, " "); lastDepth = depth; }
+
+  const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+  const travel = innerHeight - 16 - 36;
+  thumb.style.transform = `translateY(${(y / max) * travel}px)`;
+  document.body.classList.toggle("scrolled", y > innerHeight * 0.6);
+  return { i, k };
+}
+
+/* ======================= WebGL: one creature, many forms ======================= */
+const canvas = document.getElementById("scene");
+const gl = canvas.getContext("webgl", { antialias: true, alpha: true, premultipliedAlpha: true });
+
+// per-form parameters; the scene eases between them as you descend
+const FORMS = {
+  pearl:  { amp: .07, freq: 1.2, spike: 0, eye: 0, solid: 1, points: 0,  base: [.30,.36,.44], rim: [.70,.86,1.0], irid: 1.0, size: 1.0, x: .9 },
+  jelly:  { amp: .16, freq: 1.6, spike: 0, eye: 0, solid: .55, points: .35, base: [.20,.55,.75], rim: [.65,.95,1.0], irid: .35, size: 1.05, x: .95 },
+  lights: { amp: .12, freq: 2.2, spike: 0, eye: 0, solid: .06, points: 1,   base: [.05,.25,.25], rim: [.49,.96,.84], irid: 0, size: 1.15, x: 1.0 },
+  urchin: { amp: .05, freq: 1.4, spike: 1, eye: 0, solid: 1,  points: .2,  base: [.07,.05,.12], rim: [.60,.50,.95], irid: .1, size: .82, x: 1.05 },
+  eye:    { amp: .03, freq: 1.0, spike: 0, eye: 1, solid: 1,  points: 0,   base: [.03,.03,.04], rim: [1.0,.54,.42], irid: 0, size: 1.0, x: .9 },
+  "eye-rest": { amp: .03, freq: 1.0, spike: 0, eye: 1, solid: 1, points: 0, base: [.03,.03,.04], rim: [1.0,.54,.42], irid: 0, size: .7, x: 1.25 }
+};
+
+let sceneOK = !!gl;
+if (sceneOK) {
+  try { initScene(); } catch (err) { sceneOK = false; canvas.style.display = "none"; }
+} else {
+  canvas.style.display = "none";
+}
+
+function initScene() {
+  // ---------- icosphere ----------
+  const t = (1 + Math.sqrt(5)) / 2;
+  let verts = [[-1,t,0],[1,t,0],[-1,-t,0],[1,-t,0],[0,-1,t],[0,1,t],[0,-1,-t],[0,1,-t],[t,0,-1],[t,0,1],[-t,0,-1],[-t,0,1]]
+    .map((v) => { const l = Math.hypot(...v); return v.map((x) => x / l); });
+  let faces = [[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
+               [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
+  const SUB = innerWidth < 760 ? 4 : 5;
+  const levels = [];   // {faces, verts} per subdivision level, all indexing into one vertex list
+  for (let s = 0; s < SUB; s++) {
+    const cache = new Map(), next = [];
+    const mid = (a, b) => {
+      const key = a < b ? a + "_" + b : b + "_" + a;
+      if (cache.has(key)) return cache.get(key);
+      const m = verts[a].map((v, i) => (v + verts[b][i]) / 2), l = Math.hypot(...m);
+      verts.push(m.map((x) => x / l)); cache.set(key, verts.length - 1); return verts.length - 1;
+    };
+    for (const [a, b, c] of faces) { const ab = mid(a, b), bc = mid(b, c), ca = mid(c, a); next.push([a,ab,ca],[b,bc,ab],[c,ca,bc],[ab,bc,ca]); }
+    faces = next;
+    if (s >= SUB - 3) levels.push({ idx: new Uint16Array(faces.flat()), verts: verts.length });
+  }
+  const pos = new Float32Array(verts.flat());
+  let level = levels.length - 1;
+  let idx = levels[level].idx, vertCount = levels[level].verts;
+
+  const NOISE = `
+    vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+    vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+    vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+    vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+    float snoise(vec3 v){
+      const vec2 C=vec2(1.0/6.0,1.0/3.0); const vec4 D=vec4(0.0,0.5,1.0,2.0);
+      vec3 i=floor(v+dot(v,C.yyy)); vec3 x0=v-i+dot(i,C.xxx);
+      vec3 g=step(x0.yzx,x0.xyz); vec3 l=1.0-g; vec3 i1=min(g.xyz,l.zxy); vec3 i2=max(g.xyz,l.zxy);
+      vec3 x1=x0-i1+C.xxx; vec3 x2=x0-i2+C.yyy; vec3 x3=x0-D.yyy;
+      i=mod289(i);
+      vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+      float n_=0.142857142857; vec3 ns=n_*D.wyz-D.xzx;
+      vec4 j=p-49.0*floor(p*ns.z*ns.z); vec4 x_=floor(j*ns.z); vec4 y_=floor(j-7.0*x_);
+      vec4 x=x_*ns.x+ns.yyyy; vec4 y=y_*ns.x+ns.yyyy; vec4 h=1.0-abs(x)-abs(y);
+      vec4 b0=vec4(x.xy,y.xy); vec4 b1=vec4(x.zw,y.zw);
+      vec4 s0=floor(b0)*2.0+1.0; vec4 s1=floor(b1)*2.0+1.0; vec4 sh=-step(h,vec4(0.0));
+      vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy; vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+      vec3 p0=vec3(a0.xy,h.x); vec3 p1=vec3(a0.zw,h.y); vec3 p2=vec3(a1.xy,h.z); vec3 p3=vec3(a1.zw,h.w);
+      vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+      p0*=norm.x; p1*=norm.y; p2*=norm.z; p3*=norm.w;
+      vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0); m=m*m;
+      return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+    }`;
+
+  const VS = `
+    attribute vec3 aPos;
+    uniform mat4 uProj, uModel;
+    uniform float uTime, uAmp, uFreq, uSpike, uPtSize, uDpr;
+    varying vec3 vN, vObj, vWorld;
+    ${NOISE}
+    float disp(vec3 p){
+      float d = snoise(p * uFreq + vec3(0.0, uTime * 0.22, uTime * 0.12)) * uAmp;
+      if (uSpike > 0.002) d += pow(max(0.0, 1.0 - abs(snoise(p * 4.6 + 3.0))), 14.0) * uSpike * 0.42;
+      return d;
+    }
+    void main(){
+      vec3 p = normalize(aPos);
+      vec3 t1 = normalize(cross(p, abs(p.y) < 0.99 ? vec3(0.0,1.0,0.0) : vec3(1.0,0.0,0.0)));
+      vec3 t2 = cross(p, t1);
+      float e = 0.012;
+      vec3 a = p * (1.0 + disp(p));
+      vec3 b = normalize(p + t1 * e); b *= 1.0 + disp(b);
+      vec3 c = normalize(p + t2 * e); c *= 1.0 + disp(c);
+      vec3 n = normalize(cross(b - a, c - a));
+      vN = normalize(mat3(uModel) * n);
+      vObj = normalize(mat3(uModel) * p);
+      vec4 w = uModel * vec4(a, 1.0);
+      vWorld = w.xyz;
+      gl_Position = uProj * w;
+      gl_PointSize = uPtSize * uDpr * (0.6 + 0.8 * fract(sin(dot(p, vec3(12.9, 78.2, 37.7))) * 43758.5));
+    }`;
+
+  const FS_SOLID = `
     precision highp float;
-    uniform vec2  uRes;
-    uniform float uTime;
-    uniform float uModeA, uModeB, uBlend;
+    varying vec3 vN, vObj, vWorld;
+    uniform vec3 uBase, uRim, uLook;
+    uniform float uIrid, uEye, uAlpha, uTime;
+    void main(){
+      vec3 N = normalize(vN);
+      vec3 V = normalize(-vWorld);
+      vec3 L = normalize(vec3(-0.5, 0.8, 0.6));
+      float diff = max(dot(N, L), 0.0);
+      float fres = pow(1.0 - max(dot(N, V), 0.0), 2.4);
+      float spec = pow(max(dot(reflect(-L, N), V), 0.0), 40.0);
+      vec3 irid = 0.5 + 0.5 * cos(6.2831 * (fres * 1.4 + vec3(0.0, 0.33, 0.67)) + uTime * 0.2);
+      vec3 col = uBase * (0.28 + 0.72 * diff);
+      col = mix(col, irid * 0.95, uIrid * fres * 0.9);
+      col += uRim * fres * 1.1;
+      col += vec3(1.0) * spec * 0.55;
 
-    float hash1(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
-    vec2 hash2(vec2 p) {
-      p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
-      return fract(sin(p) * 43758.5453123);
-    }
-    vec2 ghash(vec2 p) { return -1.0 + 2.0 * hash2(p); }
-    float noise(vec2 p) {
-      vec2 i = floor(p);
-      vec2 f = fract(p);
-      vec2 u = f * f * (3.0 - 2.0 * f);
-      return mix(
-        mix(dot(ghash(i + vec2(0.0, 0.0)), f - vec2(0.0, 0.0)),
-            dot(ghash(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0)), u.x),
-        mix(dot(ghash(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0)),
-            dot(ghash(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0)), u.x),
-        u.y);
-    }
-    float fbm(vec2 p) {
-      float v = 0.0, a = 0.55;
-      mat2 rot = mat2(0.8, 0.6, -0.6, 0.8);
-      for (int i = 0; i < 4; i++) {
-        v += a * noise(p);
-        p = rot * p * 1.9;
-        a *= 0.55;
-      }
-      return v;
-    }
+      // the eye of the trench: iris and pupil around the gaze direction
+      vec3 g = normalize(uLook), sdir = normalize(vObj);
+      float ang = acos(clamp(dot(sdir, g), -1.0, 1.0));
+      vec3 eu = normalize(cross(g, vec3(0.0, 1.0, 0.0))), ev = cross(g, eu);
+      float az = atan(dot(sdir, ev), dot(sdir, eu));
+      float fibres = 0.78 + 0.22 * sin(az * 46.0 + sin(az * 7.0) * 2.0);
+      float iris = smoothstep(0.60, 0.54, ang);
+      float glow = mix(1.25, 0.55, smoothstep(0.22, 0.58, ang)) * fibres;
+      float pupil = smoothstep(0.235, 0.205, ang);
+      vec3 eyeCol = mix(col, uRim * glow, iris);
+      eyeCol = mix(eyeCol, vec3(0.0), pupil);
+      eyeCol += vec3(1.0) * smoothstep(0.08, 0.0, length(normalize(vObj) - normalize(uLook + vec3(-0.25, 0.25, 0.0)))) * 0.9;
+      col = mix(col, eyeCol, uEye);
 
-    // 0 — ocean from above: dark teal water, veiny white foam
-    vec3 sceneOcean(vec2 p, vec2 uv, float t) {
-      vec2 drift = vec2(0.0, t * 0.02);
-      float swell = fbm(p * 1.6 + drift);
-      float veins = fbm(p * 4.5 + swell * 1.8 - vec2(t * 0.015, 0.0));
-      float foam = smoothstep(0.80, 0.97, 1.0 - abs(veins) * 2.0);   // thin bright veins only
-      float spray = smoothstep(0.55, 0.85, fbm(p * 9.0 + drift * 3.0)) * foam;
-      vec3 water = mix(vec3(0.02, 0.08, 0.13), vec3(0.08, 0.24, 0.32), swell * 0.5 + 0.5);
-      vec3 col = mix(water, vec3(0.80, 0.88, 0.92), clamp(foam * 0.85 + spray * 0.4, 0.0, 1.0));
-      return col;
+      float a = uAlpha * mix(1.0, 0.35 + 0.65 * fres, step(uAlpha, 0.99));
+      gl_FragColor = vec4(col * a, a);
+    }`;
+
+  const FS_POINTS = `
+    precision highp float;
+    uniform vec3 uRim;
+    uniform float uAlpha;
+    void main(){
+      vec2 d = gl_PointCoord - 0.5;
+      float r = length(d);
+      float g = smoothstep(0.5, 0.0, r);
+      g *= g;
+      gl_FragColor = vec4(uRim * g * uAlpha, 0.0);
+    }`;
+
+  const VS_SNOW = `
+    attribute vec3 aSnow;
+    uniform float uTime, uScroll, uDpr;
+    uniform vec2 uView;
+    varying float vA;
+    void main(){
+      float y = fract(aSnow.y - uTime * 0.008 * (0.5 + aSnow.z) + uScroll * (0.25 + aSnow.z * 0.6)) * 2.2 - 1.1;
+      float x = aSnow.x + sin(uTime * 0.3 + aSnow.y * 20.0) * 0.01;
+      gl_Position = vec4(x, y, 0.0, 1.0);
+      gl_PointSize = (1.0 + aSnow.z * 2.4) * uDpr;
+      vA = 0.25 + aSnow.z * 0.6;
+    }`;
+  const FS_SNOW = `
+    precision mediump float;
+    varying float vA;
+    uniform float uSnowA;
+    void main(){
+      float r = length(gl_PointCoord - 0.5);
+      float a = smoothstep(0.5, 0.1, r) * vA * uSnowA;
+      gl_FragColor = vec4(vec3(0.85, 0.93, 0.95) * a, a);
+    }`;
+
+  function prog(vs, fs) {
+    const p = gl.createProgram();
+    for (const [type, src] of [[gl.VERTEX_SHADER, vs], [gl.FRAGMENT_SHADER, fs]]) {
+      const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      gl.attachShader(p, s);
     }
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    const u = {}, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+    for (let i = 0; i < n; i++) { const name = gl.getActiveUniform(p, i).name; u[name] = gl.getUniformLocation(p, name); }
+    return { p, u, a: (name) => gl.getAttribLocation(p, name) };
+  }
+  const solid = prog(VS, FS_SOLID);
+  const points = prog(VS, FS_POINTS);
+  const snow = prog(VS_SNOW, FS_SNOW);
 
-    // 1 — churning blue sun with corona on black space
-    vec3 sceneSun(vec2 p, vec2 uv, float t, float aspect) {
-      vec2 c = p - vec2(aspect * 0.5, 0.42);
-      float d = length(c);
-      float R = 0.58;
-      float surf = fbm(c * 3.6 + fbm(c * 7.0 + t * 0.06) * 1.4 + vec2(0.0, t * 0.02));
-      vec3 fire = mix(vec3(0.10, 0.16, 0.45), vec3(0.80, 0.86, 1.0), smoothstep(-0.35, 0.55, surf));
-      float body = smoothstep(R, R - 0.015, d);
-      float limb = smoothstep(R, R * 0.25, d);          // limb darkening, brighter center
-      float corona = exp(-(d - R) * 5.5) * (1.0 - body);
-      float flare = 0.5 + 0.5 * fbm(vec2(atan(c.y, c.x) * 2.5, t * 0.1));
-      vec3 col = fire * body * (0.45 + 0.65 * limb);
-      col += vec3(0.45, 0.55, 0.95) * corona * flare * 0.8;
-      return col;
-    }
+  const vbo = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vbo); gl.bufferData(gl.ARRAY_BUFFER, pos, gl.STATIC_DRAW);
+  const ibo = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+  function setLevel(l) {
+    level = l; idx = levels[l].idx; vertCount = levels[l].verts;
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+  }
+  const SNOW_N = innerWidth < 760 ? 160 : 320;
+  const snowData = new Float32Array(SNOW_N * 3);
+  for (let i = 0; i < SNOW_N; i++) { snowData[i*3] = Math.random() * 2 - 1; snowData[i*3+1] = Math.random(); snowData[i*3+2] = Math.random() ** 2; }
+  const sbo = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, sbo); gl.bufferData(gl.ARRAY_BUFFER, snowData, gl.STATIC_DRAW);
 
-    // 2 — slow constellation field on near-black navy
-    vec3 sceneStars(vec2 p, vec2 uv, float t) {
-      vec3 col = vec3(0.070, 0.085, 0.115);
-      for (int layer = 0; layer < 2; layer++) {
-        float fl = float(layer);
-        vec2 g = p * (10.0 + fl * 22.0) + vec2(t * (0.01 + fl * 0.012), fl * 7.3);
-        vec2 id = floor(g);
-        vec2 f = fract(g);
-        vec2 rp = hash2(id);
-        float keep = step(0.82 - fl * 0.12, hash1(id + 3.7));
-        float d = length(f - (0.2 + rp * 0.6));
-        float tw = 0.65 + 0.35 * sin(t * (0.8 + rp.x * 2.0) + rp.y * 6.28);
-        float star = smoothstep(0.10 - fl * 0.04, 0.0, d) * keep * tw;
-        col += vec3(0.85, 0.90, 1.0) * star * (0.9 - fl * 0.35);
-      }
-      return col;
-    }
-
-    // 3 — concrete facade: columns of tall windows, slow pan
-    vec3 sceneFacade(vec2 p, vec2 uv, float t) {
-      vec2 g = vec2(p.x * 9.0 + t * 0.03, uv.y * 7.0);
-      vec2 id = floor(g);
-      vec2 f = fract(g);
-      // window cell inside each bay
-      float winX = step(0.22, f.x) * step(f.x, 0.86);
-      float winY = step(0.12, f.y) * step(f.y, 0.92);
-      float win = winX * winY;
-      float h = hash1(id);
-      vec3 concrete = vec3(0.55, 0.49, 0.42) * (0.9 + 0.1 * hash1(id * 1.7));
-      vec3 glass = h < 0.14 ? vec3(0.04, 0.04, 0.05)
-                            : vec3(0.42, 0.46, 0.50) * (0.85 + 0.3 * h);
-      // mullion split down each window
-      float mullion = smoothstep(0.02, 0.0, abs(f.x - 0.54));
-      vec3 col = mix(concrete, glass, win);
-      col = mix(col, concrete, mullion * win);
-      // sky strip up top
-      col = mix(col, vec3(0.78, 0.79, 0.80), smoothstep(0.86, 0.90, uv.y));
-      col *= 0.9 + 0.1 * sin(p.x * 40.0);   // fine vertical ribbing
-      return col;
-    }
-
-    // 4 — a crowd from above: dense jostling specks, a few flags
-    vec3 sceneCrowd(vec2 p, vec2 uv, float t) {
-      vec3 col = vec3(0.10, 0.105, 0.10);   // asphalt
-      for (int layer = 0; layer < 2; layer++) {
-        float fl = float(layer);
-        vec2 g = p * (34.0 + fl * 21.0) + vec2(fl * 13.7, fl * 5.1);
-        vec2 id = floor(g);
-        vec2 f = fract(g);
-        vec2 rp = hash2(id);
-        vec2 jitter = 0.14 * vec2(sin(t * 0.7 + rp.x * 6.28), cos(t * 0.6 + rp.y * 6.28));
-        float d = length(f - (0.25 + rp * 0.5 + jitter));
-        float dot_ = smoothstep(0.30, 0.10, d);
-        float pick = hash1(id + 9.1);
-        vec3 tone = pick < 0.70 ? vec3(0.75, 0.74, 0.70) * (0.5 + 0.5 * rp.x)   // shirts, caps
-                  : pick < 0.82 ? vec3(0.75, 0.15, 0.12)                         // red
-                  : pick < 0.92 ? vec3(0.85, 0.72, 0.15)                         // yellow
-                                : vec3(0.15, 0.25, 0.60);                        // blue
-        col = mix(col, tone, dot_ * (0.85 - fl * 0.25));
-      }
-      return col;
-    }
-
-    vec3 scene(float mode, vec2 p, vec2 uv, float t, float aspect) {
-      if (mode < 0.5) return sceneOcean(p, uv, t);
-      if (mode < 1.5) return sceneSun(p, uv, t, aspect);
-      if (mode < 2.5) return sceneStars(p, uv, t);
-      if (mode < 3.5) return sceneFacade(p, uv, t);
-      return sceneCrowd(p, uv, t);
-    }
-
-    void main() {
-      vec2 uv = gl_FragCoord.xy / uRes.xy;
-      float aspect = uRes.x / uRes.y;
-      vec2 p = vec2(uv.x * aspect, uv.y);
-
-      vec3 col = scene(uModeA, p, uv, uTime, aspect);
-      if (uBlend > 0.001) {
-        vec3 colB = scene(uModeB, p, uv, uTime, aspect);
-        col = mix(col, colB, uBlend);
-      }
-
-      float vig = smoothstep(1.5, 0.4, length(uv - 0.5));
-      col *= mix(0.75, 1.0, vig);
-      float dither = (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
-      gl_FragColor = vec4(col + dither, 1.0);
-    }
-  `;
-
-  function compile(type, src) {
-    const s = gl.createShader(type);
-    gl.shaderSource(s, src);
-    gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-      throw new Error(gl.getShaderInfoLog(s));
-    }
-    return s;
+  // ---------- matrices ----------
+  function perspective(fovy, aspect, near, far) {
+    const f = 1 / Math.tan(fovy / 2), nf = 1 / (near - far);
+    return new Float32Array([f/aspect,0,0,0, 0,f,0,0, 0,0,(far+near)*nf,-1, 0,0,2*far*near*nf,0]);
+  }
+  function model(rx, ry, s, tx, ty, tz) {
+    const cx = Math.cos(rx), sx = Math.sin(rx), cy = Math.cos(ry), sy = Math.sin(ry);
+    // R = Ry * Rx, column-major, scaled, translated
+    return new Float32Array([
+      cy*s, 0, -sy*s, 0,
+      sy*sx*s, cx*s, cy*sx*s, 0,
+      sy*cx*s, -sx*s, cy*cx*s, 0,
+      tx, ty, tz, 1
+    ]);
   }
 
-  const prog = gl.createProgram();
-  gl.attachShader(prog, compile(gl.VERTEX_SHADER, vsSrc));
-  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fsSrc));
-  gl.linkProgram(prog);
-  gl.useProgram(prog);
-
-  const buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-  const aPos = gl.getAttribLocation(prog, "aPos");
-  gl.enableVertexAttribArray(aPos);
-  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-
-  const U = {};
-  for (const name of ["uRes", "uTime", "uModeA", "uModeB", "uBlend"]) {
-    U[name] = gl.getUniformLocation(prog, name);
-  }
-
+  let dpr = 1, W = 0, H = 0, dprCap = innerWidth < 760 ? 1.5 : 1.75;
   function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
-    canvas.width = Math.floor(innerWidth * dpr);
-    canvas.height = Math.floor(innerHeight * dpr);
-    gl.viewport(0, 0, canvas.width, canvas.height);
+    dpr = Math.min(devicePixelRatio || 1, dprCap);
+    W = Math.floor(innerWidth * dpr); H = Math.floor(innerHeight * dpr);
+    canvas.width = W; canvas.height = H;
+    gl.viewport(0, 0, W, H);
   }
-  addEventListener("resize", resize);
-  resize();
+  addEventListener("resize", resize); resize();
 
-  /* crossfade state: film A → film B over 1.2s (the original's timing) */
-  const FADE_MS = 1200;
-  let modeA = 0, modeB = 0, fadeStart = -1;
+  // ---------- state ----------
+  const cur = JSON.parse(JSON.stringify(FORMS.pearl));
+  const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+  addEventListener("pointermove", (e) => { mouse.tx = e.clientX / innerWidth * 2 - 1; mouse.ty = -(e.clientY / innerHeight * 2 - 1); }, { passive: true });
 
-  function showFilm(mode) {
-    if (mode === modeB) return;
-    modeA = currentBlend() >= 1 ? modeB : modeA;   // settle where we are
-    modeB = mode;
-    fadeStart = performance.now();
-  }
-  function currentBlend() {
-    if (fadeStart < 0) return 1;
-    return Math.min((performance.now() - fadeStart) / FADE_MS, 1);
-  }
+  let scrollY_ = scrollY;
+  addEventListener("scroll", () => { scrollY_ = scrollY; }, { passive: true });
 
-  let running = true;
+  let visible = !document.hidden;
+  document.addEventListener("visibilitychange", () => { visible = !document.hidden; if (visible) { last = performance.now(); requestAnimationFrame(frame); } });
+
   const start = performance.now();
+  let last = start, rotY = 0;
+
+  function lerpForm(a, b, k) {
+    const out = {};
+    for (const key in a) out[key] = Array.isArray(a[key]) ? a[key].map((v, i) => v + (b[key][i] - v) * k) : a[key] + (b[key] - a[key]) * k;
+    return out;
+  }
+
+  // if frames run slow, give detail back: first mesh density, then resolution, then frame rate
+  let slowEma = 16, slowFrames = 0, skip = false, every = 1, tick = 0;
+  function adapt(rawMs) {
+    slowEma += (rawMs - slowEma) * 0.08;
+    slowFrames = slowEma > 22 ? slowFrames + 1 : 0;
+    if (slowFrames < 40) return;
+    slowFrames = 0; slowEma = 16;
+    if (level > 0) setLevel(level - 1);
+    else if (dprCap > 0.8) { dprCap = Math.max(0.75, dprCap * 0.75); resize(); }
+    else every = 2;
+  }
 
   function frame(now) {
-    const t = (now - start) / 1000;
-    const blend = currentBlend();
-    if (blend >= 1 && modeA !== modeB) modeA = modeB;
+    if (!visible) return;
+    const raw = now - last;
+    adapt(raw * every);
+    if (every > 1 && (tick++ % every)) { requestAnimationFrame(frame); updateChrome(scrollY_); return; }
+    const dt = Math.min((now - last) / 1000, 0.05); last = now;
+    const t = reduceMotion ? 8 : (now - start) / 1000;
 
-    // skip the fallback shader while a real film fully covers the screen
-    const film = films[index];
-    const covered = film && !film.classList.contains("is-broken") && film.readyState >= 2;
-    if (covered && blend >= 1) {
-      if (running) requestAnimationFrame(frame);
-      return;
+    const { i, k } = updateChrome(scrollY_);
+    const a = FORMS[marks[i].state], b = FORMS[marks[Math.min(i + 1, marks.length - 1)].state];
+    const target = lerpForm(a, b, k);
+    const ease = 1 - Math.exp(-dt * 4);
+    for (const key in cur) {
+      if (Array.isArray(cur[key])) cur[key] = cur[key].map((v, j) => v + (target[key][j] - v) * ease);
+      else cur[key] += (target[key] - cur[key]) * ease;
+    }
+    const me = 1 - Math.exp(-dt * 3);
+    mouse.x += (mouse.tx - mouse.x) * me; mouse.y += (mouse.ty - mouse.y) * me;
+    if (!reduceMotion) rotY += dt * 0.12 * (1 - cur.eye);
+
+    const narrow = innerWidth < 760;
+    const aspect = W / H;
+    const proj = perspective(0.62, aspect, 0.1, 50);
+    const tx = narrow ? 0.62 : cur.x * Math.min(aspect, 1.8);
+    const ty = narrow ? 1.05 : 0;
+    const scale = cur.size * (narrow ? 0.58 : 1);
+    const M = model(0.25 + mouse.y * 0.15 * (1 - cur.eye), rotY + mouse.x * 0.25 * (1 - cur.eye), scale, tx, ty, -5.2);
+
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    // marine snow, visible mostly once the light is gone
+    const snowA = Math.min(1, Math.max(0, (cur.points + (1 - cur.irid)) * 0.6));
+    gl.disable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.useProgram(snow.p);
+    gl.bindBuffer(gl.ARRAY_BUFFER, sbo);
+    const as = snow.a("aSnow"); gl.enableVertexAttribArray(as); gl.vertexAttribPointer(as, 3, gl.FLOAT, false, 0, 0);
+    gl.uniform1f(snow.u.uTime, t); gl.uniform1f(snow.u.uScroll, scrollY_ / 4000); gl.uniform1f(snow.u.uDpr, dpr);
+    gl.uniform1f(snow.u.uSnowA, snowA * 0.8);
+    gl.drawArrays(gl.POINTS, 0, SNOW_N);
+    gl.disableVertexAttribArray(as);
+
+    // the creature
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+    // gaze toward the viewer (camera at origin), nudged by the pointer
+    const look = [-tx + mouse.x * 2.2, -ty + mouse.y * 1.6, 5.2];
+
+    function common(P) {
+      const ap = P.a("aPos"); gl.enableVertexAttribArray(ap); gl.vertexAttribPointer(ap, 3, gl.FLOAT, false, 0, 0);
+      gl.uniformMatrix4fv(P.u.uProj, false, proj);
+      gl.uniformMatrix4fv(P.u.uModel, false, M);
+      gl.uniform1f(P.u.uTime, t); gl.uniform1f(P.u.uAmp, cur.amp); gl.uniform1f(P.u.uFreq, cur.freq);
+      gl.uniform1f(P.u.uSpike, cur.spike); gl.uniform1f(P.u.uDpr, dpr);
+      return ap;
     }
 
-    gl.uniform2f(U.uRes, canvas.width, canvas.height);
-    gl.uniform1f(U.uTime, reduceMotion ? 20.0 : t);
-    gl.uniform1f(U.uModeA, modeA);
-    gl.uniform1f(U.uModeB, modeB);
-    gl.uniform1f(U.uBlend, modeA === modeB ? 0 : blend);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if (cur.solid > 0.02) {
+      gl.enable(gl.DEPTH_TEST); gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK);
+      gl.useProgram(solid.p);
+      const ap = common(solid);
+      gl.uniform1f(solid.u.uPtSize, 1);
+      gl.uniform3fv(solid.u.uBase, cur.base); gl.uniform3fv(solid.u.uRim, cur.rim);
+      gl.uniform3fv(solid.u.uLook, look);
+      gl.uniform1f(solid.u.uIrid, cur.irid); gl.uniform1f(solid.u.uEye, cur.eye);
+      gl.uniform1f(solid.u.uAlpha, Math.min(1, cur.solid));
+      gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0);
+      gl.disableVertexAttribArray(ap);
+      gl.disable(gl.CULL_FACE);
+    }
+    if (cur.points > 0.02) {
+      gl.disable(gl.DEPTH_TEST);
+      gl.useProgram(points.p);
+      const ap = common(points);
+      gl.uniform1f(points.u.uPtSize, narrow ? 5 : 7);
+      gl.uniform3fv(points.u.uRim, cur.rim);
+      gl.uniform1f(points.u.uAlpha, cur.points * 0.55);
+      gl.drawArrays(gl.POINTS, 0, vertCount);
+      gl.disableVertexAttribArray(ap);
+    }
 
-    if (running) requestAnimationFrame(frame);
+    requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+}
 
-  /* =========================================================
-     Q&A slideshow — same behavior as the original das.min.js:
-     10s auto-advance · arrows · swipe · dash click ·
-     pause on blur/hidden, resume on focus
-     ========================================================= */
-  const SLIDE_MS = 10000;
+// without WebGL the page still needs its depth gauge, colour and rail
+if (!sceneOK) {
+  let ticking = false;
+  const run = () => { updateChrome(scrollY); ticking = false; };
+  addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(run); } }, { passive: true });
+  run();
+}
 
-  /* films: stretch each clip across the slide (+1s fade), like the original's
-     playbackRate = duration / 11s; if a clip fails, the shader shows through */
-  const films = [...document.querySelectorAll(".movie video")];
-  films.forEach((v) => {
-    const last = [...v.querySelectorAll("source")].pop();
-    (last || v).addEventListener("error", () => v.classList.add("is-broken"));
-  });
-  function playFilm(v) {
-    if (!v || v.classList.contains("is-broken")) return;
-    if (v.duration > 0) {
-      v.playbackRate = Math.max(0.25, v.duration / ((SLIDE_MS + 1000) / 1000));
-      v.currentTime = 0;
-    } else {
-      v.addEventListener("loadedmetadata", () => {
-        v.playbackRate = Math.max(0.25, v.duration / ((SLIDE_MS + 1000) / 1000));
-      }, { once: true });
-    }
-    const p = v.play();
-    if (p && p.catch) p.catch(() => {});
+/* ======================= loader: short, honest, skippable ======================= */
+(function loader() {
+  const el = document.getElementById("loader"), count = document.getElementById("count");
+  if (reduceMotion) { el.classList.add("done"); return; }
+  const t0 = performance.now(), DUR = 1100;
+  function step(now) {
+    const p = Math.min(1, (now - t0) / DUR);
+    count.textContent = String(Math.round((1 - (1 - p) ** 3) * 100)).padStart(3, "0") + "%";
+    if (p < 1) requestAnimationFrame(step);
+    else { el.classList.add("done"); setTimeout(() => el.remove(), 700); }
   }
-  function pauseFilm(v) { if (v) v.pause(); }
-  function showVideo(i) {
-    const prev = films.find((v) => v.classList.contains("current"));
-    films.forEach((v, k) => v.classList.toggle("current", k === i));
-    if (prev && prev !== films[i]) setTimeout(() => pauseFilm(prev), 1000);
-    if (films[i]) films[i].preload = "auto";
-    if (films[i + 1]) films[i + 1].preload = "auto";
-    playFilm(films[i]);
-  }
-
-  const slides = [...document.querySelectorAll(".qanda__item")];
-  const dots = [...document.querySelectorAll(".qanda__nav-dot-item")];
-  let index = 0;
-  let autoTimer = null;
-
-  function goTo(delta) {
-    if (!delta) return;
-    index = ((index + delta) % slides.length + slides.length) % slides.length;
-    slides.forEach((s, i) => s.classList.toggle("current", i === index));
-    dots.forEach((d, i) => d.classList.toggle("current", i === index));
-    showFilm(index);
-    showVideo(index);
-    armAuto();
-  }
-
-  function armAuto() {
-    clearTimeout(autoTimer);
-    autoTimer = setTimeout(() => goTo(1), SLIDE_MS);
-  }
-  function pauseAuto() {
-    clearTimeout(autoTimer);
-    pauseFilm(films[index]);
-  }
-  function resumeAuto() {
-    playFilm(films[index]);
-    armAuto();
-  }
-
-  // keyboard
-  document.addEventListener("keydown", (e) => {
-    if (e.keyCode === 37) { e.preventDefault(); goTo(-1); }
-    else if (e.keyCode === 39) { e.preventDefault(); goTo(1); }
-  });
-
-  // dash nav: jump by offset from the current slide
-  dots.forEach((dot, i) => {
-    dot.addEventListener("click", () => goTo(i - index));
-  });
-
-  // touch swipe (30px threshold, like the original)
-  let touchStartX = 0;
-  const zone = document.getElementById("page-header");
-  zone.addEventListener("touchstart", (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
-  zone.addEventListener("touchend", (e) => {
-    const dx = e.changedTouches[0].screenX - touchStartX;
-    if (Math.abs(dx) > 30) goTo(dx < 0 ? 1 : -1);
-  }, { passive: true });
-
-  // pause when the tab loses focus
-  addEventListener("blur", pauseAuto);
-  addEventListener("focus", resumeAuto);
-  document.onvisibilitychange = () => (document.hidden ? pauseAuto() : resumeAuto());
-
-  // load-in: everything fades up ~1s after load
-  setTimeout(() => document.documentElement.classList.remove("is-just-loaded"), 1000);
-  showVideo(0);
-  armAuto();
+  requestAnimationFrame(step);
+  el.addEventListener("click", () => el.classList.add("done"));
 })();
 </script>
-
 </body>
 </html>
