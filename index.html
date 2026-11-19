@@ -927,159 +927,116 @@ function updateChrome(y) {
   return { i, k };
 }
 
-/* ======================= WebGL: one creature, many forms ======================= */
+/* ======================= WebGL: Kling footage under an ROV floodlight ======================= */
 const canvas = document.getElementById("scene");
-const gl = canvas.getContext("webgl", { antialias: true, alpha: true, premultipliedAlpha: true });
+const gl = canvas.getContext("webgl", { antialias: false, alpha: true, premultipliedAlpha: true });
 
-// per-form parameters; the scene eases between them as you descend
-const FORMS = {
-  pearl:  { amp: .07, freq: 1.2, spike: 0, eye: 0, solid: 1, points: 0,  base: [.30,.36,.44], rim: [.70,.86,1.0], irid: 1.0, size: 1.0, x: .9 },
-  // over the card grid the creature sinks out of the way, so titles stay readable
-  "pearl-rest": { amp: .07, freq: 1.2, spike: 0, eye: 0, solid: 0, points: 0, base: [.30,.36,.44], rim: [.70,.86,1.0], irid: 1.0, size: .7, x: 1.3 },
-  jelly:  { amp: .16, freq: 1.6, spike: 0, eye: 0, solid: .55, points: .35, base: [.20,.55,.75], rim: [.65,.95,1.0], irid: .35, size: 1.05, x: .95 },
-  lights: { amp: .12, freq: 2.2, spike: 0, eye: 0, solid: .06, points: 1,   base: [.05,.25,.25], rim: [.49,.96,.84], irid: 0, size: 1.15, x: 1.0 },
-  urchin: { amp: .05, freq: 1.4, spike: 1, eye: 0, solid: 1,  points: .2,  base: [.07,.05,.12], rim: [.60,.50,.95], irid: .1, size: .82, x: 1.05 },
-  eye:    { amp: .03, freq: 1.0, spike: 0, eye: 1, solid: 1,  points: 0,   base: [.03,.03,.04], rim: [1.0,.54,.42], irid: 0, size: 1.0, x: .9 },
-  "eye-rest": { amp: .03, freq: 1.0, spike: 0, eye: 1, solid: 1, points: 0, base: [.03,.03,.04], rim: [1.0,.54,.42], irid: 0, size: .7, x: 1.25 }
+// [time, gaze] pairs measured from the eye footage; filled in by the build step
+const EYE_X = innerWidth < 760 ? 0.5 : 0.72;   // where the eye sits on screen
+const EYE_GAZE = [[0.0,0.93],[0.083,0.978],[0.167,1.0],[0.25,0.965],[0.333,0.946],[0.417,0.961],[0.5,0.929],[0.583,0.909],[0.667,0.914],[0.75,0.935],[0.833,0.91],[0.917,0.939],[1.0,0.854],[1.083,0.823],[1.167,0.769],[1.25,0.692],[1.333,0.647],[1.417,0.653],[1.5,0.591],[1.583,0.546],[1.667,0.449],[1.75,0.427],[1.833,0.402],[1.917,0.379],[2.0,0.31],[2.083,0.276],[2.167,0.238],[2.25,0.203],[2.333,0.182],[2.417,0.173],[2.5,0.152],[2.583,0.113],[2.667,0.109],[2.75,0.119],[2.833,0.088],[2.917,0.077],[3.0,0.052],[3.083,0.059],[3.167,0.053],[3.25,0.028],[3.333,0.029],[3.417,0.037],[3.5,0.095],[3.583,0.063],[3.667,0.09],[3.75,0.058],[3.833,0.135],[3.917,0.12],[4.0,0.096],[4.083,0.112],[4.167,0.105],[4.25,0.13],[4.333,0.111],[4.417,0.136],[4.5,0.131],[4.583,0.134],[4.667,0.132],[4.75,0.133],[4.833,0.145],[4.917,0.144],[5.0,0.14]];
+
+// the footage, one shot per depth band (all generated with Kling)
+const MEDIA = {
+  surface:  { kind: "video", sources: ["depths/surface.webm", "depths/surface.mp4"] },
+  twilight: { kind: "video", sources: ["depths/twilight.webm", "depths/twilight.mp4"], frame: [0.08, 1.05] },
+  midnight: { kind: "video", sources: ["depths/midnight.webm", "depths/midnight.mp4"], frame: [0.16, 1.12] },
+  abyss:    { kind: "image", src: "depths/abyss.jpg", frame: [0.12, 1.08] },
+  eye:      { kind: "video", scrub: true, sources: ["depths/eye.webm", "depths/eye.mp4"], frame: [0.24, 1.55] }
+};
+
+// how each band is lit; the scene eases between them as you descend
+//   ambient: light without the lamp · spot: strength of the cursor floodlight
+//   tintMix: wash toward the pale surface colour · show: how much footage shows at all
+const SHOTS = {
+  pearl:        { media: "surface",  ambient: 1.0,  spot: 0,    tintMix: .88, ripple: 1,  shade: 0,   drift: 0, show: 1 },
+  "pearl-rest": { media: "surface",  ambient: 1.0,  spot: 0,    tintMix: .88, ripple: 1,  shade: 0,   drift: 0, show: 0 },
+  jelly:        { media: "twilight", ambient: .40,  spot: 1.0,  tintMix: 0,   ripple: .7, shade: .7, drift: 0, show: 1 },
+  lights:       { media: "midnight", ambient: .34,  spot: 1.1,  tintMix: 0,   ripple: .7, shade: .7, drift: 0, show: 1 },
+  urchin:       { media: "abyss",    ambient: .16,  spot: 1.35, tintMix: 0,   ripple: .5, shade: .8, drift: 1, show: 1 },
+  eye:          { media: "eye",      ambient: .42,  spot: .9,   tintMix: 0,   ripple: .4, shade: .75, drift: 0, show: 1 },
+  "eye-rest":   { media: "eye",      ambient: .22,  spot: .9,   tintMix: 0,   ripple: .4, shade: .85, drift: 0, show: .8 }
 };
 
 let sceneOK = !!gl;
 if (sceneOK) {
-  try { initScene(); } catch (err) { sceneOK = false; canvas.style.display = "none"; }
+  try { initScene(); } catch (err) { console.warn(err); sceneOK = false; canvas.style.display = "none"; }
 } else {
   canvas.style.display = "none";
 }
 
 function initScene() {
-  // ---------- icosphere ----------
-  const t = (1 + Math.sqrt(5)) / 2;
-  let verts = [[-1,t,0],[1,t,0],[-1,-t,0],[1,-t,0],[0,-1,t],[0,1,t],[0,-1,-t],[0,1,-t],[t,0,-1],[t,0,1],[-t,0,-1],[-t,0,1]]
-    .map((v) => { const l = Math.hypot(...v); return v.map((x) => x / l); });
-  let faces = [[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
-               [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
-  const SUB = innerWidth < 760 ? 4 : 5;
-  const levels = [];   // {faces, verts} per subdivision level, all indexing into one vertex list
-  for (let s = 0; s < SUB; s++) {
-    const cache = new Map(), next = [];
-    const mid = (a, b) => {
-      const key = a < b ? a + "_" + b : b + "_" + a;
-      if (cache.has(key)) return cache.get(key);
-      const m = verts[a].map((v, i) => (v + verts[b][i]) / 2), l = Math.hypot(...m);
-      verts.push(m.map((x) => x / l)); cache.set(key, verts.length - 1); return verts.length - 1;
-    };
-    for (const [a, b, c] of faces) { const ab = mid(a, b), bc = mid(b, c), ca = mid(c, a); next.push([a,ab,ca],[b,bc,ab],[c,ca,bc],[ab,bc,ca]); }
-    faces = next;
-    if (s >= SUB - 3) levels.push({ idx: new Uint16Array(faces.flat()), verts: verts.length });
-  }
-  const pos = new Float32Array(verts.flat());
-  let level = levels.length - 1;
-  let idx = levels[level].idx, vertCount = levels[level].verts;
-
-  const NOISE = `
-    vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
-    vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
-    vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
-    vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
-    float snoise(vec3 v){
-      const vec2 C=vec2(1.0/6.0,1.0/3.0); const vec4 D=vec4(0.0,0.5,1.0,2.0);
-      vec3 i=floor(v+dot(v,C.yyy)); vec3 x0=v-i+dot(i,C.xxx);
-      vec3 g=step(x0.yzx,x0.xyz); vec3 l=1.0-g; vec3 i1=min(g.xyz,l.zxy); vec3 i2=max(g.xyz,l.zxy);
-      vec3 x1=x0-i1+C.xxx; vec3 x2=x0-i2+C.yyy; vec3 x3=x0-D.yyy;
-      i=mod289(i);
-      vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
-      float n_=0.142857142857; vec3 ns=n_*D.wyz-D.xzx;
-      vec4 j=p-49.0*floor(p*ns.z*ns.z); vec4 x_=floor(j*ns.z); vec4 y_=floor(j-7.0*x_);
-      vec4 x=x_*ns.x+ns.yyyy; vec4 y=y_*ns.x+ns.yyyy; vec4 h=1.0-abs(x)-abs(y);
-      vec4 b0=vec4(x.xy,y.xy); vec4 b1=vec4(x.zw,y.zw);
-      vec4 s0=floor(b0)*2.0+1.0; vec4 s1=floor(b1)*2.0+1.0; vec4 sh=-step(h,vec4(0.0));
-      vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy; vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
-      vec3 p0=vec3(a0.xy,h.x); vec3 p1=vec3(a0.zw,h.y); vec3 p2=vec3(a1.xy,h.z); vec3 p3=vec3(a1.zw,h.w);
-      vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
-      p0*=norm.x; p1*=norm.y; p2*=norm.z; p3*=norm.w;
-      vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0); m=m*m;
-      return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
-    }`;
-
   const VS = `
-    attribute vec3 aPos;
-    uniform mat4 uProj, uModel;
-    uniform float uTime, uAmp, uFreq, uSpike, uPtSize, uDpr;
-    varying vec3 vN, vObj, vWorld;
-    ${NOISE}
-    float disp(vec3 p){
-      float d = snoise(p * uFreq + vec3(0.0, uTime * 0.22, uTime * 0.12)) * uAmp;
-      if (uSpike > 0.002) d += pow(max(0.0, 1.0 - abs(snoise(p * 4.6 + 3.0))), 14.0) * uSpike * 0.42;
-      return d;
+    attribute vec2 aPos;
+    varying vec2 vUv;
+    void main(){ vUv = aPos * 0.5 + 0.5; gl_Position = vec4(aPos, 0.0, 1.0); }`;
+
+  const FS = `
+    precision mediump float;
+    varying vec2 vUv;
+    uniform sampler2D uTexA, uTexB;
+    uniform vec2 uRes, uSizeA, uSizeB, uMouse, uFrameA, uFrameB;
+    uniform float uMix, uReadyA, uReadyB, uTime;
+    uniform float uAmbient, uSpot, uTintMix, uRipple, uShade, uDrift, uShow, uLampR;
+    uniform vec3 uTint;
+
+    // cover-fit the shot to the screen, keeping its subject (composed on the right) in view
+    vec2 cover(vec2 uv, vec2 size){
+      float rs = uRes.x / uRes.y, ri = size.x / size.y;
+      vec2 s = rs > ri ? vec2(1.0, ri / rs) : vec2(rs / ri, 1.0);
+      return uv * s + vec2((1.0 - s.x) * 0.8, (1.0 - s.y) * 0.5);
+    }
+    // per-shot framing: x = horizontal shift (moves the subject right), y = zoom (>1 shows more)
+    vec2 frameIt(vec2 tc, vec2 f){ return (tc - 0.5) * f.y + 0.5 - vec2(f.x, 0.0); }
+    float inside(vec2 tc){
+      vec2 e = smoothstep(vec2(0.0), vec2(0.06), tc) * smoothstep(vec2(0.0), vec2(0.06), 1.0 - tc);
+      return e.x * e.y;
+    }
+    vec2 drift(vec2 uv){
+      vec2 d = vec2(sin(uTime * 0.05), cos(uTime * 0.037)) * 0.018 * uDrift;
+      return (uv - 0.5) * (1.0 - 0.05 * uDrift) + 0.5 + d;
     }
     void main(){
-      vec3 p = normalize(aPos);
-      vec3 t1 = normalize(cross(p, abs(p.y) < 0.99 ? vec3(0.0,1.0,0.0) : vec3(1.0,0.0,0.0)));
-      vec3 t2 = cross(p, t1);
-      float e = 0.012;
-      vec3 a = p * (1.0 + disp(p));
-      vec3 b = normalize(p + t1 * e); b *= 1.0 + disp(b);
-      vec3 c = normalize(p + t2 * e); c *= 1.0 + disp(c);
-      vec3 n = normalize(cross(b - a, c - a));
-      vN = normalize(mat3(uModel) * n);
-      vObj = normalize(mat3(uModel) * p);
-      vec4 w = uModel * vec4(a, 1.0);
-      vWorld = w.xyz;
-      gl_Position = uProj * w;
-      gl_PointSize = uPtSize * uDpr * (0.6 + 0.8 * fract(sin(dot(p, vec3(12.9, 78.2, 37.7))) * 43758.5));
-    }`;
+      float aspect = uRes.x / uRes.y;
+      vec2 p = vUv * vec2(aspect, 1.0);
+      vec2 m = uMouse * vec2(aspect, 1.0);
+      vec2 dv = p - m;
+      float d = length(dv);
 
-  const FS_SOLID = `
-    precision highp float;
-    varying vec3 vN, vObj, vWorld;
-    uniform vec3 uBase, uRim, uLook;
-    uniform float uIrid, uEye, uAlpha, uTime;
-    void main(){
-      vec3 N = normalize(vN);
-      vec3 V = normalize(-vWorld);
-      vec3 L = normalize(vec3(-0.5, 0.8, 0.6));
-      float diff = max(dot(N, L), 0.0);
-      float fres = pow(1.0 - max(dot(N, V), 0.0), 2.4);
-      float spec = pow(max(dot(reflect(-L, N), V), 0.0), 40.0);
-      vec3 irid = 0.5 + 0.5 * cos(6.2831 * (fres * 1.4 + vec3(0.0, 0.33, 0.67)) + uTime * 0.2);
-      vec3 col = uBase * (0.28 + 0.72 * diff);
-      col = mix(col, irid * 0.95, uIrid * fres * 0.9);
-      col += uRim * fres * 1.1;
-      col += vec3(1.0) * spec * 0.55;
+      // water ripple spreading out from the lamp
+      float ring = sin(d * 42.0 - uTime * 2.6) * exp(-d * 5.0) * 0.004 * uRipple;
+      vec2 uv = vUv + (dv / max(d, 1e-4)) * ring / vec2(aspect, 1.0);
 
-      // the eye of the trench: iris and pupil around the gaze direction
-      vec3 g = normalize(uLook), sdir = normalize(vObj);
-      float ang = acos(clamp(dot(sdir, g), -1.0, 1.0));
-      vec3 eu = normalize(cross(g, vec3(0.0, 1.0, 0.0))), ev = cross(g, eu);
-      float az = atan(dot(sdir, ev), dot(sdir, eu));
-      float fibres = 0.78 + 0.22 * sin(az * 46.0 + sin(az * 7.0) * 2.0);
-      float iris = smoothstep(0.60, 0.54, ang);
-      float glow = mix(1.25, 0.55, smoothstep(0.22, 0.58, ang)) * fibres;
-      float pupil = smoothstep(0.235, 0.205, ang);
-      vec3 eyeCol = mix(col, uRim * glow, iris);
-      eyeCol = mix(eyeCol, vec3(0.0), pupil);
-      eyeCol += vec3(1.0) * smoothstep(0.08, 0.0, length(normalize(vObj) - normalize(uLook + vec3(-0.25, 0.25, 0.0)))) * 0.9;
-      col = mix(col, eyeCol, uEye);
+      vec2 ta = frameIt(drift(cover(uv, uSizeA)), uFrameA);
+      vec2 tb = frameIt(drift(cover(uv, uSizeB)), uFrameB);
+      vec3 a = texture2D(uTexA, clamp(ta, 0.0, 1.0)).rgb * inside(ta);
+      vec3 b = texture2D(uTexB, clamp(tb, 0.0, 1.0)).rgb * inside(tb);
+      vec3 col = mix(a, b, uMix);
+      float ready = mix(uReadyA, uReadyB, uMix);
 
-      float a = uAlpha * mix(1.0, 0.35 + 0.65 * fres, step(uAlpha, 0.99));
-      gl_FragColor = vec4(col * a, a);
-    }`;
+      // the ROV floodlight: a soft cone with a warm core that follows the cursor
+      float lamp = exp(-(d * d) / (2.0 * uLampR * uLampR));
+      float light = uAmbient + uSpot * lamp * 1.7;
+      col *= light;
+      col += vec3(1.0, 0.92, 0.8) * pow(lamp, 6.0) * 0.06 * uSpot;
 
-  const FS_POINTS = `
-    precision highp float;
-    uniform vec3 uRim;
-    uniform float uAlpha;
-    void main(){
-      vec2 d = gl_PointCoord - 0.5;
-      float r = length(d);
-      float g = smoothstep(0.5, 0.0, r);
-      g *= g;
-      gl_FragColor = vec4(uRim * g * uAlpha, 0.0);
+      // keep the text column on the left calm
+      col *= mix(1.0, 0.42, uShade * smoothstep(0.62, 0.0, vUv.x));
+
+      // at the surface the footage is washed into pale foam
+      float lum = dot(col, vec3(0.299, 0.587, 0.114));
+      vec3 pale = uTint * (1.0 + 0.07 * (lum - 0.35));
+      col = mix(col, pale, uTintMix);
+
+      float vig = smoothstep(1.35, 0.35, length(vUv - 0.5));
+      col *= mix(1.0, mix(0.7, 1.0, vig), 1.0 - uTintMix);
+
+      float alpha = uShow * ready;
+      gl_FragColor = vec4(col * alpha, alpha);
     }`;
 
   const VS_SNOW = `
     attribute vec3 aSnow;
     uniform float uTime, uScroll, uDpr;
-    uniform vec2 uView;
     varying float vA;
     void main(){
       float y = fract(aSnow.y - uTime * 0.008 * (0.5 + aSnow.z) + uScroll * (0.25 + aSnow.z * 0.6)) * 2.2 - 1.1;
@@ -1111,38 +1068,78 @@ function initScene() {
     for (let i = 0; i < n; i++) { const name = gl.getActiveUniform(p, i).name; u[name] = gl.getUniformLocation(p, name); }
     return { p, u, a: (name) => gl.getAttribLocation(p, name) };
   }
-  const solid = prog(VS, FS_SOLID);
-  const points = prog(VS, FS_POINTS);
+  const main = prog(VS, FS);
   const snow = prog(VS_SNOW, FS_SNOW);
 
-  const vbo = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vbo); gl.bufferData(gl.ARRAY_BUFFER, pos, gl.STATIC_DRAW);
-  const ibo = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
-  function setLevel(l) {
-    level = l; idx = levels[l].idx; vertCount = levels[l].verts;
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
-  }
-  const SNOW_N = innerWidth < 760 ? 160 : 320;
+  const quad = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const SNOW_N = innerWidth < 760 ? 140 : 280;
   const snowData = new Float32Array(SNOW_N * 3);
   for (let i = 0; i < SNOW_N; i++) { snowData[i*3] = Math.random() * 2 - 1; snowData[i*3+1] = Math.random(); snowData[i*3+2] = Math.random() ** 2; }
   const sbo = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, sbo); gl.bufferData(gl.ARRAY_BUFFER, snowData, gl.STATIC_DRAW);
 
-  // ---------- matrices ----------
-  function perspective(fovy, aspect, near, far) {
-    const f = 1 / Math.tan(fovy / 2), nf = 1 / (near - far);
-    return new Float32Array([f/aspect,0,0,0, 0,f,0,0, 0,0,(far+near)*nf,-1, 0,0,2*far*near*nf,0]);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+  // ---------- media: created on demand, only the shots near the current depth are live ----------
+  function makeTexture() {
+    const t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
+    for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
+    return t;
   }
-  function model(rx, ry, s, tx, ty, tz) {
-    const cx = Math.cos(rx), sx = Math.sin(rx), cy = Math.cos(ry), sy = Math.sin(ry);
-    // R = Ry * Rx, column-major, scaled, translated
-    return new Float32Array([
-      cy*s, 0, -sy*s, 0,
-      sy*sx*s, cx*s, cy*sx*s, 0,
-      sy*cx*s, -sx*s, cy*cx*s, 0,
-      tx, ty, tz, 1
-    ]);
+  function load(name) {
+    const m = MEDIA[name];
+    if (m.el) return m;
+    m.tex = makeTexture(); m.ready = 0; m.size = [16, 9]; m.lastT = -1;
+    if (m.kind === "image") {
+      m.el = new Image();
+      m.el.decoding = "async";
+      m.el.onload = () => { m.size = [m.el.naturalWidth, m.el.naturalHeight]; m.dirty = true; };
+      m.el.src = m.src;
+    } else {
+      const v = document.createElement("video");
+      v.muted = true; v.playsInline = true; v.preload = "auto";
+      v.setAttribute("muted", ""); v.setAttribute("playsinline", "");
+      v.loop = !m.scrub;
+      for (const src of m.sources) {
+        const s = document.createElement("source");
+        s.src = src; s.type = src.endsWith(".webm") ? "video/webm" : "video/mp4";
+        v.appendChild(s);
+      }
+      v.addEventListener("loadedmetadata", () => { m.size = [v.videoWidth, v.videoHeight]; });
+      v.addEventListener("seeked", () => { m.seeking = false; m.dirty = true; });
+      m.el = v;
+      v.load();
+    }
+    return m;
+  }
+  function upload(m) {
+    if (!m.el) return;
+    if (m.kind === "image") {
+      if (m.dirty) { gl.bindTexture(gl.TEXTURE_2D, m.tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, m.el); m.dirty = false; m.ready = 1; }
+      return;
+    }
+    const v = m.el;
+    if (v.readyState < 2) return;
+    if (v.currentTime !== m.lastT || m.dirty) {
+      gl.bindTexture(gl.TEXTURE_2D, m.tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, v);
+      m.lastT = v.currentTime; m.dirty = false; m.ready = 1;
+    }
+  }
+  function setPlaying(active) {
+    for (const name in MEDIA) {
+      const m = MEDIA[name];
+      if (!m.el || m.kind !== "video" || m.scrub) continue;
+      if (active.has(name) && !reduceMotion) { if (m.el.paused) { const p = m.el.play(); if (p && p.catch) p.catch(() => {}); } }
+      else if (!m.el.paused) m.el.pause();
+    }
   }
 
-  let dpr = 1, W = 0, H = 0, dprCap = innerWidth < 760 ? 1.5 : 1.75;
+  // ---------- canvas size ----------
+  let dpr = 1, W = 0, H = 0, dprCap = innerWidth < 760 ? 1 : 1.5;
   function resize() {
     dpr = Math.min(devicePixelRatio || 1, dprCap);
     W = Math.floor(innerWidth * dpr); H = Math.floor(innerHeight * dpr);
@@ -1151,36 +1148,63 @@ function initScene() {
   }
   addEventListener("resize", resize); resize();
 
-  // ---------- state ----------
-  const cur = JSON.parse(JSON.stringify(FORMS.pearl));
-  const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
-  addEventListener("pointermove", (e) => { mouse.tx = e.clientX / innerWidth * 2 - 1; mouse.ty = -(e.clientY / innerHeight * 2 - 1); }, { passive: true });
+  // ---------- the lamp: follows the pointer; drifts on its own when nobody steers ----------
+  const lamp = { x: .68, y: .55, tx: .68, ty: .55, last: -1e9 };
+  addEventListener("pointermove", (e) => {
+    lamp.tx = e.clientX / innerWidth; lamp.ty = 1 - e.clientY / innerHeight; lamp.last = performance.now();
+  }, { passive: true });
+  addEventListener("pointerdown", (e) => {
+    lamp.tx = e.clientX / innerWidth; lamp.ty = 1 - e.clientY / innerHeight; lamp.last = performance.now();
+  }, { passive: true });
 
   let scrollY_ = scrollY;
   addEventListener("scroll", () => { scrollY_ = scrollY; }, { passive: true });
 
   let visible = !document.hidden;
-  document.addEventListener("visibilitychange", () => { visible = !document.hidden; if (visible) { last = performance.now(); requestAnimationFrame(frame); } });
+  document.addEventListener("visibilitychange", () => {
+    visible = !document.hidden;
+    if (visible) { last = performance.now(); requestAnimationFrame(frame); } else setPlaying(new Set());
+  });
 
+  const cur = { ...SHOTS.pearl };
+  delete cur.media;
+  let mixAB = 0;
   const start = performance.now();
-  let last = start, rotY = 0;
+  let last = start;
 
-  function lerpForm(a, b, k) {
-    const out = {};
-    for (const key in a) out[key] = Array.isArray(a[key]) ? a[key].map((v, i) => v + (b[key][i] - v) * k) : a[key] + (b[key] - a[key]) * k;
-    return out;
-  }
-
-  // if frames run slow, give detail back: first mesh density, then resolution, then frame rate
-  let slowEma = 16, slowFrames = 0, skip = false, every = 1, tick = 0;
+  // quality guard: if frames run slow, drop resolution, then render every other frame
+  let slowEma = 16, slowFrames = 0, every = 1, tick = 0;
   function adapt(rawMs) {
     slowEma += (rawMs - slowEma) * 0.08;
     slowFrames = slowEma > 22 ? slowFrames + 1 : 0;
     if (slowFrames < 40) return;
     slowFrames = 0; slowEma = 16;
-    if (level > 0) setLevel(level - 1);
-    else if (dprCap > 0.8) { dprCap = Math.max(0.75, dprCap * 0.75); resize(); }
+    if (dprCap > 0.6) { dprCap = Math.max(0.5, dprCap * 0.7); resize(); }
     else every = 2;
+  }
+
+  // the trench eye: its gaze is a video, scrubbed to wherever the lamp is.
+  // GAZE lists, per sampled frame, where the pupil points (0 = far left, 1 = far right);
+  // for a lamp position we pick the matching frame nearest the current one, so the eye never jumps.
+  function steerEye(m, dt) {
+    const v = m.el;
+    if (!v || v.readyState < 1 || !(v.duration > 0)) return;
+    const want = Math.min(1, Math.max(0, (lamp.x - EYE_X + 0.38) / 0.62));
+    let target;
+    if (EYE_GAZE.length) {
+      const now = m.t === undefined ? 0 : m.t;
+      let best = Infinity;
+      for (const [ft, g] of EYE_GAZE) {
+        const cost = Math.abs(g - want) + 0.12 * Math.abs(ft - now) / v.duration;
+        if (cost < best) { best = cost; target = ft; }
+      }
+    } else {
+      target = want * (v.duration - 0.05);
+    }
+    m.t = m.t === undefined ? target : m.t + (target - m.t) * (1 - Math.exp(-dt * 7));
+    // a seek that never reports back (slow network) must not freeze the eye
+    if (m.seeking && performance.now() - m.seekAt > 600) m.seeking = false;
+    if (!m.seeking && Math.abs(v.currentTime - m.t) > 1 / 30) { m.seeking = true; m.seekAt = performance.now(); v.currentTime = m.t; }
   }
 
   function frame(now) {
@@ -1188,86 +1212,87 @@ function initScene() {
     const raw = now - last;
     adapt(raw * every);
     if (every > 1 && (tick++ % every)) { requestAnimationFrame(frame); updateChrome(scrollY_); return; }
-    const dt = Math.min((now - last) / 1000, 0.05); last = now;
-    const t = reduceMotion ? 8 : (now - start) / 1000;
+    const dt = Math.min(raw / 1000, 0.05); last = now;
+    const t = reduceMotion ? 6 : (now - start) / 1000;
 
     const { i, k } = updateChrome(scrollY_);
-    const a = FORMS[marks[i].state], b = FORMS[marks[Math.min(i + 1, marks.length - 1)].state];
-    const target = lerpForm(a, b, k);
-    const ease = 1 - Math.exp(-dt * 4);
-    for (const key in cur) {
-      if (Array.isArray(cur[key])) cur[key] = cur[key].map((v, j) => v + (target[key][j] - v) * ease);
-      else cur[key] += (target[key] - cur[key]) * ease;
-    }
-    const me = 1 - Math.exp(-dt * 3);
-    mouse.x += (mouse.tx - mouse.x) * me; mouse.y += (mouse.ty - mouse.y) * me;
-    if (!reduceMotion) rotY += dt * 0.12 * (1 - cur.eye);
+    const sa = SHOTS[marks[i].state], sb = SHOTS[marks[Math.min(i + 1, marks.length - 1)].state];
 
-    const narrow = innerWidth < 760;
-    const aspect = W / H;
-    const proj = perspective(0.62, aspect, 0.1, 50);
-    const tx = narrow ? 0.62 : cur.x * Math.min(aspect, 1.8);
-    const ty = narrow ? 1.05 : 0;
-    const scale = cur.size * (narrow ? 0.58 : 1);
-    const M = model(0.25 + mouse.y * 0.15 * (1 - cur.eye), rotY + mouse.x * 0.25 * (1 - cur.eye), scale, tx, ty, -5.2);
+    // live media: this band, the next one, and the one after (prefetch)
+    const ma = load(sa.media), mb = load(sb.media);
+    const ahead = marks[Math.min(i + 2, marks.length - 1)];
+    load(SHOTS[ahead.state].media);
+    setPlaying(new Set([sa.media, sb.media]));
+
+    // ease every lighting parameter toward the blend of the two bands
+    const e = 1 - Math.exp(-dt * 4);
+    for (const key in cur) {
+      const target = sa[key] + (sb[key] - sa[key]) * k;
+      cur[key] += (target - cur[key]) * e;
+    }
+    mixAB = sa.media === sb.media ? 0 : k;
+
+    // lamp: pointer if recent, otherwise a slow searching sweep
+    const idle = now - lamp.last > 3500;
+    if (idle) {
+      lamp.tx = 0.66 + Math.sin(t * 0.21) * 0.2;
+      lamp.ty = 0.5 + Math.sin(t * 0.33 + 1.3) * 0.18;
+    }
+    const le = 1 - Math.exp(-dt * (idle ? 1.2 : 5));
+    lamp.x += (lamp.tx - lamp.x) * le; lamp.y += (lamp.ty - lamp.y) * le;
+
+    if (ma.scrub) steerEye(ma, dt);
+    if (mb !== ma && mb.scrub) steerEye(mb, dt);
+    upload(ma); if (mb !== ma) upload(mb);
 
     gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    // marine snow, visible mostly once the light is gone
-    const snowA = Math.min(1, Math.max(0, (cur.points + (1 - cur.irid)) * 0.6));
-    gl.disable(gl.DEPTH_TEST);
+    gl.clear(gl.COLOR_BUFFER_BIT);
     gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    gl.useProgram(snow.p);
-    gl.bindBuffer(gl.ARRAY_BUFFER, sbo);
-    const as = snow.a("aSnow"); gl.enableVertexAttribArray(as); gl.vertexAttribPointer(as, 3, gl.FLOAT, false, 0, 0);
-    gl.uniform1f(snow.u.uTime, t); gl.uniform1f(snow.u.uScroll, scrollY_ / 4000); gl.uniform1f(snow.u.uDpr, dpr);
-    gl.uniform1f(snow.u.uSnowA, snowA * 0.8);
-    gl.drawArrays(gl.POINTS, 0, SNOW_N);
-    gl.disableVertexAttribArray(as);
 
-    // the creature
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
-    // gaze toward the viewer (camera at origin), nudged by the pointer
-    const look = [-tx + mouse.x * 2.2, -ty + mouse.y * 1.6, 5.2];
-
-    function common(P) {
-      const ap = P.a("aPos"); gl.enableVertexAttribArray(ap); gl.vertexAttribPointer(ap, 3, gl.FLOAT, false, 0, 0);
-      gl.uniformMatrix4fv(P.u.uProj, false, proj);
-      gl.uniformMatrix4fv(P.u.uModel, false, M);
-      gl.uniform1f(P.u.uTime, t); gl.uniform1f(P.u.uAmp, cur.amp); gl.uniform1f(P.u.uFreq, cur.freq);
-      gl.uniform1f(P.u.uSpike, cur.spike); gl.uniform1f(P.u.uDpr, dpr);
-      return ap;
+    if (cur.show > 0.01) {
+      gl.useProgram(main.p);
+      gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+      const ap = main.a("aPos"); gl.enableVertexAttribArray(ap); gl.vertexAttribPointer(ap, 2, gl.FLOAT, false, 0, 0);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, ma.tex); gl.uniform1i(main.u.uTexA, 0);
+      gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, mb.tex); gl.uniform1i(main.u.uTexB, 1);
+      gl.uniform2f(main.u.uRes, W, H);
+      gl.uniform2f(main.u.uSizeA, ma.size[0], ma.size[1]);
+      gl.uniform2f(main.u.uSizeB, mb.size[0], mb.size[1]);
+      const narrow = innerWidth < 760;
+      const fa = ma.frame || [0, 1], fb = mb.frame || [0, 1];
+      // on phones the subject sits centred under the text instead of beside it
+      gl.uniform2f(main.u.uFrameA, narrow ? 0 : fa[0], fa[1]);
+      gl.uniform2f(main.u.uFrameB, narrow ? 0 : fb[0], fb[1]);
+      gl.uniform2f(main.u.uMouse, lamp.x, lamp.y);
+      gl.uniform1f(main.u.uMix, mixAB);
+      gl.uniform1f(main.u.uReadyA, ma.ready); gl.uniform1f(main.u.uReadyB, mb.ready);
+      gl.uniform1f(main.u.uTime, t);
+      gl.uniform1f(main.u.uAmbient, cur.ambient); gl.uniform1f(main.u.uSpot, cur.spot);
+      gl.uniform1f(main.u.uTintMix, cur.tintMix); gl.uniform1f(main.u.uRipple, reduceMotion ? 0 : cur.ripple);
+      gl.uniform1f(main.u.uShade, cur.shade); gl.uniform1f(main.u.uDrift, reduceMotion ? 0 : cur.drift);
+      gl.uniform1f(main.u.uShow, cur.show);
+      gl.uniform1f(main.u.uLampR, innerWidth < 760 ? 0.32 : 0.26);
+      gl.uniform3f(main.u.uTint, 0.93, 0.95, 0.94);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.disableVertexAttribArray(ap);
     }
 
-    if (cur.solid > 0.02) {
-      gl.enable(gl.DEPTH_TEST); gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK);
-      gl.useProgram(solid.p);
-      const ap = common(solid);
-      gl.uniform1f(solid.u.uPtSize, 1);
-      gl.uniform3fv(solid.u.uBase, cur.base); gl.uniform3fv(solid.u.uRim, cur.rim);
-      gl.uniform3fv(solid.u.uLook, look);
-      gl.uniform1f(solid.u.uIrid, cur.irid); gl.uniform1f(solid.u.uEye, cur.eye);
-      gl.uniform1f(solid.u.uAlpha, Math.min(1, cur.solid));
-      gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0);
-      gl.disableVertexAttribArray(ap);
-      gl.disable(gl.CULL_FACE);
-    }
-    if (cur.points > 0.02) {
-      gl.disable(gl.DEPTH_TEST);
-      gl.useProgram(points.p);
-      const ap = common(points);
-      gl.uniform1f(points.u.uPtSize, narrow ? 5 : 7);
-      gl.uniform3fv(points.u.uRim, cur.rim);
-      gl.uniform1f(points.u.uAlpha, cur.points * 0.55);
-      gl.drawArrays(gl.POINTS, 0, vertCount);
-      gl.disableVertexAttribArray(ap);
+    // marine snow, visible once the light is gone
+    const snowA = (1 - cur.tintMix) * 0.7;
+    if (snowA > 0.02) {
+      gl.useProgram(snow.p);
+      gl.bindBuffer(gl.ARRAY_BUFFER, sbo);
+      const as = snow.a("aSnow"); gl.enableVertexAttribArray(as); gl.vertexAttribPointer(as, 3, gl.FLOAT, false, 0, 0);
+      gl.uniform1f(snow.u.uTime, t); gl.uniform1f(snow.u.uScroll, scrollY_ / 4000); gl.uniform1f(snow.u.uDpr, dpr);
+      gl.uniform1f(snow.u.uSnowA, snowA);
+      gl.drawArrays(gl.POINTS, 0, SNOW_N);
+      gl.disableVertexAttribArray(as);
     }
 
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+  window.__hadal = { MEDIA, lamp };
 }
 
 // without WebGL the page still needs its depth gauge, colour and rail
