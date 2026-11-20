@@ -940,7 +940,7 @@ const MEDIA = {
   surface:  { kind: "video", sources: ["depths/surface.webm", "depths/surface.mp4"] },
   twilight: { kind: "video", sources: ["depths/twilight.webm", "depths/twilight.mp4"], frame: [0.08, 1.05] },
   midnight: { kind: "video", sources: ["depths/midnight.webm", "depths/midnight.mp4"], frame: [0.16, 1.12] },
-  abyss:    { kind: "image", src: "depths/abyss.jpg", frame: [0.12, 1.08] },
+  abyss:    { kind: "video", sources: ["depths/abyss.webm", "depths/abyss.mp4"], fallback: "depths/abyss.jpg", frame: [0.1, 1.05] },
   eye:      { kind: "video", scrub: true, sources: ["depths/eye.webm", "depths/eye.mp4"], frame: [0.24, 1.55] }
 };
 
@@ -952,7 +952,7 @@ const SHOTS = {
   "pearl-rest": { media: "surface",  ambient: 1.0,  spot: 0,    tintMix: .88, ripple: 1,  shade: 0,   drift: 0, show: 0 },
   jelly:        { media: "twilight", ambient: .40,  spot: 1.0,  tintMix: 0,   ripple: .7, shade: .7, drift: 0, show: 1 },
   lights:       { media: "midnight", ambient: .34,  spot: 1.1,  tintMix: 0,   ripple: .7, shade: .7, drift: 0, show: 1 },
-  urchin:       { media: "abyss",    ambient: .16,  spot: 1.35, tintMix: 0,   ripple: .5, shade: .8, drift: 1, show: 1 },
+  urchin:       { media: "abyss",    ambient: .16,  spot: 1.35, tintMix: 0,   ripple: .5, shade: .8, drift: 0, show: 1 },
   eye:          { media: "eye",      ambient: .42,  spot: .9,   tintMix: 0,   ripple: .4, shade: .75, drift: 0, show: 1 },
   "eye-rest":   { media: "eye",      ambient: .22,  spot: .9,   tintMix: 0,   ripple: .4, shade: .85, drift: 0, show: .8 }
 };
@@ -1092,7 +1092,7 @@ function initScene() {
   function load(name) {
     const m = MEDIA[name];
     if (m.el) return m;
-    m.tex = makeTexture(); m.ready = 0; m.size = [16, 9]; m.lastT = -1;
+    m.tex = m.tex || makeTexture(); m.ready = 0; m.size = [16, 9]; m.lastT = -1;
     if (m.kind === "image") {
       m.el = new Image();
       m.el.decoding = "async";
@@ -1109,6 +1109,12 @@ function initScene() {
         v.appendChild(s);
       }
       v.addEventListener("loadedmetadata", () => { m.size = [v.videoWidth, v.videoHeight]; });
+      // if the footage can't load, a shot with a fallback still shows its photograph instead
+      const lastSource = v.lastElementChild;
+      if (m.fallback && lastSource) lastSource.addEventListener("error", () => {
+        v.pause(); m.kind = "image"; m.src = m.fallback; m.el = null; m.ready = 0;
+        load(Object.keys(MEDIA).find((k) => MEDIA[k] === m));
+      }, { once: true });
       v.addEventListener("seeked", () => { m.seeking = false; m.dirty = true; });
       m.el = v;
       v.load();
