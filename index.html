@@ -168,37 +168,105 @@
   .fade--bottom { bottom: 0; height: 96px; --dir: 0deg; }
 
   /* ================= menu ================= */
+  /* opens as a sonar bloom from the button; behind the list, each depth's footage
+     plays under a lamp that follows the pointer, and a sounding line reads the depth */
   .menu {
     position: fixed; inset: 0; z-index: 25;
     background: var(--hadal);
     color: var(--pale);
     padding: calc(var(--pad) + 90px) var(--pad) var(--pad);
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     align-content: start;
     gap: 40px;
-    clip-path: inset(0 0 100% 0);
-    transition: clip-path .7s var(--ease);
+    clip-path: circle(0px at var(--ox, 100%) var(--oy, 0px));
+    transition: clip-path .55s cubic-bezier(.6, 0, .8, .4);
     overflow-y: auto;
   }
   .menu[hidden] { display: none; }
-  body.menu-open .menu { clip-path: inset(0 0 0 0); }
+  body.menu-open .menu { clip-path: circle(150vmax at var(--ox, 100%) var(--oy, 0px)); transition: clip-path 1.1s var(--ease); }
   body.menu-open .chrome { color: var(--pale); }
   body.menu-open .menu-btn { background: rgba(230,238,240,.08); color: var(--pale); }
-  .menu ol { list-style: none; border-top: 1px solid var(--pale-line); }
+  .menu > ol, .menu > .sub { position: relative; z-index: 1; }
+  @media (min-width: 761px) { .menu { padding-right: calc(var(--pad) + 150px); } }
+
+  .menu__stage { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .menu__reels video {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    opacity: 0; transform: scale(1.08);
+    transition: opacity 1.2s var(--ease), transform 6s var(--ease);
+  }
+  .menu__reels video.on.ready { opacity: 1; transform: scale(1); }
+  .menu__lamp {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at var(--mx, 72%) var(--my, 46%), rgba(2,3,6,0) 0, rgba(2,3,6,.28) 160px, rgba(2,3,6,.8) 460px, rgba(2,3,6,.9) 900px),
+      linear-gradient(90deg, rgba(2,3,6,.72), rgba(2,3,6,.1) 62%);
+  }
+  .menu__ping {
+    position: fixed; left: var(--ox, 100%); top: var(--oy, 0px); z-index: 0;
+    width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%;
+    border: 1px solid var(--lume); opacity: 0; pointer-events: none;
+  }
+  body.menu-open .menu__ping { animation: ping 1.6s var(--ease) .1s 2 both; }
+  .menu__ping + .menu__ping { animation-delay: .45s !important; }
+  @keyframes ping { from { transform: scale(.4); opacity: .7; } to { transform: scale(26); opacity: 0; } }
+
+  .menu ol { list-style: none; }
+  .menu li { position: relative; overflow: hidden; }
+  .menu li::before, .menu li::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+    transform-origin: left; transform: scaleX(0);
+  }
+  .menu li::before { background: var(--pale-line); transition: transform .4s var(--ease); }
+  .menu li::after { background: var(--lume); box-shadow: 0 0 12px var(--lume); transition: transform .7s var(--ease); }
+  .menu li:first-child { border-top: 1px solid transparent; }
+  body.menu-open .menu li::before { transform: scaleX(1); transition: transform 1.2s var(--ease) calc(.25s + var(--i) * .08s); }
+  .menu li.on::after { transform: scaleX(1); }
   .menu li a {
     display: grid; grid-template-columns: 56px 1fr auto; align-items: baseline; gap: 16px;
     padding: 18px 0; text-decoration: none;
-    border-bottom: 1px solid var(--pale-line);
     font-size: clamp(26px, 4.4vw, 54px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.05;
+    transform: translateY(110%);
+    transition: transform .35s var(--ease), color .4s var(--ease);
   }
+  body.menu-open .menu li a { transform: none; transition: transform 1s var(--ease) calc(.2s + var(--i) * .08s), color .4s var(--ease); }
+  .menu li a b { font-weight: inherit; display: inline-block; transition: transform .6s var(--ease); }
   .menu li a small, .menu li a span {
     font-family: var(--mono); font-size: 12px; font-weight: 400; letter-spacing: .06em; color: var(--pale-soft);
+    transition: color .4s var(--ease);
   }
-  .menu li a:hover { color: var(--lume); }
-  .menu .sub { display: flex; flex-wrap: wrap; gap: 8px 28px; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+  .menu ol.has-on li:not(.on) a { color: rgba(230,238,240,.36); }
+  .menu li.on a { color: var(--lume); }
+  .menu li.on a b { transform: translateX(22px); }
+  .menu li.on a small, .menu li.on a span { color: var(--pale); }
+  .menu .sub { display: flex; flex-wrap: wrap; gap: 8px 28px; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
+    opacity: 0; transform: translateY(12px); transition: opacity .3s, transform .3s; }
+  body.menu-open .menu .sub { opacity: 1; transform: none; transition: opacity .8s var(--ease) .75s, transform .8s var(--ease) .75s; }
   .menu .sub a { text-decoration: none; color: var(--pale-soft); }
   .menu .sub a:hover { color: var(--pale); }
+
+  /* sounding line: 0 to 11,034 m, with the hovered band lit and a pin that counts */
+  .menu__sounding {
+    position: fixed; z-index: 1; pointer-events: none;
+    right: calc(var(--pad) + 34px); top: calc(var(--pad) + 110px); bottom: calc(var(--pad) + 40px); width: 1px;
+    background: var(--pale-line);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: var(--pale-soft); font-variant-numeric: tabular-nums;
+    opacity: 0; transition: opacity .4s;
+  }
+  body.menu-open .menu__sounding { opacity: 1; transition: opacity 1s var(--ease) .6s; }
+  .menu__sounding em { position: absolute; left: 12px; transform: translateY(-50%); font-style: normal; white-space: nowrap; opacity: .7; }
+  .menu__sounding em::before { content: ""; position: absolute; left: -12px; top: 50%; width: 7px; height: 1px; background: currentColor; }
+  .menu__band {
+    position: absolute; left: -2px; width: 5px; top: 0; height: 0;
+    background: var(--lume); box-shadow: 0 0 14px var(--lume); opacity: .8;
+    transition: top .9s var(--ease), height .9s var(--ease);
+  }
+  .menu__pin {
+    position: absolute; left: -26px; top: 0; width: 34px; height: 1px; background: var(--lume);
+    transition: top .9s var(--ease);
+  }
+  .menu__pin output { position: absolute; right: 42px; top: -8px; color: var(--lume); white-space: nowrap; font-size: 12px; }
 
   /* ================= loader ================= */
   .loader {
@@ -457,6 +525,7 @@
     .hero h1, .hero .lede, .who .body { grid-column: 1 / -1; }
     .who .teams { grid-template-columns: 1fr; }
     .gauge { display: none; }
+    .menu__sounding { display: none; }
     .sheet__in { grid-template-columns: 1fr; }
     .sheet__art { aspect-ratio: 16 / 10; }
     .card__legend { padding: 12px; font-size: 14px; }
@@ -469,7 +538,8 @@
   @media (prefers-reduced-motion: reduce) {
     .rv { opacity: 1; transform: none; transition: none; }
     .ticker .run, .cube, .ticker .live::before { animation: none; }
-    .menu { transition: none; }
+    .menu, body.menu-open .menu, .menu li a, body.menu-open .menu li a, .menu .sub, body.menu-open .menu .sub { transition: none; }
+    body.menu-open .menu__ping { animation: none; }
   }
 </style>
 </head>
@@ -508,6 +578,9 @@
 <a class="chrome totop" href="#top"><small>Back to the surface</small><em>↑</em></a>
 
 <nav class="menu" id="menu" aria-label="Site navigation" hidden>
+  <div class="menu__stage" aria-hidden="true"><div class="menu__reels" id="menuReels"></div><div class="menu__lamp"></div></div>
+  <i class="menu__ping" aria-hidden="true"></i><i class="menu__ping" aria-hidden="true"></i>
+  <div class="menu__sounding" id="sounding" aria-hidden="true"><span class="menu__band" id="soundBand"></span><span class="menu__pin" id="soundPin"><output id="soundOut">0 m</output></span></div>
   <ol id="menuList"></ol>
   <div class="sub">
     <a href="#" data-manifesto>Manifesto</a>
@@ -795,9 +868,11 @@ document.getElementById("crew").innerHTML = LORE.crew.map(([n, r]) => `<li>${n}<
 const tickerItems = LORE.ticker.map((t) => `<span>${t}</span>`).join("");
 document.getElementById("tickerRun").innerHTML = tickerItems + tickerItems;
 
-document.getElementById("menuList").innerHTML = LORE.zones.map((z) =>
-  `<li><a href="#${z.id}"><small>${z.num}</small>${z.name}<span>${z.range}</span></a></li>`).join("") +
-  `<li><a href="#who"><small>05</small>Who we are<span>11,034 m</span></a></li>`;
+// each entry carries the depth band it stands for and the footage that plays behind it
+const MENU_REEL = { twilight: "twilight", midnight: "midnight", abyss: "abyss", hadal: "eye", who: "surface" };
+document.getElementById("menuList").innerHTML = LORE.zones.map((z, i) =>
+  `<li style="--i:${i}" data-reel="${MENU_REEL[z.id]}" data-from="${z.top}" data-to="${(LORE.zones[i + 1] || { top: 11000 }).top}"><a href="#${z.id}"><small>${z.num}</small><b>${z.name}</b><span>${z.range}</span></a></li>`).join("") +
+  `<li style="--i:${LORE.zones.length}" data-reel="${MENU_REEL.who}" data-from="0" data-to="11034"><a href="#who"><small>05</small><b>Who we are</b><span>11,034 m</span></a></li>`;
 
 // a photograph that fails to load is replaced by the creature's generated sigil
 function sigilFallback(img) {
@@ -886,16 +961,137 @@ document.addEventListener("click", (e) => {
 /* ======================= menu ======================= */
 const menu = document.getElementById("menu");
 const menuBtn = document.getElementById("menuBtn");
+const menuList = document.getElementById("menuList");
+const menuItems = [...menuList.children];
+const reelBox = document.getElementById("menuReels");
+const soundBand = document.getElementById("soundBand"), soundPin = document.getElementById("soundPin"), soundOut = document.getElementById("soundOut");
+const SOUND_MAX = 11034;
+let sceneHold = false;          // the depth scene stops drawing while the menu covers it
+const reels = {};               // footage per depth, created the first time the menu opens
+let menuOn = -1, idleTimer = 0, hovering = false;
+
+// the sounding line's scale: a tick every 2,000 m
+for (let m = 0; m <= 10000; m += 2000) {
+  const e = document.createElement("em");
+  e.style.top = `${(m / SOUND_MAX) * 100}%`;
+  e.textContent = m ? `${(m / 1000).toFixed(0)},000` : "0";
+  document.getElementById("sounding").appendChild(e);
+}
+
+function reel(name) {
+  if (reels[name]) return reels[name];
+  const v = document.createElement("video");
+  v.muted = true; v.loop = true; v.playsInline = true; v.preload = "auto";
+  v.setAttribute("aria-hidden", "true");
+  if (name === "eye") v.style.objectPosition = "78% 50%";
+  for (const src of MEDIA_SRC[name]) {
+    const s = document.createElement("source");
+    s.src = src; s.type = `video/${src.split(".").pop()}`;
+    v.appendChild(s);
+  }
+  v.addEventListener("loadeddata", () => v.classList.add("ready"));
+  reelBox.appendChild(v);
+  return (reels[name] = v);
+}
+const MEDIA_SRC = {
+  twilight: ["depths/twilight.webm", "depths/twilight.mp4"],
+  midnight: ["depths/midnight.webm", "depths/midnight.mp4"],
+  abyss:    ["depths/abyss.webm", "depths/abyss.mp4"],
+  eye:      ["depths/eye.webm", "depths/eye.mp4"],
+  surface:  ["depths/surface.webm", "depths/surface.mp4"]
+};
+
+// count the pin's readout from where it is to where it is going
+let soundNow = 0, soundRaf = 0;
+function soundTo(target) {
+  cancelAnimationFrame(soundRaf);
+  const from = soundNow, t0 = performance.now(), dur = reduceMotion ? 0 : 900;
+  const step = (now) => {
+    const k = dur ? Math.min(1, (now - t0) / dur) : 1;
+    soundNow = from + (target - from) * (1 - Math.pow(1 - k, 3));
+    soundOut.textContent = `${Math.round(soundNow).toLocaleString("en-US")} m`;
+    if (k < 1) soundRaf = requestAnimationFrame(step);
+  };
+  soundRaf = requestAnimationFrame(step);
+}
+
+function lightItem(i) {
+  if (i === menuOn) return;
+  menuOn = i;
+  menuItems.forEach((li, j) => li.classList.toggle("on", j === i));
+  menuList.classList.add("has-on");
+  const li = menuItems[i];
+  const name = li.dataset.reel;
+  for (const k in reels) if (k !== name) { reels[k].classList.remove("on"); if (!reels[k].paused) setTimeout(() => { if (!reels[k].classList.contains("on")) reels[k].pause(); }, 1200); }
+  const v = reel(name);
+  v.classList.add("on");
+  if (!reduceMotion) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
+  const from = +li.dataset.from, to = +li.dataset.to;
+  const isWho = li.querySelector("a").hash === "#who";
+  soundBand.style.top = `${(from / SOUND_MAX) * 100}%`;
+  soundBand.style.height = `${((to - from) / SOUND_MAX) * 100}%`;
+  soundPin.style.top = `${(to / SOUND_MAX) * 100}%`;
+  soundTo(isWho ? SOUND_MAX : to);
+}
+
+// left alone, the menu drifts down through the depths by itself (this is all a touch screen sees)
+function idleDrift() {
+  clearTimeout(idleTimer);
+  if (reduceMotion) return;
+  idleTimer = setTimeout(() => {
+    if (!document.body.classList.contains("menu-open")) return;
+    if (!hovering) lightItem((menuOn + 1) % menuItems.length);
+    idleDrift();
+  }, 4200);
+}
+
+menuItems.forEach((li, i) => {
+  li.addEventListener("pointerenter", () => { hovering = true; lightItem(i); });
+  li.addEventListener("pointerleave", () => { hovering = false; idleDrift(); });
+  li.querySelector("a").addEventListener("focus", () => lightItem(i));
+});
+menu.addEventListener("pointermove", (e) => {
+  menu.style.setProperty("--mx", `${e.clientX}px`);
+  menu.style.setProperty("--my", `${e.clientY}px`);
+}, { passive: true });
+
+// the item for the band you are in now
+function currentItem() {
+  const depth = parseInt((document.getElementById("depth").textContent || "0").replace(/\D/g, ""), 10) || 0;
+  let i = 0;
+  LORE.zones.forEach((z, j) => { if (depth >= z.top) i = j; });
+  return depth >= 11000 ? menuItems.length - 1 : i;
+}
+
 function setMenu(open) {
-  if (open) menu.hidden = false;
-  requestAnimationFrame(() => document.body.classList.toggle("menu-open", open));
+  const r = menuBtn.getBoundingClientRect();
+  menu.style.setProperty("--ox", `${r.left + r.width / 2}px`);
+  menu.style.setProperty("--oy", `${r.top + r.height / 2}px`);
+  if (open) {
+    menu.hidden = false;
+    menuOn = -1;
+    lightItem(currentItem());
+    idleDrift();
+    requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.add("menu-open")));
+    setTimeout(() => { if (document.body.classList.contains("menu-open")) sceneHold = true; }, 1100);
+  } else {
+    sceneHold = false; hovering = false;
+    clearTimeout(idleTimer);
+    document.body.classList.remove("menu-open");
+    setTimeout(() => {
+      if (document.body.classList.contains("menu-open")) return;
+      menu.hidden = true;
+      for (const k in reels) { reels[k].pause(); reels[k].classList.remove("on"); }
+      menuItems.forEach((li) => li.classList.remove("on"));
+      menuList.classList.remove("has-on");
+    }, 600);
+  }
   menuBtn.setAttribute("aria-expanded", String(open));
   menuBtn.setAttribute("aria-label", open ? "Close site navigation" : "Open site navigation");
-  if (!open) setTimeout(() => { if (!document.body.classList.contains("menu-open")) menu.hidden = true; }, 700);
 }
 menuBtn.addEventListener("click", () => setMenu(!document.body.classList.contains("menu-open")));
 menu.addEventListener("click", (e) => { if (e.target.closest("a[href^='#']") && !e.target.closest("[data-manifesto]")) setMenu(false); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") setMenu(false); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && document.body.classList.contains("menu-open")) setMenu(false); });
 
 /* ======================= reveal on scroll ======================= */
 const io = new IntersectionObserver((entries) => {
@@ -1249,8 +1445,14 @@ function initScene() {
     if (!m.seeking && Math.abs(v.currentTime - m.t) > 1 / 30) { m.seeking = true; m.seekAt = performance.now(); v.currentTime = m.t; }
   }
 
+  let held = false;
   function frame(now) {
     if (!visible) return;
+    if (sceneHold) {
+      if (!held) { held = true; setPlaying(new Set()); }
+      last = now; requestAnimationFrame(frame); return;
+    }
+    held = false;
     const raw = now - last;
     adapt(raw * every);
     if (every > 1 && (tick++ % every)) { requestAnimationFrame(frame); updateChrome(scrollY_); return; }
