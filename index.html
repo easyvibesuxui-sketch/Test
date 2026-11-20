@@ -940,7 +940,7 @@ const MEDIA = {
   surface:  { kind: "video", sources: ["depths/surface.webm", "depths/surface.mp4"] },
   twilight: { kind: "video", sources: ["depths/twilight.webm", "depths/twilight.mp4"], frame: [0.08, 1.05] },
   midnight: { kind: "video", sources: ["depths/midnight.webm", "depths/midnight.mp4"], frame: [0.16, 1.12] },
-  abyss:    { kind: "video", sources: ["depths/abyss.webm", "depths/abyss.mp4"], fallback: "depths/abyss.jpg", frame: [0.1, 1.05] },
+  abyss:    { kind: "video", sources: ["depths/abyss.webm", "depths/abyss.mp4"], fallback: "depths/abyss.jpg", frame: [0.1, 1.1, 0.2] },
   eye:      { kind: "video", scrub: true, sources: ["depths/eye.webm", "depths/eye.mp4"], frame: [0.24, 1.55] }
 };
 
@@ -948,8 +948,8 @@ const MEDIA = {
 //   ambient: light without the lamp · spot: strength of the cursor floodlight
 //   tintMix: wash toward the pale surface colour · show: how much footage shows at all
 const SHOTS = {
-  pearl:        { media: "surface",  ambient: 1.0,  spot: 0,    tintMix: .88, ripple: 1,  shade: 0,   drift: 0, show: 1 },
-  "pearl-rest": { media: "surface",  ambient: 1.0,  spot: 0,    tintMix: .88, ripple: 1,  shade: 0,   drift: 0, show: 0 },
+  pearl:        { media: "surface",  ambient: 1.0,  spot: 0,    tintMix: .84, ripple: 1,  shade: 0,   drift: 0, show: 1 },
+  "pearl-rest": { media: "surface",  ambient: 1.0,  spot: 0,    tintMix: .84, ripple: 1,  shade: 0,   drift: 0, show: 0 },
   jelly:        { media: "twilight", ambient: .40,  spot: 1.0,  tintMix: 0,   ripple: .7, shade: .7, drift: 0, show: 1 },
   lights:       { media: "midnight", ambient: .34,  spot: 1.1,  tintMix: 0,   ripple: .7, shade: .7, drift: 0, show: 1 },
   urchin:       { media: "abyss",    ambient: .16,  spot: 1.35, tintMix: 0,   ripple: .5, shade: .8, drift: 0, show: 1 },
@@ -974,7 +974,8 @@ function initScene() {
     precision mediump float;
     varying vec2 vUv;
     uniform sampler2D uTexA, uTexB;
-    uniform vec2 uRes, uSizeA, uSizeB, uMouse, uFrameA, uFrameB;
+    uniform vec2 uRes, uSizeA, uSizeB, uMouse;
+    uniform vec3 uFrameA, uFrameB;
     uniform float uMix, uReadyA, uReadyB, uTime;
     uniform float uAmbient, uSpot, uTintMix, uRipple, uShade, uDrift, uShow, uLampR;
     uniform vec3 uTint;
@@ -985,8 +986,8 @@ function initScene() {
       vec2 s = rs > ri ? vec2(1.0, ri / rs) : vec2(rs / ri, 1.0);
       return uv * s + vec2((1.0 - s.x) * 0.8, (1.0 - s.y) * 0.5);
     }
-    // per-shot framing: x = horizontal shift (moves the subject right), y = zoom (>1 shows more)
-    vec2 frameIt(vec2 tc, vec2 f){ return (tc - 0.5) * f.y + 0.5 - vec2(f.x, 0.0); }
+    // per-shot framing: x = shift right, y = zoom (>1 shows more), z = shift up
+    vec2 frameIt(vec2 tc, vec3 f){ return (tc - 0.5) * f.y + 0.5 - vec2(f.x, f.z); }
     float inside(vec2 tc){
       vec2 e = smoothstep(vec2(0.0), vec2(0.06), tc) * smoothstep(vec2(0.0), vec2(0.06), 1.0 - tc);
       return e.x * e.y;
@@ -1265,10 +1266,10 @@ function initScene() {
       gl.uniform2f(main.u.uSizeA, ma.size[0], ma.size[1]);
       gl.uniform2f(main.u.uSizeB, mb.size[0], mb.size[1]);
       const narrow = innerWidth < 760;
-      const fa = ma.frame || [0, 1], fb = mb.frame || [0, 1];
+      const fa = ma.frame || [0, 1, 0], fb = mb.frame || [0, 1, 0];
       // on phones the subject sits centred under the text instead of beside it
-      gl.uniform2f(main.u.uFrameA, narrow ? 0 : fa[0], fa[1]);
-      gl.uniform2f(main.u.uFrameB, narrow ? 0 : fb[0], fb[1]);
+      gl.uniform3f(main.u.uFrameA, narrow ? 0 : fa[0], fa[1], fa[2] || 0);
+      gl.uniform3f(main.u.uFrameB, narrow ? 0 : fb[0], fb[1], fb[2] || 0);
       gl.uniform2f(main.u.uMouse, lamp.x, lamp.y);
       gl.uniform1f(main.u.uMix, mixAB);
       gl.uniform1f(main.u.uReadyA, ma.ready); gl.uniform1f(main.u.uReadyB, mb.ready);
