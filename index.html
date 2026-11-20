@@ -356,7 +356,7 @@
     border-radius: 2px;
     background: #050A12;
   }
-  .card__tile canvas, .card__tile img {
+  .card__tile canvas, .card__tile img, .card__tile video {
     position: absolute; inset: 0; width: 100%; height: 100%;
     object-fit: cover;
     transition: transform .8s var(--ease), opacity .5s var(--ease);
@@ -372,7 +372,10 @@
     opacity: 0; transform: translateY(10px);
     transition: opacity .45s var(--ease), transform .45s var(--ease);
   }
-  .card:hover .card__tile :is(canvas, img), .card:focus-visible .card__tile :is(canvas, img) { transform: scale(1.06); opacity: .75; }
+  .card:hover .card__tile :is(canvas, img, video), .card:focus-visible .card__tile :is(canvas, img, video) { transform: scale(1.06); opacity: .75; }
+  /* the footage fades in over the photograph once it is actually playing */
+  .card__tile video { opacity: 0; transition: transform .8s var(--ease), opacity .6s var(--ease); }
+  .card__tile video.playing { opacity: 1; }
   .card:hover .card__legend, .card:focus-visible .card__legend { opacity: 1; transform: none; }
   .card__name { margin-top: 14px; font-size: clamp(18px, 1.4vw, 22px); font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
   .card__more { margin-top: 6px; align-self: flex-start; }
@@ -421,7 +424,9 @@
   @keyframes rise { from { opacity: 0; transform: translateY(24px); } }
   .sheet__in { display: grid; grid-template-columns: 1fr 1fr; }
   .sheet__art { position: relative; aspect-ratio: 1; background: #050A12; }
-  .sheet__art canvas, .sheet__art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .sheet__art canvas, .sheet__art img, .sheet__art video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .sheet__art video { opacity: 0; transition: opacity .6s var(--ease); }
+  .sheet__art video.playing { opacity: 1; }
   .sheet__text { padding: 32px; display: flex; flex-direction: column; gap: 18px; }
   .sheet__text h2 { font-size: clamp(28px, 3.4vw, 42px); line-height: 1; letter-spacing: -0.03em; font-weight: 600; }
   .sheet__text .tale { font-family: var(--serif); font-style: italic; font-size: 20px; line-height: 1.45; }
@@ -656,6 +661,7 @@ const LORE = {
 const STATUS = { sighted: "Sighted", recorded: "Recorded", unconfirmed: "Unconfirmed", lost: "Lost" };
 const slug = (n) => n.toLowerCase().replace(/^the /, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 const photo = (n) => `creatures/${slug(n)}.jpg`;
+const clip = (n) => `creatures/video/${slug(n)}`;   // + .webm / .mp4
 const fmt = (n) => n.toLocaleString("en-US");
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -765,7 +771,7 @@ LORE.zones.forEach((z) => z.creatures.forEach((c) => (byName[c.name] = { ...c, z
 function cardHTML(c, zone) {
   return `<li><button class="card rv" data-name="${c.name}" aria-label="${c.name}: open the legend">
     <span class="card__top"><span>${fmt(c.depth)} m</span><span class="flag" data-s="${c.status}">${STATUS[c.status]}</span></span>
-    <span class="card__tile"><img src="${photo(c.name)}" alt="" loading="lazy" decoding="async" data-sigil="${c.name}" data-zone="${zone.id}"><span class="card__legend">${c.legend}</span></span>
+    <span class="card__tile"><img src="${photo(c.name)}" alt="" loading="lazy" decoding="async" data-sigil="${c.name}" data-zone="${zone.id}"><video muted loop playsinline preload="none" data-clip="${clip(c.name)}" aria-hidden="true"></video><span class="card__legend">${c.legend}</span></span>
     <span class="card__name">${c.name}</span>
     <span class="button card__more"><span>Read the legend</span> →</span>
   </button></li>`;
@@ -799,6 +805,33 @@ function sigilFallback(img) {
   drawSigil(cv, byName[img.dataset.sigil], img.dataset.zone);
   img.replaceWith(cv);
 }
+/* card footage: attach sources only when a card nears the screen, play while visible, pause when not.
+   If a clip fails, it is removed and the photograph underneath stays. */
+function wireClip(v) {
+  if (v.dataset.wired) return;
+  v.dataset.wired = "1";
+  for (const ext of ["webm", "mp4"]) {
+    const s = document.createElement("source");
+    s.src = `${v.dataset.clip}.${ext}`; s.type = `video/${ext}`;
+    v.appendChild(s);
+  }
+  v.lastElementChild.addEventListener("error", () => v.remove(), { once: true });
+  v.addEventListener("playing", () => v.classList.add("playing"));
+  v.load();
+}
+function playClip(v) {
+  if (reduceMotion || !v.isConnected) return;
+  const p = v.play(); if (p && p.catch) p.catch(() => {});
+}
+const clipIO = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    const v = e.target;
+    if (e.isIntersecting) { wireClip(v); playClip(v); }
+    else if (!v.paused) v.pause();
+  }
+}, { rootMargin: "200px 0px" });
+document.querySelectorAll(".card__tile video").forEach((v) => clipIO.observe(v));
+
 document.querySelectorAll("img[data-sigil]").forEach((img) => {
   img.addEventListener("error", () => sigilFallback(img), { once: true });
   if (img.complete && img.naturalWidth === 0 && img.src) sigilFallback(img);
@@ -820,7 +853,7 @@ document.addEventListener("click", (e) => {
   if (card) {
     const c = byName[card.dataset.name];
     openSheet(`<div class="sheet__in">
-      <div class="sheet__art"><img id="sheetArt" src="${photo(c.name)}" alt="${c.name}, archive photograph" data-sigil="${c.name}" data-zone="${c.zone.id}"></div>
+      <div class="sheet__art"><img id="sheetArt" src="${photo(c.name)}" alt="${c.name}, archive photograph" data-sigil="${c.name}" data-zone="${c.zone.id}"><video id="sheetClip" muted loop playsinline data-clip="${clip(c.name)}" aria-hidden="true"></video></div>
       <div class="sheet__text">
         <p class="kicker" style="color:var(--pale-soft)">${c.zone.num} · ${c.zone.name}</p>
         <h2>${c.name}</h2>
@@ -833,6 +866,8 @@ document.addEventListener("click", (e) => {
       </div></div>`);
     const art = document.getElementById("sheetArt");
     art.addEventListener("error", () => sigilFallback(art), { once: true });
+    const sc = document.getElementById("sheetClip");
+    wireClip(sc); playClip(sc);
     return;
   }
   if (e.target.closest("[data-manifesto]")) {
