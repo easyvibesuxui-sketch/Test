@@ -230,7 +230,36 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
   overflow:hidden;
   border-bottom:1px solid var(--line);
 }
-.hero-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.55}
+/* night site photograph (Kling) — the machine sits right, the left falls to
+   black under the headline; a slow settle on load, slight parallax on scroll */
+.hero-photo{
+  position:absolute;inset:0;overflow:hidden;pointer-events:none;
+  animation:heroSettle 2.6s cubic-bezier(.16,1,.3,1) both;
+}
+.hero-photo-img{
+  position:absolute;inset:-6% 0;
+  background:#000 url("../img/hero-excavator.webp") 68% 50%/cover no-repeat;
+  -webkit-mask-image:linear-gradient(90deg,transparent 4%,rgba(0,0,0,.55) 34%,#000 62%);
+          mask-image:linear-gradient(90deg,transparent 4%,rgba(0,0,0,.55) 34%,#000 62%);
+}
+.hero-photo::after{
+  content:"";position:absolute;inset:0;
+  background:
+    /* dims the boom where it runs behind the headline; the lit cab stays clear */
+    linear-gradient(90deg,rgba(0,0,0,.62) 0,rgba(0,0,0,.5) 48%,rgba(0,0,0,.12) 72%,transparent 82%),
+    linear-gradient(180deg,rgba(0,0,0,.55),transparent 22%,transparent 62%,#000 100%),
+    radial-gradient(70% 60% at 78% 72%,rgba(225,6,0,.10),transparent 70%);
+}
+@keyframes heroSettle{from{opacity:0;transform:scale(1.08)}to{opacity:1;transform:none}}
+@media (max-width:900px){
+  .hero-photo-img{
+    background-image:url("../img/hero-excavator-1200.webp");background-position:72% 50%;
+    -webkit-mask-image:linear-gradient(180deg,#000 30%,rgba(0,0,0,.35) 75%,transparent);
+            mask-image:linear-gradient(180deg,#000 30%,rgba(0,0,0,.35) 75%,transparent);
+    opacity:.75;
+  }
+}
+.hero-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.38;mix-blend-mode:screen}
 .hero-grid{
   position:absolute;inset:0;pointer-events:none;
   background:
@@ -401,7 +430,7 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
 .dev-card{
   position:relative;
   display:grid;
-  grid-template-columns:56px 150px minmax(0,1.1fr) minmax(0,1fr);
+  grid-template-columns:56px 260px minmax(0,1.1fr) minmax(0,1fr);
   grid-template-areas:"idx vis head specs" "idx vis lede specs";
   grid-template-rows:auto 1fr;
   column-gap:clamp(24px,3.4vw,64px);
@@ -421,14 +450,24 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
   grid-area:idx;padding-top:.55rem;
   font-family:var(--f-mono);font-size:.7rem;letter-spacing:.16em;color:var(--grey-dim);
 }
+/* product photographs (Kling), shot on black so they sit straight on the page */
 .dev-visual{
-  grid-area:vis;align-self:start;
-  width:150px;height:120px;display:flex;align-items:center;justify-content:center;
-  color:#585e64;border:1px solid var(--line-soft);border-radius:2px;
-  transition:color .45s var(--ease),border-color .45s var(--ease);
+  grid-area:vis;align-self:start;position:relative;overflow:hidden;
+  width:260px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;
+  color:#585e64;background:#000;border-radius:2px;
 }
+.dev-visual img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  transform:scale(1.02);transition:transform 1.1s var(--ease),filter .6s var(--ease);
+  filter:saturate(.92) brightness(.92);
+}
+.dev-visual::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset 0 0 0 1px var(--line-soft);transition:box-shadow .5s var(--ease);
+}
+.dev-card:hover .dev-visual img{transform:scale(1.08);filter:none}
+.dev-card:hover .dev-visual::after{box-shadow:inset 0 0 0 1px rgba(225,6,0,.45)}
 .dev-visual svg{width:88px;height:88px}
-.dev-card:hover .dev-visual{color:var(--white);border-color:rgba(225,6,0,.45)}
 .dev-body header{
   grid-area:head;
   display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:1.1rem;
@@ -460,13 +499,37 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
 .statement-bg{
   position:absolute;inset:-20% 0;
   background:
-    radial-gradient(60% 55% at 78% 30%,rgba(225,6,0,.22),transparent 66%),
-    repeating-linear-gradient(115deg,rgba(255,255,255,.028) 0 2px,transparent 2px 9px);
+    radial-gradient(60% 55% at 78% 30%,rgba(225,6,0,.16),transparent 66%),
+    repeating-linear-gradient(115deg,rgba(255,255,255,.022) 0 2px,transparent 2px 9px);
+}
+/* the CORE box bolted to a boom in the rain (Kling): a framed plate on the
+   right that melts into black, so the quote keeps a clean ground on the left */
+.statement-photo{
+  position:absolute;right:0;top:50%;transform:translateY(-50%);
+  width:min(60vw,1120px);aspect-ratio:16/9;
+  background:url("../img/statement-mounted.webp") 50% 50%/cover no-repeat;
+  /* fade on both axes so no edge of the plate ever shows */
+  -webkit-mask-image:
+    linear-gradient(90deg,transparent 0,rgba(0,0,0,.55) 22%,#000 46%),
+    linear-gradient(180deg,transparent 0,#000 26%,#000 70%,transparent 100%);
+  -webkit-mask-composite:source-in;
+          mask-image:
+    linear-gradient(90deg,transparent 0,rgba(0,0,0,.55) 22%,#000 46%),
+    linear-gradient(180deg,transparent 0,#000 26%,#000 70%,transparent 100%);
+          mask-composite:intersect;
 }
 .statement blockquote{position:relative;max-width:var(--maxw);margin:0 auto}
 .statement p{
-  font-family:var(--f-display);font-weight:700;font-size:clamp(1.85rem,5vw,4.4rem);
+  font-family:var(--f-display);font-weight:700;font-size:clamp(1.85rem,4.2vw,3.8rem);
   line-height:1.02;letter-spacing:-.018em;text-transform:uppercase;
+  max-width:15.5em;text-wrap:balance;
+}
+@media (max-width:900px){
+  .statement-photo{
+    top:16%;transform:none;width:100%;opacity:.55;
+    -webkit-mask-image:linear-gradient(180deg,transparent,#000 30%,transparent 95%);
+            mask-image:linear-gradient(180deg,transparent,#000 30%,transparent 95%);
+  }
 }
 .statement em{font-style:normal;color:var(--red)}
 .statement-strip{
@@ -642,11 +705,11 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
 @media (max-width:1100px){
   .cap-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .dev-card{
-    grid-template-columns:40px 120px minmax(0,1fr);
+    grid-template-columns:40px 200px minmax(0,1fr);
     grid-template-areas:"idx vis head" "idx vis lede" "idx vis specs";
     grid-template-rows:auto auto 1fr;row-gap:0;
   }
-  .dev-visual{width:120px;height:100px}
+  .dev-visual{width:200px}
   .dev-lede{margin-bottom:1.6rem}
 }
 @media (max-width:900px){
@@ -670,13 +733,12 @@ body::-webkit-scrollbar-thumb:hover{background:var(--red)}
   .steps{min-height:210px}
   .cap-grid{grid-template-columns:1fr}
   .dev-card{
-    grid-template-columns:auto 1fr;
-    grid-template-areas:"vis idx" "head head" "lede lede" "specs specs";
+    grid-template-columns:1fr;
+    grid-template-areas:"idx" "vis" "head" "lede" "specs";
     grid-template-rows:auto;
   }
-  .dev-index{justify-self:end;padding-top:0;align-self:start}
-  .dev-visual{width:96px;height:80px;margin-bottom:1.6rem}
-  .dev-visual svg{width:64px;height:64px}
+  .dev-index{padding-top:0;margin-bottom:1rem}
+  .dev-visual{width:100%;margin-bottom:1.8rem}
   .scroll-cue{display:none}
   .cmp th,.cmp td{padding:18px 18px}
 }
