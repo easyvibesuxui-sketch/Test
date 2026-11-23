@@ -125,26 +125,73 @@
     will-change: transform;
   }
 
+  /* the sightings wire: messages type in as they arrive, a hydrophone trace twitches,
+     and hovering opens the log, where each entry opens its creature's record */
   .ticker {
     left: var(--pad); bottom: var(--pad);
-    display: flex; align-items: center; gap: 12px;
-    width: min(420px, calc(100vw - 2 * var(--pad) - 150px));
+    display: flex; align-items: center; gap: 10px;
+    width: min(440px, calc(100vw - 2 * var(--pad) - 150px));
     font-family: var(--mono);
     font-size: 11px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
-  .ticker .live { display: flex; align-items: center; gap: 7px; flex: none; }
+  .ticker .live { position: relative; display: flex; align-items: center; gap: 7px; flex: none; }
   .ticker .live::before {
     content: ""; width: 7px; height: 7px; border-radius: 50%;
     background: var(--lume);
     box-shadow: 0 0 10px var(--lume);
     animation: pulse 1.8s ease-in-out infinite;
   }
+  .ticker .live::after {
+    content: ""; position: absolute; left: 0; top: 50%; width: 7px; height: 7px; margin-top: -3.5px;
+    border-radius: 50%; border: 1px solid var(--lume); opacity: 0;
+  }
+  .ticker .live.ping::after { animation: livePing 1s var(--ease); }
   @keyframes pulse { 50% { opacity: .35; } }
-  .ticker .track { overflow: hidden; flex: 1; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
-  .ticker .run { display: inline-flex; gap: 48px; white-space: nowrap; animation: run 26s linear infinite; }
-  @keyframes run { to { transform: translateX(-50%); } }
+  @keyframes livePing { from { transform: scale(1); opacity: .9; } to { transform: scale(5); opacity: 0; } }
+  .ticker__scope { flex: none; width: 46px; height: 16px; }
+  .ticker__wire {
+    position: relative; flex: 1; min-width: 0; height: 1.5em; overflow: hidden; cursor: pointer;
+    -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent);
+  }
+  .ticker__line {
+    position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1.5;
+    transition: transform .14s linear, opacity .45s var(--ease);
+  }
+  .ticker__line.in { animation: lineIn .45s var(--ease); }
+  .ticker__line.out { transform: translateY(-110%) !important; opacity: 0; transition: transform .45s var(--ease), opacity .45s var(--ease); }
+  @keyframes lineIn { from { opacity: 0; transform: translateY(110%); } }
+  .ticker__line .t, .ticker__line .d { opacity: .55; margin-right: 8px; }
+  .ticker__line .noise { opacity: .5; }
+  .ticker__line .caret { display: inline-block; width: .6em; height: 1em; margin-left: 2px; vertical-align: -2px; background: currentColor; animation: caret .8s steps(1) infinite; }
+  .ticker__line.done .caret { display: none; }
+  @keyframes caret { 50% { opacity: 0; } }
+
+  .ticker__log {
+    position: absolute; left: -12px; right: -12px; bottom: calc(100% + 14px);
+    padding: 12px; background: var(--bg); color: inherit;
+    border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+    box-shadow: 0 18px 50px rgba(2,3,6,.22);
+    opacity: 0; visibility: hidden; transform: translateY(8px);
+    transition: opacity .35s var(--ease), transform .35s var(--ease), visibility .35s;
+    text-transform: none; letter-spacing: .02em;
+  }
+  .ticker:hover .ticker__log, .ticker:focus-within .ticker__log, .ticker.open .ticker__log { opacity: 1; visibility: visible; transform: none; }
+  .ticker__log header { display: flex; justify-content: space-between; text-transform: uppercase; letter-spacing: .08em; opacity: .55; margin-bottom: 8px; }
+  .ticker__log ol { list-style: none; }
+  .ticker__log li { border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+  .ticker__log li.fresh { animation: logIn .6s var(--ease); }
+  @keyframes logIn { from { opacity: 0; transform: translateY(-6px); } }
+  .ticker__hit {
+    display: grid; grid-template-columns: 44px 1fr; gap: 2px 10px; width: 100%; padding: 8px 0;
+    text-align: left; font: inherit; color: inherit; background: none; border: 0; cursor: pointer;
+  }
+  .ticker__hit small { grid-row: span 2; opacity: .55; font-size: 10px; line-height: 1.5; }
+  .ticker__hit span { line-height: 1.45; }
+  .ticker__hit em { font-style: normal; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; opacity: .55; }
+  .ticker__hit:hover span, .ticker__hit:focus-visible span { color: var(--lume); }
+  body:not(.deep) .ticker__hit:hover span, body:not(.deep) .ticker__hit:focus-visible span { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 
   .totop {
     right: var(--pad); bottom: var(--pad);
@@ -580,7 +627,7 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .rv { opacity: 1; transform: none; transition: none; }
-    .ticker .run, .cube, .ticker .live::before { animation: none; }
+    .cube, .ticker .live::before, .ticker .live.ping::after, .ticker__line .caret, .ticker__line.in { animation: none; }
     .menu, body.menu-open .menu, .menu li a, body.menu-open .menu li a, .menu .sub, body.menu-open .menu .sub { transition: none; }
     body.menu-open .menu__ping { animation: none; }
   }
@@ -621,9 +668,14 @@
 
 <div class="chrome rail" aria-hidden="true"><span id="railThumb"></span></div>
 
-<div class="chrome ticker" aria-label="Latest sighting">
-  <span class="live">Live</span>
-  <div class="track"><div class="run" id="tickerRun"></div></div>
+<div class="chrome ticker" id="ticker">
+  <span class="live" id="tickerLive">Live</span>
+  <canvas class="ticker__scope" id="tickerScope" aria-hidden="true"></canvas>
+  <div class="ticker__wire" id="tickerWire" aria-hidden="true"></div>
+  <section class="ticker__log" aria-label="Sightings log">
+    <header><span>Sightings log</span><span id="tickerWhere">Surface</span></header>
+    <ol id="tickerList"></ol>
+  </section>
 </div>
 
 <a class="chrome totop" href="#top"><small>Back to the surface</small><em>↑</em></a>
@@ -916,8 +968,6 @@ document.getElementById("zones").outerHTML = LORE.zones.map((z) => `
 document.getElementById("keepers").innerHTML = LORE.keepers.map(([n, r]) => `<li>${n}<span>${r}</span></li>`).join("");
 document.getElementById("crew").innerHTML = LORE.crew.map(([n, r]) => `<li>${n}<span>${r}</span></li>`).join("");
 
-const tickerItems = LORE.ticker.map((t) => `<span>${t}</span>`).join("");
-document.getElementById("tickerRun").innerHTML = tickerItems + tickerItems;
 
 // each entry carries the depth band it stands for and the footage that plays behind it
 const MENU_REEL = { twilight: "twilight", midnight: "midnight", abyss: "abyss", hadal: "eye", who: "surface" };
@@ -975,7 +1025,7 @@ document.getElementById("sheetClose").addEventListener("click", closeSheet);
 sheet.addEventListener("click", (e) => { if (e.target === sheet) closeSheet(); });
 
 document.addEventListener("click", (e) => {
-  const card = e.target.closest(".card");
+  const card = e.target.closest(".card, .ticker__hit");
   if (card) {
     const c = byName[card.dataset.name];
     openSheet(`<div class="sheet__in">
@@ -1597,6 +1647,148 @@ if (!sceneOK) {
   addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(run); } }, { passive: true });
   run();
 }
+
+/* ======================= the sightings wire ======================= */
+(function wire() {
+  const box = document.getElementById("ticker"), liveEl = document.getElementById("tickerLive");
+  const wireEl = document.getElementById("tickerWire"), list = document.getElementById("tickerList");
+  const where = document.getElementById("tickerWhere"), scope = document.getElementById("tickerScope");
+  const all = Object.values(byName);
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
+
+  const STATIONS = ["Sonar station 7", "Hydrophone array K-3", "Buoy 41", "ROV Petrel", "Bathyscaphe Lantern II", "Trawler Aud Marie", "Listening post Skerholm"];
+  const SOUNDS = ["ringing", "a slow knocking", "singing in two voices", "a ticking like a clock", "something breathing", "one bell, then nothing"];
+  const CREW = LORE.crew.map(([n]) => n);
+  const near = (d) => Math.max(10, Math.round((d * (0.9 + Math.random() * 0.2)) / 10) * 10);
+  const TEMPLATES = [
+    (c, d) => `${pick(STATIONS)} hears ${pick(SOUNDS)} at ${fmt(d)} m. ${c.name} again?`,
+    (c, d) => `New sighting submitted from ${fmt(d)} m: ${c.name}`,
+    (c, d) => `${pick(CREW)} logs ${c.name} near ${fmt(d)} m`,
+    (c, d) => `Lamp seen below ${fmt(d)} m. The desk thinks ${c.name}`,
+    (c, d) => `${pick(STATIONS)} lowers a camera to ${fmt(d)} m. ${c.name} looks back`,
+    (c, d) => `Night shift asks: has anyone heard ${c.name} since ${fmt(d)} m?`
+  ];
+  // the three standing reports from the archive come first
+  const queue = [
+    { c: byName["The Bellringer of Karst Deep"], text: LORE.ticker[0], d: 1912 },
+    { c: byName["The Lantern Widow"], text: LORE.ticker[1], d: 640 },
+    { c: byName["Gulper of Promises"] || pick(all), text: LORE.ticker[2], d: 4300 }
+  ].filter((m) => m.c);
+
+  // where the reader is decides what the wire talks about, most of the time
+  function hereZone() {
+    const depth = parseInt((document.getElementById("depth").textContent || "0").replace(/\D/g, ""), 10) || 0;
+    let z = null;
+    for (const zz of LORE.zones) if (depth >= zz.top) z = zz;
+    return z;
+  }
+  function compose() {
+    const z = hereZone();
+    where.textContent = z ? z.name : "Surface";
+    const pool = z && Math.random() < 0.7 ? z.creatures.map((c) => byName[c.name]) : all;
+    const c = pick(pool), d = near(c.depth);
+    return { c, d, text: pick(TEMPLATES)(c, d) };
+  }
+
+  const clock = () => { const n = new Date(); return `${String(n.getUTCHours()).padStart(2, "0")}:${String(n.getUTCMinutes()).padStart(2, "0")}`; };
+
+  // ---- the hydrophone trace ----
+  const sx = scope.getContext("2d");
+  let kick = 0, chatter = 0;
+  function sizeScope() { const r = Math.min(devicePixelRatio || 1, 2); scope.width = 46 * r; scope.height = 16 * r; sx.setTransform(r, 0, 0, r, 0, 0); }
+  sizeScope();
+  let col = "", colAt = 0;
+  function drawScope(now) {
+    if (now - colAt > 500) { col = getComputedStyle(box).color; colAt = now; }
+    sx.clearRect(0, 0, 46, 16);
+    sx.strokeStyle = col; sx.lineWidth = 1; sx.globalAlpha = 0.8;
+    sx.beginPath();
+    const t = now / 1000;
+    for (let x = 0; x <= 46; x += 1) {
+      const u = x / 46;
+      const env = Math.exp(-Math.pow((u - 0.5) * 3.2, 2));
+      const y = 8
+        + Math.sin(u * 9 + t * 3) * 1.1
+        + Math.sin(u * 23 - t * 7) * 0.6 * (0.4 + chatter)
+        + Math.sin(u * 40 + t * 18) * 6.2 * kick * env
+        + (Math.random() - 0.5) * (0.8 + chatter * 1.6);
+      x ? sx.lineTo(x, y) : sx.moveTo(x, y);
+    }
+    sx.stroke();
+    kick *= 0.94; chatter *= 0.9;
+  }
+  let lastDraw = 0;
+  function loop(now) {
+    if (!document.hidden && now - lastDraw > 33) { drawScope(now); lastDraw = now; }
+    requestAnimationFrame(loop);
+  }
+  if (reduceMotion) drawScope(0); else requestAnimationFrame(loop);
+
+  // ---- arrivals ----
+  const GLYPHS = "▓▒░/\\|<>#*+01";
+  let current = null, typing = 0;
+  function arrive(m) {
+    const time = clock();
+    // into the log (newest first, six kept)
+    const li = document.createElement("li");
+    li.className = "fresh";
+    li.innerHTML = `<button class="ticker__hit" type="button" data-name="${m.c.name}"><small>${time}<br>UTC</small><span></span><em>${fmt(m.d)} m · ${m.c.zone.name}</em></button>`;
+    li.querySelector("span").textContent = m.text;
+    list.prepend(li);
+    while (list.children.length > 6) list.lastElementChild.remove();
+
+    // onto the wire
+    const line = document.createElement("div");
+    line.className = "ticker__line in";
+    line.innerHTML = `<span class="t">${time}</span><span class="d">${fmt(m.d)} m</span><span class="msg"></span><span class="noise"></span><i class="caret"></i>`;
+    if (current) { const old = current; old.classList.add("out"); setTimeout(() => old.remove(), 500); }
+    wireEl.appendChild(line);
+    current = line;
+
+    liveEl.classList.remove("ping"); void liveEl.offsetWidth; liveEl.classList.add("ping");
+    kick = 1;
+
+    const msg = line.querySelector(".msg"), noise = line.querySelector(".noise");
+    if (reduceMotion) { msg.textContent = m.text; line.classList.add("done"); return; }
+    let i = 0;
+    clearInterval(typing);
+    typing = setInterval(() => {
+      i += 1;
+      msg.textContent = m.text.slice(0, i);
+      noise.textContent = i < m.text.length ? Array.from({ length: Math.min(3, m.text.length - i) }, () => pick(GLYPHS)).join("") : "";
+      chatter = Math.min(1, chatter + 0.25);
+      // keep the newest characters in view while it types
+      const over = line.scrollWidth - wireEl.clientWidth * 0.86;
+      line.style.transform = over > 0 ? `translateX(${-over}px)` : "";
+      if (i >= m.text.length) {
+        clearInterval(typing);
+        line.classList.add("done");
+        // then drift back so the line can be read from its start
+        if (over > 0) setTimeout(() => { if (current === line) { line.style.transition = "transform 1.6s var(--ease)"; line.style.transform = ""; } }, 1800);
+      }
+    }, 26);
+  }
+
+  // the wire waits while the log is being read, the menu is open, or the tab is hidden
+  let held = false;
+  box.addEventListener("pointerenter", () => (held = true));
+  box.addEventListener("pointerleave", () => (held = false));
+  box.addEventListener("focusin", () => (held = true));
+  box.addEventListener("focusout", () => (held = false));
+  wireEl.addEventListener("click", () => box.classList.toggle("open"));
+  document.addEventListener("click", (e) => { if (!box.contains(e.target)) box.classList.remove("open"); });
+
+  function next() {
+    if (held || box.classList.contains("open") || document.hidden || document.body.classList.contains("menu-open")) {
+      setTimeout(next, 1000);
+      return;
+    }
+    arrive(queue.length ? queue.shift() : compose());
+    setTimeout(next, 6500 + Math.random() * 3000);
+  }
+  // the first report lands as the loader surfaces
+  setTimeout(next, reduceMotion ? 0 : 3200);
+})();
 
 /* ======================= loader: an ascent from the trench ======================= */
 // short, honest (it waits for the page, up to a point) and skippable with a click
