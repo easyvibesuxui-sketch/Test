@@ -95,6 +95,71 @@
   .logo__word { display: grid; font-family: var(--display); font-style: italic; font-weight: 600; font-size: 27px; line-height: .92; }
   .logo__word small { font-family: var(--mono); font-style: normal; font-weight: 400; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; opacity: .62; margin-bottom: 5px; }
 
+  /* ---- the header comes alive ----
+     on arrival the emblem unfurls, the name rises letter by letter and the instruments switch on one by one;
+     the nautilus turns as you dive; heading down, the strapline tucks away; once below the surface a band of
+     frosted water sits behind the header with a dive line showing how far down the page you are */
+  .logo__emblem { rotate: calc(var(--spin, 0) * 1deg); }
+  .logo__emblem { transform: none; transition: translate .8s var(--ease), filter .6s var(--ease), scale .5s var(--ease), transform 1.6s var(--ease) .1s, opacity .9s var(--ease) .1s; }
+  body:not(.arrived) .logo__emblem { transform: scale(.35) rotate(-160deg); opacity: 0; }
+  .logo__name { display: block; clip-path: inset(-.4em -.6em 0 -.4em); white-space: nowrap; }
+  .logo__name .ch { display: inline-block; transition: translate 1s var(--ease) calc(var(--i) * 45ms + .3s), opacity .6s var(--ease) calc(var(--i) * 45ms + .3s); }
+  .logo__name .ch.sp { width: .26em; }
+  body:not(.arrived) .logo__name .ch { translate: 0 105%; opacity: 0; }
+  .logo:hover .logo__name .ch { animation: chWave .8s var(--ease) calc(var(--i) * 38ms); }
+  @keyframes chWave { 35% { translate: 0 -16%; } }
+  .logo__word small { transition: opacity .6s var(--ease) .9s, letter-spacing 1.4s var(--ease) .8s, translate .5s var(--ease); }
+  body:not(.arrived) .logo__word small { opacity: 0; letter-spacing: .6em; }
+  body.sinking .logo__word small { opacity: 0; translate: 0 7px; transition: opacity .4s var(--ease), translate .5s var(--ease); }
+
+  .hud > *, .menu-btn { transition-property: opacity, translate, background, color, box-shadow; transition-duration: .9s, .9s, .5s, .5s, .5s;
+    transition-timing-function: var(--ease); transition-delay: calc(var(--i, 0) * 90ms + .45s), calc(var(--i, 0) * 90ms + .45s), 0s, 0s, 0s; }
+  body:not(.arrived) .hud > *, body:not(.arrived) .menu-btn { opacity: 0; translate: 0 -14px; }
+  .hud__d { display: grid; justify-items: end; gap: 5px; }
+  .hud__zone { display: block; height: 1.25em; overflow: hidden; font-family: var(--mono); font-size: 9px; font-weight: 400; letter-spacing: .16em; text-transform: uppercase; opacity: .62; }
+  .hud__zone s { display: block; text-decoration: none; }
+  .hud__zone.swap s { animation: zoneRoll .8s var(--ease); }
+  @keyframes zoneRoll { from { translate: 0 120%; opacity: 0; } }
+  .hud__num { display: block; }
+  .hud__bar { position: relative; display: block; width: 64px; height: 2px; margin-top: 4px; text-decoration: none; overflow: hidden; }
+  .hud__bar::before, .hud__bar::after { content: ""; position: absolute; inset: 0; background: currentColor; }
+  .hud__bar::before { opacity: .14; }
+  .hud__bar::after { transform-origin: left; transform: scaleX(var(--v, 0)); transition: transform .7s var(--ease); }
+  #barLight::after { background: #E9B44C; }
+  body.deep #barLight::after { background: var(--lume); }
+
+  .menu-btn { translate: var(--mx, 0px) var(--my, 0px); }
+  .menu-btn i::before, .menu-btn i::after { transition: transform .4s var(--ease), width .4s var(--ease); }
+  .menu-btn:hover i::before { width: 12px; }
+  .menu-btn:hover i::after { width: 18px; }
+  body.menu-open .menu-btn i::before { width: 18px; }
+
+  .headglass {
+    top: 0; left: 0; right: 0; height: calc(var(--pad) * 2 + 64px); z-index: 29; pointer-events: none;
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 55%, transparent), color-mix(in srgb, var(--bg) 0%, transparent));
+    -webkit-backdrop-filter: blur(12px) saturate(1.15); backdrop-filter: blur(12px) saturate(1.15);
+    -webkit-mask-image: linear-gradient(#000 55%, transparent); mask-image: linear-gradient(#000 55%, transparent);
+    opacity: 0; transition: opacity .8s var(--ease);
+  }
+  body.scrolled .headglass { opacity: 1; }
+  .diveline {
+    top: calc(var(--pad) + 66px); left: var(--pad); right: var(--pad); height: 1px; pointer-events: none;
+    background: linear-gradient(90deg, currentColor, currentColor) left / 100% 1px no-repeat;
+    opacity: 0; transform: scaleX(0); transform-origin: left; transition: opacity .7s var(--ease), transform 1.4s var(--ease), color .5s var(--ease);
+  }
+  .diveline::before { content: ""; position: absolute; inset: 0; background: currentColor; opacity: .5; }
+  .diveline { background: none; }
+  .diveline > u { position: absolute; top: -3px; width: 1px; height: 7px; background: currentColor; opacity: .4; }
+  .diveline > b {
+    position: absolute; top: -3px; left: 0; width: 7px; height: 7px; margin-left: -3px; border-radius: 50%;
+    background: var(--lume); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lume) 22%, transparent), 0 0 14px var(--lume);
+    translate: var(--dl, 0px) 0;
+  }
+  .diveline > b::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 1px solid var(--lume); animation: diveBeat 2.4s ease-out infinite; }
+  @keyframes diveBeat { from { scale: .6; opacity: .9; } to { scale: 3; opacity: 0; } }
+  body.scrolled .diveline { opacity: .5; transform: none; }
+  @media (max-width: 760px) { .diveline { top: calc(var(--pad) + 58px); } }
+
   .topright {
     top: var(--pad); right: var(--pad);
     display: flex; align-items: center; gap: 14px;
@@ -816,6 +881,9 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .rv, .foot__word span { opacity: 1; transform: none; transition: none; }
+    .logo__emblem, .logo__name .ch, .logo__word small, .hud > *, .menu-btn, .diveline { transition: none; animation: none; }
+    .logo__emblem { rotate: none; }
+    .diveline > b::after, .hud__zone.swap s { animation: none; }
     .card .card__tile { clip-path: none; transform: none; transition: none; }
     .card::before { transform: none; transition: none; }
     .card .card__tile :is(img, video, canvas) { scale: 1; animation: none; transition: none; }
@@ -852,19 +920,21 @@
 <div class="fade fade--top" aria-hidden="true"></div>
 <div class="fade fade--bottom" aria-hidden="true"></div>
 
+<div class="chrome headglass" aria-hidden="true"></div>
+<div class="chrome diveline" id="diveline" aria-hidden="true"><b></b></div>
 <a class="chrome logo" href="#top" aria-label="Hadal House, back to the surface">
   <span class="logo__emblem" aria-hidden="true"><i class="logo__mark"></i></span>
-  <span class="logo__word"><small>A field guide to the deep</small>Hadal House</span>
+  <span class="logo__word"><small>A field guide to the deep</small><span class="logo__name" id="logoName">Hadal House</span></span>
 </a>
 
 <div class="chrome topright">
   <div class="gauge hud" aria-live="off">
-    <span class="hud__d"><b id="depth">0</b><i>m</i></span>
-    <span class="hud__r"><em>Sunlight</em><b id="hudLight">100%</b></span>
-    <span class="hud__r"><em>Pressure</em><b id="hudPres">1 bar</b></span>
-    <span class="hud__r"><em>Water</em><b id="hudTemp">20 °C</b></span>
+    <span class="hud__d" style="--i:0"><small class="hud__zone" id="hudZone"><s>01 Sunlight</s></small><span class="hud__num"><b id="depth">0</b><i>m</i></span></span>
+    <span class="hud__r" style="--i:1"><em>Sunlight</em><b id="hudLight">100%</b><u class="hud__bar" id="barLight"></u></span>
+    <span class="hud__r" style="--i:2"><em>Pressure</em><b id="hudPres">1 bar</b><u class="hud__bar" id="barPres"></u></span>
+    <span class="hud__r" style="--i:3"><em>Water</em><b id="hudTemp">20 °C</b><u class="hud__bar" id="barTemp"></u></span>
   </div>
-  <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu" aria-label="Open site navigation"><i></i></button>
+  <button class="menu-btn" id="menuBtn" style="--i:4" aria-expanded="false" aria-controls="menu" aria-label="Open site navigation"><i></i></button>
 </div>
 
 <canvas class="chrome tape" id="tape" aria-hidden="true"></canvas>
@@ -1633,9 +1703,23 @@ function tempAt(d) {
   for (let i = 1; i < TEMP.length; i++) if (d <= TEMP[i][0]) { const [a, ta] = TEMP[i - 1], [b, tb] = TEMP[i]; return ta + (tb - ta) * (d - a) / (b - a); }
   return TEMP[TEMP.length - 1][1];
 }
+const barLight = document.getElementById("barLight"), barPres = document.getElementById("barPres"), barTemp = document.getElementById("barTemp");
+const hudZone = document.getElementById("hudZone");
+let hudZoneId = "";
 function readWater(d) {
   depthEl.textContent = fmt(d);
   const light = 100 * Math.exp(-d / 43.4);
+  // the instruments' bars: light on a log scale (100% to 0.01%), pressure to the trench floor, temperature to 20 °C
+  barLight.style.setProperty("--v", Math.min(1, Math.max(0, (Math.log10(Math.max(light, 1e-3)) + 2) / 4)).toFixed(3));
+  barPres.style.setProperty("--v", Math.min(1, (1 + d / 10.06) / 1088).toFixed(3));
+  barTemp.style.setProperty("--v", Math.min(1, tempAt(d) / 20).toFixed(3));
+  let z = LORE.zones[0];
+  for (const zz of LORE.zones) if (d >= zz.top) z = zz;
+  if (z.id !== hudZoneId) {
+    hudZoneId = z.id;
+    hudZone.firstChild.textContent = `${z.num} ${z.name.replace(/ Zone$/, "")}`;
+    hudZone.classList.remove("swap"); void hudZone.offsetWidth; hudZone.classList.add("swap");
+  }
   hudLight.textContent = light >= 10 ? `${light.toFixed(0)}%` : light >= 1 ? `${light.toFixed(1)}%` : light >= 0.01 ? `${light.toFixed(2)}%` : "none";
   hudPres.textContent = `${fmt(Math.round(1 + d / 10.06))} bar`;
   hudTemp.textContent = `${tempAt(d).toFixed(1)} °C`;
@@ -1781,8 +1865,44 @@ function updateChrome(y) {
   const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
   railMove(y, max, marks[i].sec, depth);
   document.body.classList.toggle("scrolled", y > innerHeight * 0.6);
+  headerFollow(y, depth);
   return { i, k };
 }
+
+/* ======================= the living header ======================= */
+// the name, letter by letter, so it can rise in and ripple under the pointer
+(function splitName() {
+  const el = document.getElementById("logoName");
+  el.innerHTML = [...el.textContent].map((c, i) => c === " " ? `<span class="ch sp" style="--i:${i}"> </span>` : `<span class="ch" style="--i:${i}">${c}</span>`).join("");
+})();
+// the dive line: zone ticks on a log scale of depth, and a bead at the current depth
+const diveline = document.getElementById("diveline"), diveBead = diveline.querySelector("b");
+const diveAt = (d) => Math.log(1 + Math.max(0, d) / 10) / Math.log(1 + 10935 / 10);
+diveline.insertAdjacentHTML("beforeend", LORE.zones.slice(1).map((z) => `<u style="left:${(diveAt(z.top) * 100).toFixed(2)}%"></u>`).join(""));
+let headY = 0, headDepth = -1, sinking = false;
+function headerFollow(y, depth) {
+  // heading down past the first screen tucks the strapline away; any climb brings it back
+  if (y - headY > 8) { if (!sinking && y > innerHeight * 0.6) { sinking = true; document.body.classList.add("sinking"); } headY = y; }
+  else if (headY - y > 8 || y < innerHeight * 0.6) { if (sinking) { sinking = false; document.body.classList.remove("sinking"); } headY = y; }
+  if (!reduceMotion) logoEl.style.setProperty("--spin", (y * 0.03).toFixed(1));
+  if (depth !== headDepth) { headDepth = depth; diveBead.style.setProperty("--dl", `${(diveAt(depth) * diveline.clientWidth).toFixed(1)}px`); }
+}
+addEventListener("resize", () => { headDepth = -1; });
+// the menu button leans toward a pointer that comes near it
+if (!reduceMotion && matchMedia("(hover: hover)").matches) {
+  const btn = document.getElementById("menuBtn");
+  let pulled = false;
+  document.addEventListener("pointermove", (e) => {
+    const r = btn.getBoundingClientRect();
+    const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+    if (Math.hypot(dx, dy) < 90) {
+      btn.style.setProperty("--mx", `${(dx * 0.2).toFixed(1)}px`); btn.style.setProperty("--my", `${(dy * 0.2).toFixed(1)}px`); pulled = true;
+    } else if (pulled) { btn.style.removeProperty("--mx"); btn.style.removeProperty("--my"); pulled = false; }
+  }, { passive: true });
+}
+// the header switches on when the loader has gone (or straight away, without one)
+const arrive = () => document.body.classList.add("arrived");
+setTimeout(arrive, 7000);
 
 /* ======================= WebGL: Kling footage under an ROV floodlight ======================= */
 const canvas = document.getElementById("scene");
@@ -2472,7 +2592,7 @@ if (!sceneOK) {
 // short, honest (it waits for the page, up to a point) and skippable with a click
 (function loader() {
   const el = document.getElementById("loader");
-  if (reduceMotion) { el.classList.add("done"); return; }
+  if (reduceMotion) { el.classList.add("done"); arrive(); return; }
   const count = document.getElementById("count"), zoneEl = document.getElementById("ldZone"), depthEl = document.getElementById("ldDepth");
   const MAX = 10935, DUR = 2800;
   const ZONES = [[6000, "Hadal Trenches"], [4000, "Abyss"], [1000, "Midnight Zone"], [200, "Twilight Zone"], [0, "Sunlight Zone"]];
@@ -2596,7 +2716,7 @@ if (!sceneOK) {
   function finish() {
     finished = true;
     el.classList.add("surfacing");
-    setTimeout(() => el.classList.add("done"), 650);
+    setTimeout(() => { el.classList.add("done"); arrive(); }, 650);
     setTimeout(() => el.remove(), 1400);
   }
   el.addEventListener("click", () => { skipped = true; shown = 1; if (!finished) finish(); });
