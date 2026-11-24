@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hadal House — Archive of the Deep</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <meta name="description" content="A fictional archive of deep-sea legends, sorted by the depth they come from.">
 <style>
   :root {
@@ -29,9 +32,12 @@
     --st-unconfirmed: #F2C77E;
     --st-lost:        #C7A2A8;
 
-    --sans: "Avenir Next", "Avenir", "Segoe UI Variable Display", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
-    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    /* an academic set: Cormorant Garamond for display, EB Garamond for reading,
+       IBM Plex Mono for the catalogue labels and instruments */
+    --display: "Cormorant Garamond", "EB Garamond", "Iowan Old Style", Georgia, serif;
+    --sans: "EB Garamond", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --serif: "EB Garamond", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
     --pad: clamp(16px, 3.2vw, 40px);
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -44,7 +50,7 @@
     background: var(--bg);
     color: var(--ink);
     font-family: var(--sans);
-    font-size: 17px;
+    font-size: 19px;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
@@ -55,6 +61,7 @@
 
   /* dark bands flip the ink */
   .is-deep { color: var(--pale); }
+  h1, h2, .card__name, .menu li a b, .after p, .sheet__text h2, .sheet__manifesto h2, .who .body { font-family: var(--display); }
 
   /* ================= fixed layers ================= */
   #scene {
@@ -68,16 +75,28 @@
   .chrome { position: fixed; z-index: 30; color: var(--ink); transition: color .5s var(--ease); }
   body.deep .chrome { color: var(--pale); }
 
+  /* the mark: a bathysphere hanging on a cable from the top of the screen. It sways,
+     pings sonar now and then, is lowered a little as you go deeper, and its port lights up in the dark */
   .logo {
     top: var(--pad); left: var(--pad);
-    display: block;
+    display: flex; align-items: center; gap: 12px;
     text-decoration: none;
-    font-weight: 700;
-    font-size: 21px;
-    line-height: 0.98;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
   }
+  .logo__mark { flex: none; width: 26px; height: 44px; overflow: visible; }
+  .logo__mark line, .logo__mark circle, .logo__mark path { fill: none; stroke: currentColor; stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+  .logo__mark .logo__cable { opacity: .5; }
+  .logo__mark .logo__port { fill: currentColor; stroke: none; transition: fill .6s var(--ease); }
+  body.deep .logo__mark .logo__port, body.menu-open .logo__mark .logo__port { fill: var(--lume); filter: drop-shadow(0 0 3px var(--lume)); }
+  .logo__sway { transform-box: view-box; transform-origin: 13px -40px; animation: bellSway 7s ease-in-out infinite; }
+  @keyframes bellSway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+  .logo__drop { transform: translateY(calc(var(--drop, 0) * 6px)); transition: transform .8s var(--ease); }
+  .logo:hover .logo__drop { transform: translateY(calc(var(--drop, 0) * 6px + 4px)); }
+  .logo__mark .logo__ping { opacity: 0; animation: logoPing 4.8s var(--ease) infinite; }
+  .logo__mark .logo__ping + .logo__ping { animation-delay: .3s; }
+  .logo:hover .logo__ping { animation-duration: 1.4s; }
+  @keyframes logoPing { 0%, 60% { opacity: 0; transform: translateY(-3px); } 68% { opacity: .9; } 100% { opacity: 0; transform: translateY(4px); } }
+  .logo__word { display: grid; font-family: var(--display); font-style: italic; font-weight: 600; font-size: 27px; line-height: .92; }
+  .logo__word small { font-family: var(--mono); font-style: normal; font-weight: 400; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; opacity: .62; margin-bottom: 5px; }
 
   .topright {
     top: var(--pad); right: var(--pad);
@@ -112,18 +131,42 @@
   body.menu-open .menu-btn i::before { transform: translateY(6px) rotate(45deg); }
   body.menu-open .menu-btn i::after  { transform: translateY(-6px) rotate(-45deg); width: 18px; }
 
-  .rail {
-    right: 6px; top: 8px; bottom: 8px;
-    width: 4px;
-    pointer-events: none;
+  /* the scroll rail is a sounding line: a small bathysphere lowered on its cable as you read.
+     It stretches with speed and trails bubbles; each section is a mark (hover to read, click to go) */
+  .rail { right: 4px; top: calc(var(--pad) + 76px); bottom: calc(var(--pad) + 64px); width: 26px; transition: opacity .4s; }
+  body.menu-open .rail { opacity: 0; pointer-events: none; }
+  .rail__line, .rail__cable { position: absolute; right: 12px; top: 0; width: 1px; height: 100%; background: currentColor; }
+  .rail__line { opacity: .16; }
+  .rail__cable { opacity: .75; transform-origin: top; transform: scaleY(0); will-change: transform; }
+  .rail__marks { list-style: none; position: absolute; inset: 0; }
+  .rail__marks li { position: absolute; right: 0; height: 18px; margin-top: -9px; }
+  .rail__marks a {
+    display: flex; align-items: center; justify-content: flex-end; height: 18px; padding-right: 9px;
+    text-decoration: none; color: inherit; white-space: nowrap;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
   }
-  .rail span {
-    position: absolute; left: 0; top: 0;
-    width: 4px; height: 36px;
-    border-radius: 4px;
-    background: currentColor;
-    will-change: transform;
+  .rail__marks a::after { content: ""; width: 7px; height: 1px; margin-left: 10px; background: currentColor; opacity: .55; transition: width .35s var(--ease), opacity .35s, background .35s, box-shadow .35s; }
+  .rail__marks a span { opacity: 0; transform: translateX(8px); padding: 2px 7px; background: color-mix(in srgb, var(--bg) 86%, transparent); transition: opacity .3s var(--ease), transform .4s var(--ease); }
+  .rail:hover .rail__marks a span, .rail:focus-within .rail__marks a span { opacity: .78; transform: none; transition-delay: calc(var(--i) * 30ms); }
+  .rail .rail__marks a:hover span, .rail .rail__marks a:focus-visible span { opacity: 1; }
+  .rail__marks li.here a::after { width: 13px; opacity: 1; background: var(--lume); box-shadow: 0 0 8px var(--lume); }
+  body:not(.deep) .rail__marks li.here a::after { background: currentColor; box-shadow: none; }
+  .rail__bob {
+    position: absolute; right: 7.5px; top: 0; width: 10px; height: 10px; margin-top: -5px; border-radius: 50%;
+    border: 1.5px solid currentColor; background: var(--bg); will-change: transform; pointer-events: none;
+    transition: transform .25s var(--ease);
   }
+  .rail__bob i { position: absolute; inset: 2px; border-radius: 50%; background: currentColor; }
+  body.deep .rail__bob i { background: var(--lume); box-shadow: 0 0 8px var(--lume); animation: pulse 2.4s ease-in-out infinite; }
+  .rail__read {
+    position: absolute; right: 26px; top: 0; margin-top: -.75em;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; font-variant-numeric: tabular-nums;
+    white-space: nowrap; opacity: 0; transition: opacity .4s var(--ease); pointer-events: none;
+  }
+  .rail.moving .rail__read { opacity: .85; }
+  .rail:hover .rail__read { opacity: 0; }
+  .rail__bubble { position: absolute; right: 10px; top: 0; width: 5px; height: 5px; border-radius: 50%; border: 1px solid currentColor; pointer-events: none; animation: railBubble 1.2s ease-out forwards; }
+  @keyframes railBubble { from { transform: translate(0, var(--y)); opacity: .7; } to { transform: translate(var(--dx), calc(var(--y) - 46px)); opacity: 0; } }
 
   /* the sightings wire: messages type in as they arrive, a hydrophone trace twitches,
      and hovering opens the log, where each entry opens its creature's record */
@@ -273,7 +316,7 @@
   .menu li a {
     display: grid; grid-template-columns: 56px 1fr auto; align-items: baseline; gap: 16px;
     padding: 18px 0; text-decoration: none;
-    font-size: clamp(26px, 4.4vw, 54px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.05;
+    font-size: clamp(28px, 4.6vw, 58px); font-weight: 600; letter-spacing: 0; line-height: 1.05;
     transform: translateY(110%);
     transition: transform .35s var(--ease), color .4s var(--ease);
   }
@@ -337,37 +380,37 @@
   }
   @keyframes sway { from { transform: skewX(-6deg) translateX(-2%); } to { transform: skewX(6deg) translateX(2%); } }
 
-  .scene3d { position: relative; width: 160px; height: 160px; perspective: 700px; transition: transform .7s var(--ease), opacity .5s var(--ease); }
-  .cube {
-    width: 100%; height: 100%; position: relative; transform-style: preserve-3d;
-    animation: spin 2.4s cubic-bezier(.65,0,.35,1) infinite;
+  /* the bathysphere rises on its cable; through its port, one creature and then another */
+  .sphere {
+    position: relative; display: grid; justify-items: center; text-align: center;
+    transform: translateY(calc((1 - var(--p)) * 12vh));
   }
-  .cube__face {
-    position: absolute; inset: 0; overflow: hidden; margin: 0;
-    background: var(--ink); color: var(--foam);
-    display: grid; place-items: center; text-align: center;
-    font-weight: 700; font-size: 28px; line-height: .98; letter-spacing: .02em; text-transform: uppercase;
-    border: 1px solid rgba(124,245,214, calc(.45 * var(--glow)));
-    box-shadow: 0 0 calc(46px * var(--glow)) rgba(124,245,214, calc(.22 * var(--glow))), inset 0 0 0 1px var(--ink);
-    backface-visibility: hidden;
+  .sphere__rig { position: relative; width: 168px; height: 168px; transform-origin: 50% -50vh; animation: rigSway 6s ease-in-out infinite; }
+  @keyframes rigSway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } }
+  .sphere__cable { position: absolute; left: 50%; bottom: 100%; width: 1px; height: 100vh; background: currentColor; opacity: .45; }
+  .sphere__hull {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: radial-gradient(circle at 35% 28%, #22313a, var(--ink) 62%);
+    border: 1px solid rgba(124,245,214, calc(.55 * var(--glow)));
+    box-shadow: 0 0 calc(70px * var(--glow)) rgba(124,245,214, calc(.25 * var(--glow))), inset 0 -16px 30px rgba(0,0,0,.55);
   }
-  .cube__face--front  { transform: rotateY(0)       translateZ(80px); }
-  .cube__face--right  { transform: rotateY(90deg)   translateZ(80px); }
-  .cube__face--back   { transform: rotateY(180deg)  translateZ(80px); }
-  .cube__face--left   { transform: rotateY(-90deg)  translateZ(80px); }
-  .cube__face video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .4s; }
-  .cube__face video.ready { opacity: 1; }
-  .cube__face figcaption {
-    position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 8px 7px;
-    background: linear-gradient(transparent, rgba(2,3,6,.85));
-    font-family: var(--mono); font-size: 9px; font-weight: 400; letter-spacing: .1em; line-height: 1.3; color: var(--pale);
+  .sphere__hull::before {
+    content: ""; position: absolute; inset: 21px; border-radius: 50%;
+    background: repeating-conic-gradient(rgba(230,238,240,.6) 0 4deg, transparent 4deg 30deg);
+    -webkit-mask: radial-gradient(closest-side, transparent 86%, #000 87% 97%, transparent 98%);
+    mask: radial-gradient(closest-side, transparent 86%, #000 87% 97%, transparent 98%);
   }
-  @keyframes spin {
-    0%, 15%   { transform: rotateY(0); }
-    35%, 50%  { transform: rotateY(-90deg); }
-    70%, 85%  { transform: rotateY(-180deg); }
-    100%      { transform: rotateY(-360deg); }
-  }
+  .sphere__port { position: absolute; inset: 30px; border-radius: 50%; overflow: hidden; background: #050A12; box-shadow: 0 0 0 4px #1a252b, 0 0 0 5px rgba(230,238,240,.3); }
+  .sphere__port video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .9s var(--ease); }
+  .sphere__port video.on.ready { opacity: 1; }
+  .sphere__glass { position: absolute; inset: 30px; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.3), transparent 36%), radial-gradient(circle at 72% 80%, rgba(124,245,214,.12), transparent 40%); }
+  .sphere__ping { position: absolute; inset: 0; border-radius: 50%; border: 1px solid var(--lume); opacity: 0; animation: spherePing 2.6s var(--ease) infinite; }
+  .sphere__ping + .sphere__ping { animation-delay: 1.3s; }
+  @keyframes spherePing { from { transform: scale(1); opacity: calc(.6 * var(--glow)); } to { transform: scale(2.4); opacity: 0; } }
+  .sphere__word { margin-top: 34px; display: grid; font-family: var(--display); font-style: italic; font-weight: 600; font-size: 36px; line-height: 1; }
+  .sphere__word small { font-family: var(--mono); font-style: normal; font-weight: 400; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; opacity: .6; margin-bottom: 8px; }
+  .sphere__seen { margin-top: 12px; min-height: 1.4em; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; opacity: .6; }
   .loader__read {
     position: absolute; left: var(--pad); right: var(--pad); bottom: 28px;
     display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 12px;
@@ -388,7 +431,7 @@
   .loader.surfacing .loader__ring { animation: surface 1.1s var(--ease) both; }
   .loader.surfacing .loader__ring + .loader__ring { animation-delay: .18s; }
   @keyframes surface { from { transform: scale(.6); opacity: .45; } to { transform: scale(9); opacity: 0; } }
-  .loader.surfacing .scene3d { transform: translateY(-34px) scale(.82); opacity: 0; }
+  .loader.surfacing .sphere { transform: translateY(-60px); opacity: 0; transition: transform .8s var(--ease), opacity .6s var(--ease); }
   .loader.surfacing .loader__read { opacity: 0; }
   @media (max-width: 760px) {
     .loader__read { font-size: 10px; }
@@ -421,12 +464,12 @@
   .hero h1 {
     grid-column: 1 / span 8;
     font-size: clamp(44px, 7.4vw, 120px);
-    line-height: .95;
-    letter-spacing: -0.035em;
+    line-height: .98;
+    letter-spacing: -0.01em;
     font-weight: 600;
     text-wrap: balance;
   }
-  .hero h1 em { font-family: var(--serif); font-weight: 400; font-style: italic; letter-spacing: -0.02em; }
+  .hero h1 em { font-family: var(--display); font-weight: 500; font-style: italic; letter-spacing: 0; }
   .hero .lede {
     grid-column: 1 / span 5;
     margin-top: 40px;
@@ -461,7 +504,7 @@
   .band-head .kicker { grid-column: 1 / -1; display: flex; gap: 24px; flex-wrap: wrap; }
   .band-head h2 {
     grid-column: 1 / span 7;
-    font-size: clamp(38px, 5.6vw, 88px); line-height: .96; letter-spacing: -0.03em; font-weight: 600;
+    font-size: clamp(40px, 5.8vw, 92px); line-height: 1; letter-spacing: -0.005em; font-weight: 600;
     text-wrap: balance;
   }
   .band-head p {
@@ -494,12 +537,27 @@
     font-variant-numeric: tabular-nums;
     margin-bottom: 12px;
   }
+  /* status is an icon (eye, trace, query, broken ring); its word slides out on hover */
   .flag {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 3px 8px 3px 7px; border-radius: 99px;
+    display: inline-flex; align-items: center;
+    height: 26px; padding: 0 5px; border-radius: 99px;
     box-shadow: inset 0 0 0 1px currentColor;
   }
-  .flag::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .flag svg { flex: none; width: 16px; height: 16px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+  .flag svg .fill { fill: currentColor; stroke: none; }
+  .flag .lbl { max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0; transition: max-width .45s var(--ease), opacity .3s var(--ease), margin .45s var(--ease); }
+  .card:hover .flag .lbl, .card:focus-visible .flag .lbl, .sheet .flag .lbl { max-width: 9em; opacity: 1; margin: 0 4px 0 6px; }
+  .card:hover .flag[data-s="sighted"] .lid { animation: blink .5s ease-in-out; transform-box: fill-box; transform-origin: center; }
+  .card:hover .flag[data-s="recorded"] path { stroke-dasharray: 40; animation: trace 1.4s linear infinite; }
+  .card:hover .flag[data-s="unconfirmed"] svg { animation: query .9s var(--ease); }
+  .card:hover .flag[data-s="lost"] circle { animation: drift 3s linear infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes blink { 50% { transform: scaleY(.1); } }
+  @keyframes trace { from { stroke-dashoffset: 80; } to { stroke-dashoffset: 0; } }
+  @keyframes query { 30% { transform: rotate(-14deg); } 65% { transform: rotate(9deg); } }
+  @keyframes drift { to { transform: rotate(360deg); } }
+  .key { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px 26px; list-style: none;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+  .key li { display: flex; align-items: center; gap: 9px; }
   .flag[data-s="sighted"]     { color: var(--st-sighted); }
   .flag[data-s="recorded"]    { color: var(--st-recorded); }
   .flag[data-s="unconfirmed"] { color: var(--st-unconfirmed); }
@@ -535,7 +593,7 @@
   .card__tile video { opacity: 0; transition: transform .8s var(--ease), opacity .6s var(--ease); }
   .card__tile video.playing { opacity: 1; }
   .card:hover .card__legend, .card:focus-visible .card__legend { opacity: 1; transform: none; }
-  .card__name { margin-top: 14px; font-size: clamp(18px, 1.4vw, 22px); font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+  .card__name { margin-top: 14px; font-size: clamp(21px, 1.7vw, 27px); font-weight: 600; letter-spacing: 0; line-height: 1.15; }
   .card__more { margin-top: 6px; align-self: flex-start; }
   @media (hover: none) {
     .card__legend { opacity: 1; transform: none; background: linear-gradient(180deg, rgba(2,3,6,0) 30%, rgba(2,3,6,.88) 80%); }
@@ -546,10 +604,10 @@
     display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 24px;
     margin-top: 72px; padding-top: 24px; border-top: 1px solid var(--ink-line);
   }
-  .after p { font-size: clamp(22px, 2.4vw, 34px); letter-spacing: -0.02em; line-height: 1.15; max-width: 22em; font-weight: 500; }
+  .after p { font-size: clamp(24px, 2.6vw, 38px); letter-spacing: 0; line-height: 1.15; max-width: 22em; font-weight: 500; }
 
   /* who we are */
-  .who .body { grid-column: 1 / span 7; font-size: clamp(20px, 2vw, 28px); line-height: 1.35; letter-spacing: -0.01em; }
+  .who .body { grid-column: 1 / span 7; font-size: clamp(22px, 2.2vw, 31px); line-height: 1.32; letter-spacing: 0; font-weight: 500; }
   .who .body strong { color: var(--lume); font-weight: 500; }
   .who .teams { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 80px; }
   .who h3 { font-family: var(--mono); font-size: 12px; font-weight: 400; letter-spacing: .1em; text-transform: uppercase; color: var(--pale-soft); padding-bottom: 12px; border-bottom: 1px solid var(--pale-line); }
@@ -586,13 +644,13 @@
   .sheet__art video { opacity: 0; transition: opacity .6s var(--ease); }
   .sheet__art video.playing { opacity: 1; }
   .sheet__text { padding: 32px; display: flex; flex-direction: column; gap: 18px; }
-  .sheet__text h2 { font-size: clamp(28px, 3.4vw, 42px); line-height: 1; letter-spacing: -0.03em; font-weight: 600; }
+  .sheet__text h2 { font-size: clamp(30px, 3.6vw, 46px); line-height: 1; letter-spacing: 0; font-weight: 600; }
   .sheet__text .tale { font-family: var(--serif); font-style: italic; font-size: 20px; line-height: 1.45; }
   .sheet__text dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; margin-top: auto; font-family: var(--mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
   .sheet__text dt { color: var(--pale-soft); }
   .sheet__close { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; font-size: 22px; color: var(--pale); background: rgba(2,3,6,.6); border-radius: 2px; }
   .sheet__manifesto { padding: 48px clamp(24px, 5vw, 64px); display: grid; gap: 18px; font-size: 19px; line-height: 1.55; max-width: 40em; }
-  .sheet__manifesto h2 { font-size: clamp(32px, 4vw, 52px); letter-spacing: -0.03em; line-height: 1; margin-bottom: 8px; }
+  .sheet__manifesto h2 { font-size: clamp(34px, 4.2vw, 56px); letter-spacing: 0; line-height: 1; margin-bottom: 8px; font-weight: 600; }
   .sheet__manifesto p:last-child { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--pale-soft); margin-top: 8px; }
 
   /* ================= reveal ================= */
@@ -621,13 +679,22 @@
     .card__legend { padding: 12px; font-size: 14px; }
     .ticker { width: calc(100vw - 2 * var(--pad) - 60px); }
     .totop small { display: none; }
+    /* on a phone the sounding line lives in the edge gutter, ticks only */
+    .rail { right: 0; width: 14px; }
+    .rail__line, .rail__cable { right: 6px; }
+    .rail__bob { right: 1.5px; }
+    .rail__marks a { padding-right: 3px; }
+    .rail__marks a::after { width: 6px; margin-left: 0; }
+    .rail__marks li.here a::after { width: 9px; }
+    .rail__marks a span { display: none; }
+    .rail__read { right: 16px; }
   }
   @media (max-width: 420px) {
     .cards { grid-template-columns: 1fr; }
   }
   @media (prefers-reduced-motion: reduce) {
     .rv { opacity: 1; transform: none; transition: none; }
-    .cube, .ticker .live::before, .ticker .live.ping::after, .ticker__line .caret, .ticker__line.in { animation: none; }
+    .sphere__rig, .sphere__ping, .logo__sway, .logo__ping, .ticker .live::before, .ticker .live.ping::after, .ticker__line .caret, .ticker__line.in { animation: none; }
     .menu, body.menu-open .menu, .menu li a, body.menu-open .menu li a, .menu .sub, body.menu-open .menu .sub { transition: none; }
     body.menu-open .menu__ping { animation: none; }
   }
@@ -639,13 +706,14 @@
   <canvas id="loaderSnow"></canvas>
   <div class="loader__rays"></div>
   <span class="loader__ring"></span><span class="loader__ring"></span>
-  <div class="scene3d">
-    <div class="cube">
-      <div class="cube__face cube__face--front">Hadal<br>House</div>
-      <figure class="cube__face cube__face--right" data-window></figure>
-      <div class="cube__face cube__face--back">Hadal<br>House</div>
-      <figure class="cube__face cube__face--left" data-window></figure>
+  <div class="sphere">
+    <div class="sphere__rig">
+      <span class="sphere__cable"></span>
+      <span class="sphere__ping"></span><span class="sphere__ping"></span>
+      <div class="sphere__hull"><div class="sphere__port" id="spherePort"></div><span class="sphere__glass"></span></div>
     </div>
+    <p class="sphere__word"><small>Archive of the deep</small>Hadal House</p>
+    <p class="sphere__seen" id="sphereSeen"></p>
   </div>
   <div class="loader__read">
     <span class="loader__zone"><i id="ldZone">Hadal Trenches</i></span>
@@ -659,14 +727,31 @@
 <div class="fade fade--top" aria-hidden="true"></div>
 <div class="fade fade--bottom" aria-hidden="true"></div>
 
-<a class="chrome logo" href="#top" aria-label="Hadal House, back to the surface">Hadal<br>House</a>
+<a class="chrome logo" href="#top" aria-label="Hadal House, back to the surface">
+  <svg class="logo__mark" viewBox="0 0 26 44" aria-hidden="true">
+    <g class="logo__sway"><g class="logo__drop">
+      <line class="logo__cable" x1="13" y1="-160" x2="13" y2="12.5"/>
+      <circle class="logo__hull" cx="13" cy="20" r="7.5"/>
+      <circle class="logo__port" cx="13" cy="20" r="3"/>
+      <path class="logo__ping" d="M6.5 31.5Q13 35.5 19.5 31.5"/>
+      <path class="logo__ping" d="M3.5 36Q13 42 22.5 36"/>
+    </g></g>
+  </svg>
+  <span class="logo__word"><small>Archive of the deep</small>Hadal House</span>
+</a>
 
 <div class="chrome topright">
   <div class="gauge" aria-live="off">Depth <b id="depth">0</b> m</div>
   <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu" aria-label="Open site navigation"><i></i></button>
 </div>
 
-<div class="chrome rail" aria-hidden="true"><span id="railThumb"></span></div>
+<nav class="chrome rail" id="rail" aria-label="Sections by depth">
+  <span class="rail__line" aria-hidden="true"></span>
+  <span class="rail__cable" id="railCable" aria-hidden="true"></span>
+  <ol class="rail__marks" id="railMarks"></ol>
+  <span class="rail__bob" id="railThumb" aria-hidden="true"><i></i></span>
+  <output class="rail__read" id="railRead" aria-hidden="true">0 m</output>
+</nav>
 
 <div class="chrome ticker" id="ticker">
   <span class="live" id="tickerLive">Live</span>
@@ -709,6 +794,7 @@
       <p class="kicker rv"><span>Most-told legends</span><span>Surface – 200 m</span></p>
       <h2 class="rv">Stories sailors still lower their voices for.</h2>
       <p class="rv">Eight entries asked about more than any others. Hover a card to hear the legend; open it for the full record.</p>
+      <ul class="key rv" id="statusKey" aria-label="Status key"></ul>
     </div>
     <ul class="cards" id="told-cards"></ul>
     <div class="after rv">
@@ -835,6 +921,14 @@ const LORE = {
 };
 
 const STATUS = { sighted: "Sighted", recorded: "Recorded", unconfirmed: "Unconfirmed", lost: "Lost" };
+// one drawn mark per status: an eye, a recorded trace, a query, a broken ring
+const STATUS_ICON = {
+  sighted: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.4 8S3.8 3.6 8 3.6 14.6 8 14.6 8 12.2 12.4 8 12.4 1.4 8 1.4 8Z"/><g class="lid"><circle class="fill" cx="8" cy="8" r="2.2"/></g></svg>',
+  recorded: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 8h2.2l1.4-3.4 2 7 2.1-9.2 2 8.2 1.4-2.6H15"/></svg>',
+  unconfirmed: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.4"/><path d="M6.1 6.3a1.95 1.95 0 1 1 2.6 1.85c-.45.17-.7.55-.7 1v.45"/><circle class="fill" cx="8" cy="11.5" r=".75"/></svg>',
+  lost: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.4" stroke-dasharray="2.4 2.6"/><path d="M5.4 10.6l5.2-5.2"/></svg>'
+};
+const flagHTML = (st) => `<span class="flag" data-s="${st}" title="${STATUS[st]}">${STATUS_ICON[st]}<span class="lbl">${STATUS[st]}</span></span>`;
 const slug = (n) => n.toLowerCase().replace(/^the /, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 const photo = (n) => `creatures/${slug(n)}.jpg`;
 const clip = (n) => `creatures/video/${slug(n)}`;   // + .webm / .mp4
@@ -946,7 +1040,7 @@ LORE.zones.forEach((z) => z.creatures.forEach((c) => (byName[c.name] = { ...c, z
 
 function cardHTML(c, zone) {
   return `<li><button class="card rv" data-name="${c.name}" aria-label="${c.name}: open the legend">
-    <span class="card__top"><span>${fmt(c.depth)} m</span><span class="flag" data-s="${c.status}">${STATUS[c.status]}</span></span>
+    <span class="card__top"><span>${fmt(c.depth)} m</span>${flagHTML(c.status)}</span>
     <span class="card__tile"><img src="${photo(c.name)}" alt="" loading="lazy" decoding="async" data-sigil="${c.name}" data-zone="${zone.id}"><video muted loop playsinline preload="none" data-clip="${clip(c.name)}" aria-hidden="true"></video><span class="card__legend">${c.legend}</span></span>
     <span class="card__name">${c.name}</span>
     <span class="button card__more"><span>Read the legend</span> →</span>
@@ -954,6 +1048,7 @@ function cardHTML(c, zone) {
 }
 
 document.getElementById("told-cards").innerHTML = LORE.told.map((n) => cardHTML(byName[n], byName[n].zone)).join("");
+document.getElementById("statusKey").innerHTML = Object.keys(STATUS).map((st) => `<li>${flagHTML(st)}${STATUS[st]}</li>`).join("");
 
 document.getElementById("zones").outerHTML = LORE.zones.map((z) => `
   <section class="grid12 band is-deep" id="${z.id}" data-depth="${z.top}" data-state="${z.state}">
@@ -1037,7 +1132,7 @@ document.addEventListener("click", (e) => {
         <dl>
           <dt>Depth</dt><dd>${fmt(c.depth)} m</dd>
           <dt>Zone</dt><dd>${c.zone.range}</dd>
-          <dt>Status</dt><dd><span class="flag" data-s="${c.status}">${STATUS[c.status]}</span></dd>
+          <dt>Status</dt><dd>${flagHTML(c.status)}</dd>
         </dl>
       </div></div>`);
     const art = document.getElementById("sheetArt");
@@ -1233,6 +1328,65 @@ const smooth = (t) => t * t * (3 - 2 * t);
 
 const depthEl = document.getElementById("depth");
 const thumb = document.getElementById("railThumb");
+
+/* ---- the sounding rail ---- */
+const rail = document.getElementById("rail"), railCable = document.getElementById("railCable");
+const railRead = document.getElementById("railRead"), railMarks = document.getElementById("railMarks");
+const logoEl = document.querySelector(".logo");
+const RAIL_NAME = { told: "Most told", who: "Who we are" };
+let railH = 0, railItems = [], railHere = -1, railY = -1, railVel = 0, railStill = 0, railBubbleAt = 0, railDepth = -1;
+function placeRail() {
+  railH = rail.clientHeight;
+  const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+  railMarks.innerHTML = sections.map((s, i) => {
+    const z = LORE.zones.find((zz) => zz.id === s.id);
+    const name = z ? z.name : RAIL_NAME[s.id] || "Surface";
+    const at = Math.min(1, s.offsetTop / max);
+    return `<li style="top:${(at * 100).toFixed(2)}%;--i:${i}"><a href="#${s.id || "top"}"><span>${name} · ${fmt(+s.dataset.depth)} m</span></a></li>`;
+  }).join("");
+  railItems = [...railMarks.children];
+  railHere = -1;
+}
+placeRail();
+addEventListener("resize", placeRail);
+addEventListener("load", placeRail);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { measure(); placeRail(); });
+
+function railBubble(pos) {
+  const b = document.createElement("i");
+  b.className = "rail__bubble";
+  b.style.setProperty("--y", `${(pos - 6).toFixed(1)}px`);
+  b.style.setProperty("--dx", `${((Math.random() - 0.5) * 10).toFixed(1)}px`);
+  rail.appendChild(b);
+  b.addEventListener("animationend", () => b.remove());
+}
+function railMove(y, max, here, depth) {
+  const frac = Math.min(1, Math.max(0, y / max));
+  const pos = frac * railH;
+  const v = railY < 0 ? 0 : y - railY;
+  railY = y;
+  railVel += (v - railVel) * 0.25;
+  const stretch = reduceMotion ? 1 : 1 + Math.min(0.7, Math.abs(railVel) / 70);
+  thumb.style.transform = `translateY(${pos.toFixed(1)}px) scale(${(1 / Math.sqrt(stretch)).toFixed(3)}, ${stretch.toFixed(3)})`;
+  railCable.style.transform = `scaleY(${frac.toFixed(4)})`;
+  railRead.style.transform = `translateY(${pos.toFixed(1)}px)`;
+  if (depth !== railDepth) {
+    railDepth = depth;
+    railRead.textContent = `${fmt(Math.max(0, depth))} m`;
+    logoEl.style.setProperty("--drop", (Math.max(0, depth) / 11034).toFixed(3));
+  }
+  if (here !== railHere && railItems.length) {
+    railItems.forEach((li, j) => li.classList.toggle("here", j === here));
+    railHere = here;
+  }
+  if (Math.abs(v) > 0.5) {
+    rail.classList.add("moving");
+    clearTimeout(railStill);
+    railStill = setTimeout(() => { rail.classList.remove("moving"); railVel = 0; thumb.style.transform = `translateY(${pos.toFixed(1)}px)`; }, 900);
+    const now = performance.now();
+    if (!reduceMotion && railVel > 4 && now - railBubbleAt > 110) { railBubbleAt = now; railBubble(pos); }
+  }
+}
 let lastDepth = -1, lastDeep = null, lastBg = "";
 function updateChrome(y) {
   const vy = y + innerHeight * 0.45;
@@ -1253,8 +1407,7 @@ function updateChrome(y) {
   if (depth !== lastDepth) { depthEl.textContent = fmt(Math.max(0, depth)).padStart(6, " "); lastDepth = depth; }
 
   const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
-  const travel = innerHeight - 16 - 36;
-  thumb.style.transform = `translateY(${(y / max) * travel}px)`;
+  railMove(y, max, i, depth);
   document.body.classList.toggle("scrolled", y > innerHeight * 0.6);
   return { i, k };
 }
@@ -1800,25 +1953,34 @@ if (!sceneOK) {
   const ZONES = [[6000, "Hadal Trenches"], [4000, "Abyss"], [1000, "Midnight Zone"], [200, "Twilight Zone"], [0, "Sunlight Zone"]];
   const DEEP = [2, 3, 6], SURF = [238, 242, 240], PALE = [230, 238, 240], INK = [10, 17, 20];
 
-  // two of the archive's creatures look out of the cube's side windows
+  // through the porthole: one of the archive's creatures, then another as we rise
   const WINDOWS = ["lantern-widow", "mother-coil", "listener", "vespertine-choir", "captain-halfmoon", "inkwraith"];
-  const picks = WINDOWS.slice().sort(() => Math.random() - 0.5);
-  document.querySelectorAll("#loader [data-window]").forEach((fig, i) => {
-    const s = picks[i];
-    const name = Object.keys(byName).find((n) => slug(n) === s) || "";
+  const picks = WINDOWS.slice().sort(() => Math.random() - 0.5).slice(0, 2);
+  const port = document.getElementById("spherePort"), seen = document.getElementById("sphereSeen");
+  const portVids = picks.map((s) => {
     const v = document.createElement("video");
-    v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true;
+    v.muted = true; v.loop = true; v.playsInline = true; v.preload = "auto";
+    v.dataset.name = Object.keys(byName).find((n) => slug(n) === s) || "";
     for (const ext of ["webm", "mp4"]) {
       const src = document.createElement("source");
       src.src = `creatures/loader/${s}.${ext}`; src.type = `video/${ext}`;
       v.appendChild(src);
     }
     v.addEventListener("loadeddata", () => v.classList.add("ready"));
-    const cap = document.createElement("figcaption");
-    cap.textContent = name;
-    fig.append(v, cap);
-    const pr = v.play(); if (pr && pr.catch) pr.catch(() => {});
+    port.appendChild(v);
+    return v;
   });
+  let portOn = -1;
+  function showPort(i) {
+    if (i === portOn) return;
+    portOn = i;
+    portVids.forEach((v, j) => {
+      v.classList.toggle("on", j === i);
+      if (j === i) { const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); }
+    });
+    seen.textContent = `At the porthole · ${portVids[i].dataset.name}`;
+  }
+  showPort(0);
 
   // marine snow falls past as we rise; a few bubbles rise with us; some specks glow in the deep
   const cv = document.getElementById("loaderSnow"), ctx = cv.getContext("2d");
@@ -1867,6 +2029,7 @@ if (!sceneOK) {
 
     count.textContent = String(Math.round(shown * 100)).padStart(3, "0") + "%";
     depthEl.textContent = `${depth.toLocaleString("en-US")} m`;
+    showPort(shown < 0.5 ? 0 : 1);
     const zone = ZONES.find(([top]) => depth >= top)[1];
     if (zone !== zoneNow) {
       zoneNow = zone; zoneEl.textContent = zone;
@@ -1904,7 +2067,7 @@ if (!sceneOK) {
   }
   requestAnimationFrame(step);
 
-  // break the surface: rings spread, the cube rises out of view, the loader dissolves into the page
+  // break the surface: rings spread, the bathysphere rises out of view, the loader dissolves into the page
   function finish() {
     finished = true;
     el.classList.add("surfacing");
