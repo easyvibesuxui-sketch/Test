@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hadal House — Archive of the Deep</title>
+<title>Hadal House — A Field Guide to the Deep</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<meta name="description" content="A fictional archive of deep-sea legends, sorted by the depth they come from.">
+<meta name="description" content="A field guide to the ocean, from the sunlit surface to the bottom of the Challenger Deep: real animals, the giants first, and the myths sailors told about them.">
 <style>
   :root {
     /* the descent: one colour per depth band, interpolated on scroll */
@@ -75,26 +75,22 @@
   .chrome { position: fixed; z-index: 30; color: var(--ink); transition: color .5s var(--ease); }
   body.deep .chrome { color: var(--pale); }
 
-  /* the mark: a bathysphere hanging on a cable from the top of the screen. It sways,
-     pings sonar now and then, is lowered a little as you go deeper, and its port lights up in the dark */
+  /* the mark: an engraved nautilus emblem made with Kling, inked in the current text colour.
+     It turns very slowly, sinks a little as you go deeper and glows in dark water */
   .logo {
     top: var(--pad); left: var(--pad);
     display: flex; align-items: center; gap: 12px;
     text-decoration: none;
   }
-  .logo__mark { flex: none; width: 26px; height: 44px; overflow: visible; }
-  .logo__mark line, .logo__mark circle, .logo__mark path { fill: none; stroke: currentColor; stroke-width: 1.4; vector-effect: non-scaling-stroke; }
-  .logo__mark .logo__cable { opacity: .5; }
-  .logo__mark .logo__port { fill: currentColor; stroke: none; transition: fill .6s var(--ease); }
-  body.deep .logo__mark .logo__port, body.menu-open .logo__mark .logo__port { fill: var(--lume); filter: drop-shadow(0 0 3px var(--lume)); }
-  .logo__sway { transform-box: view-box; transform-origin: 13px -40px; animation: bellSway 7s ease-in-out infinite; }
-  @keyframes bellSway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
-  .logo__drop { transform: translateY(calc(var(--drop, 0) * 6px)); transition: transform .8s var(--ease); }
-  .logo:hover .logo__drop { transform: translateY(calc(var(--drop, 0) * 6px + 4px)); }
-  .logo__mark .logo__ping { opacity: 0; animation: logoPing 4.8s var(--ease) infinite; }
-  .logo__mark .logo__ping + .logo__ping { animation-delay: .3s; }
-  .logo:hover .logo__ping { animation-duration: 1.4s; }
-  @keyframes logoPing { 0%, 60% { opacity: 0; transform: translateY(-3px); } 68% { opacity: .9; } 100% { opacity: 0; transform: translateY(4px); } }
+  .logo__emblem { flex: none; display: block; width: 48px; height: 48px; translate: 0 calc(var(--drop, 0) * 4px); transition: translate .8s var(--ease), filter .6s var(--ease), scale .5s var(--ease); }
+  .logo__mark {
+    display: block; width: 100%; height: 100%; background: currentColor;
+    -webkit-mask: url(brand/emblem.png) center / contain no-repeat; mask: url(brand/emblem.png) center / contain no-repeat;
+    animation: emblemTurn 90s linear infinite;
+  }
+  @keyframes emblemTurn { to { rotate: 360deg; } }
+  .logo:hover .logo__emblem { scale: 1.08; }
+  body.deep .logo__emblem, body.menu-open .logo__emblem { filter: drop-shadow(0 0 5px rgba(124,245,214,.5)); }
   .logo__word { display: grid; font-family: var(--display); font-style: italic; font-weight: 600; font-size: 27px; line-height: .92; }
   .logo__word small { font-family: var(--mono); font-style: normal; font-weight: 400; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; opacity: .62; margin-bottom: 5px; }
 
@@ -336,7 +332,7 @@
   .menu .sub a { text-decoration: none; color: var(--pale-soft); }
   .menu .sub a:hover { color: var(--pale); }
 
-  /* sounding line: 0 to 11,034 m, with the hovered band lit and a pin that counts */
+  /* sounding line: 0 to 10,935 m, with the hovered band lit and a pin that counts */
   .menu__sounding {
     position: fixed; z-index: 1; pointer-events: none;
     right: calc(var(--pad) + 34px); top: calc(var(--pad) + 110px); bottom: calc(var(--pad) + 40px); width: 1px;
@@ -359,7 +355,7 @@
   .menu__pin output { position: absolute; right: 42px; top: -8px; color: var(--lume); white-space: nowrap; font-size: 12px; }
 
   /* ================= loader ================= */
-  /* an ascent: the loader starts in the trench at 11,034 m and surfaces as it loads,
+  /* an ascent: the loader starts in the trench at 10,935 m and surfaces as it loads,
      so it ends on the same pale water the page opens on */
   .loader {
     position: fixed; inset: 0; z-index: 100; overflow: hidden;
@@ -479,7 +475,7 @@
     max-width: 34em;
   }
   .hero .lede strong { color: var(--ink); font-weight: 600; }
-  .hero .actions { grid-column: 1 / -1; margin-top: 36px; }
+  .hero .actions { grid-column: 1 / -1; margin-top: 36px; display: flex; flex-wrap: wrap; gap: 14px 32px; }
 
   .button {
     position: relative; display: inline-flex; align-items: center; gap: 10px;
@@ -547,10 +543,9 @@
   .flag svg .fill { fill: currentColor; stroke: none; }
   .flag .lbl { max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0; transition: max-width .45s var(--ease), opacity .3s var(--ease), margin .45s var(--ease); }
   .card:hover .flag .lbl, .card:focus-visible .flag .lbl, .sheet .flag .lbl { max-width: 9em; opacity: 1; margin: 0 4px 0 6px; }
-  .card:hover .flag[data-s="sighted"] .lid { animation: blink .5s ease-in-out; transform-box: fill-box; transform-origin: center; }
-  .card:hover .flag[data-s="recorded"] path { stroke-dasharray: 40; animation: trace 1.4s linear infinite; }
-  .card:hover .flag[data-s="unconfirmed"] svg { animation: query .9s var(--ease); }
-  .card:hover .flag[data-s="lost"] circle { animation: drift 3s linear infinite; transform-box: fill-box; transform-origin: center; }
+  .card:hover .flag[data-s="common"] .lid { animation: blink .5s ease-in-out; transform-box: fill-box; transform-origin: center; }
+  .card:hover .flag[data-s="rare"] path { stroke-dasharray: 40; animation: trace 1.4s linear infinite; }
+  .card:hover .flag[data-s="myth"] svg { animation: query .9s var(--ease); }
   @keyframes blink { 50% { transform: scaleY(.1); } }
   @keyframes trace { from { stroke-dashoffset: 80; } to { stroke-dashoffset: 0; } }
   @keyframes query { 30% { transform: rotate(-14deg); } 65% { transform: rotate(9deg); } }
@@ -558,10 +553,9 @@
   .key { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px 26px; list-style: none;
     font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
   .key li { display: flex; align-items: center; gap: 9px; }
-  .flag[data-s="sighted"]     { color: var(--st-sighted); }
-  .flag[data-s="recorded"]    { color: var(--st-recorded); }
-  .flag[data-s="unconfirmed"] { color: var(--st-unconfirmed); }
-  .flag[data-s="lost"]        { color: var(--st-lost); }
+  .flag[data-s="common"] { color: var(--st-sighted); }
+  .flag[data-s="rare"]   { color: var(--st-recorded); }
+  .flag[data-s="myth"]   { color: var(--st-unconfirmed); }
   /* on the pale surface the bright flag colours need a dark ground */
   .is-surface .flag { background: var(--ink); box-shadow: none; }
 
@@ -595,6 +589,16 @@
   .card:hover .card__legend, .card:focus-visible .card__legend { opacity: 1; transform: none; }
   .card__name { margin-top: 14px; font-size: clamp(21px, 1.7vw, 27px); font-weight: 600; letter-spacing: 0; line-height: 1.15; }
   .card__more { margin-top: 6px; align-self: flex-start; }
+  .card__sci { margin-top: 2px; font-family: var(--serif); font-style: italic; font-size: 16px; color: var(--ink-soft); }
+  .is-deep .card__sci { color: var(--pale-soft); }
+  /* the giants' length bars share one scale (the 40 m siphonophore); the notch is a 1.8 m person */
+  .card__scale { margin: 12px 0 4px; display: grid; gap: 6px; font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+  .card__scale i { position: relative; display: block; height: 6px; background: var(--ink-line); }
+  .card__scale i::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--l) * 100%); background: var(--ink); transform-origin: left; transform: scaleX(0); transition: transform 1.6s var(--ease) .25s; }
+  .card__scale i::after { content: ""; position: absolute; left: 4.5%; top: -4px; bottom: -4px; width: 2px; background: var(--st-unconfirmed); }
+  .card.in .card__scale i::before, .card:not(.rv) .card__scale i::before { transform: scaleX(1); }
+  .card__scale em { font-style: normal; }
+  .sheet dd i { text-transform: none; font-family: var(--serif); font-size: 15px; letter-spacing: 0; }
   @media (hover: none) {
     .card__legend { opacity: 1; transform: none; background: linear-gradient(180deg, rgba(2,3,6,0) 30%, rgba(2,3,6,.88) 80%); }
   }
@@ -615,7 +619,7 @@
   .who li { padding: 12px 0; border-bottom: 1px solid var(--pale-line); font-size: 18px; display: flex; justify-content: space-between; gap: 16px; }
   .who li span { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--pale-soft); }
 
-  /* ================= footer: the trench floor at 11,034 m ================= */
+  /* ================= footer: the trench floor at 10,935 m ================= */
   /* marine snow settles into a drift you can stir with the pointer; the name rests half-sunk
      in it; the instruments tick; and a ping sent from here comes back exactly one second late */
   footer {
@@ -742,7 +746,7 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .rv, .foot__word span { opacity: 1; transform: none; transition: none; }
-    .sphere__rig, .sphere__ping, .logo__sway, .logo__ping, .foot__sonar i::after, footer.in .foot__word b, .ticker .live::before, .ticker .live.ping::after, .ticker__line .caret, .ticker__line.in { animation: none; }
+    .sphere__rig, .sphere__ping, .logo__mark, .foot__sonar i::after, footer.in .foot__word b, .ticker .live::before, .ticker .live.ping::after, .ticker__line .caret, .ticker__line.in { animation: none; }
     .menu, body.menu-open .menu, .menu li a, body.menu-open .menu li a, .menu .sub, body.menu-open .menu .sub { transition: none; }
     body.menu-open .menu__ping { animation: none; }
   }
@@ -760,13 +764,13 @@
       <span class="sphere__ping"></span><span class="sphere__ping"></span>
       <div class="sphere__hull"><div class="sphere__port" id="spherePort"></div><span class="sphere__glass"></span></div>
     </div>
-    <p class="sphere__word"><small>Archive of the deep</small>Hadal House</p>
+    <p class="sphere__word"><small>A field guide to the deep</small>Hadal House</p>
     <p class="sphere__seen" id="sphereSeen"></p>
   </div>
   <div class="loader__read">
     <span class="loader__zone"><i id="ldZone">Hadal Trenches</i></span>
     <span class="count" id="count">000%</span>
-    <span class="loader__depth" id="ldDepth">11,034 m</span>
+    <span class="loader__depth" id="ldDepth">10,935 m</span>
   </div>
   <span class="loader__bar"></span>
 </div>
@@ -776,16 +780,8 @@
 <div class="fade fade--bottom" aria-hidden="true"></div>
 
 <a class="chrome logo" href="#top" aria-label="Hadal House, back to the surface">
-  <svg class="logo__mark" viewBox="0 0 26 44" aria-hidden="true">
-    <g class="logo__sway"><g class="logo__drop">
-      <line class="logo__cable" x1="13" y1="-160" x2="13" y2="12.5"/>
-      <circle class="logo__hull" cx="13" cy="20" r="7.5"/>
-      <circle class="logo__port" cx="13" cy="20" r="3"/>
-      <path class="logo__ping" d="M6.5 31.5Q13 35.5 19.5 31.5"/>
-      <path class="logo__ping" d="M3.5 36Q13 42 22.5 36"/>
-    </g></g>
-  </svg>
-  <span class="logo__word"><small>Archive of the deep</small>Hadal House</span>
+  <span class="logo__emblem" aria-hidden="true"><i class="logo__mark"></i></span>
+  <span class="logo__word"><small>A field guide to the deep</small>Hadal House</span>
 </a>
 
 <div class="chrome topright">
@@ -802,11 +798,11 @@
 </nav>
 
 <div class="chrome ticker" id="ticker">
-  <span class="live" id="tickerLive">Live</span>
+  <span class="live" id="tickerLive">Facts</span>
   <canvas class="ticker__scope" id="tickerScope" aria-hidden="true"></canvas>
   <div class="ticker__wire" id="tickerWire" aria-hidden="true"></div>
-  <section class="ticker__log" aria-label="Sightings log">
-    <header><span>Sightings log</span><span id="tickerWhere">Surface</span></header>
+  <section class="ticker__log" aria-label="Recent facts">
+    <header><span>Recent facts</span><span id="tickerWhere">Surface</span></header>
     <ol id="tickerList"></ol>
   </section>
 </div>
@@ -819,49 +815,48 @@
   <div class="menu__sounding" id="sounding" aria-hidden="true"><span class="menu__band" id="soundBand"></span><span class="menu__pin" id="soundPin"><output id="soundOut">0 m</output></span></div>
   <ol id="menuList"></ol>
   <div class="sub">
-    <a href="#" data-manifesto>Manifesto</a>
-    <a href="#">Field notes</a>
-    <a href="#">Submit a sighting</a>
-    <a href="#">Legal</a>
+    <a href="#" data-manifesto>About this guide</a>
+    <a href="#giants">The giants</a>
+    <a href="#who">Deepest dives</a>
   </div>
 </nav>
 
 <main id="top">
   <section class="grid12 hero is-surface" data-depth="0" data-state="pearl">
-    <p class="kicker rv">Hadal House · Archive of the deep · Est. 1887</p>
-    <h1 class="rv">Will it <em>surface,</em> or will it sleep?</h1>
+    <p class="kicker rv">Hadal House · A field guide to the water column</p>
+    <h1 class="rv">What lives <em>below</em> the surface?</h1>
     <div class="lede rv">
-      <p>The deep sea is the largest unread library on Earth. Fishermen, sonar crews and divers have been adding to it for centuries, one half-believed story at a time.</p>
-      <p>At Hadal House we keep only two kinds of legends: <strong>the ones that are rising, and the ones that should be left asleep.</strong></p>
+      <p>The ocean is about 3,700 m deep on average, and its deepest point, the Challenger Deep, lies 10,935 m down. Each layer on the way has its own light, cold and pressure, and its own residents.</p>
+      <p>Scroll down through five zones to meet <strong>the giants first, then everyone else</strong>, and the myths sailors told about what they saw.</p>
     </div>
-    <div class="actions rv"><a class="button" href="#" data-manifesto><span>Read the manifesto</span> →</a></div>
+    <div class="actions rv"><a class="button" href="#giants"><span>Meet the giants</span> ↓</a> <a class="button" href="#" data-manifesto><span>About this guide</span> →</a></div>
   </section>
 
-  <section class="grid12 band is-surface" id="told" data-depth="150" data-state="pearl-rest">
+  <section class="grid12 band is-surface" id="giants" data-depth="0" data-state="pearl-rest">
     <div class="band-head">
-      <p class="kicker rv"><span>Most-told legends</span><span>Surface – 200 m</span></p>
-      <h2 class="rv">Stories sailors still lower their voices for.</h2>
-      <p class="rv">Eight entries asked about more than any others. Hover a card to hear the legend; open it for the full record.</p>
-      <ul class="key rv" id="statusKey" aria-label="Status key"></ul>
+      <p class="kicker rv"><span>The giants</span><span>Drawn to scale</span></p>
+      <h2 class="rv">The biggest things in the sea, first.</h2>
+      <p class="rv">Eight record holders, longest first. The bar on each card is to scale against the longest, a 40 m siphonophore, and the yellow notch marks a 1.8 m person. Hover a card for a fact; open it for more.</p>
+      <ul class="key rv" id="statusKey" aria-label="Key"></ul>
     </div>
-    <ul class="cards" id="told-cards"></ul>
+    <ul class="cards" id="giant-cards"></ul>
     <div class="after rv">
-      <p>1,140 legends in the archive. Twenty-two are told here, sorted by the depth they come from.</p>
-      <a class="button" href="#twilight"><span>Begin the descent</span> ↓</a>
+      <p>39 entries from the surface to the bottom of the Challenger Deep: 31 real animals and 8 myths.</p>
+      <a class="button" href="#sunlight"><span>Begin the descent</span> ↓</a>
     </div>
   </section>
 
   <div id="zones"></div>
 
-  <section class="grid12 band who is-deep" id="who" data-depth="11034" data-state="eye-rest">
+  <section class="grid12 band who is-deep" id="who" data-depth="10935" data-state="eye-rest">
     <div class="band-head">
-      <p class="kicker rv"><span>05</span><span>Who we are</span><span>11,034 m</span></p>
-      <h2 class="rv">The keepers.</h2>
+      <p class="kicker rv"><span>06</span><span>Deepest dives</span><span>10,935 m</span></p>
+      <h2 class="rv">How deep is deep?</h2>
     </div>
-    <p class="body rv">A small, stubborn archive in a decommissioned lighthouse on the North Atlantic, founded in 1887 by a harbour master who kept a second logbook for things he couldn't explain. Today we hold <strong>1,140 legends</strong>, <strong>312 sonar recordings</strong> and one jar of ink nobody will open. We take sightings from anyone, at any depth.</p>
+    <p class="body rv">The deepest known point in the ocean, the Challenger Deep in the Mariana Trench, lies about <strong>10,935 m</strong> down: Mount Everest would fit inside with two kilometres of water to spare. Roughly three quarters of the sea floor has still not been mapped in high resolution, and most of what we know about the animals here comes from robot submersibles, baited cameras dropped to the floor and tags that ride on whales and sharks.</p>
     <div class="teams">
-      <div class="rv"><h3>Keepers of the archive</h3><ul id="keepers"></ul></div>
-      <div class="rv"><h3>Divers &amp; listeners</h3><ul id="crew"></ul></div>
+      <div class="rv"><h3>Deepest recorded dives: animals</h3><ul id="animalDives"></ul></div>
+      <div class="rv"><h3>Deepest dives: people and machines</h3><ul id="humanDives"></ul></div>
     </div>
   </section>
 </main>
@@ -870,10 +865,10 @@
   <div class="foot__top">
     <div class="foot__ping">
       <button class="foot__sonar" id="footPing" type="button"><i></i>Send a ping</button>
-      <p class="foot__log" id="footLog" aria-live="polite">Something on the trench floor answers every ping, exactly one second late. Try it.</p>
+      <p class="foot__log" id="footLog" aria-live="polite">Send a ping to the bottom of the Challenger Deep and time its echo, the way ships measure the depth of the sea.</p>
     </div>
     <dl class="foot__inst" aria-label="Instruments on the trench floor">
-      <dt>Depth</dt><dd>11,034 m</dd>
+      <dt>Depth</dt><dd>10,935 m</dd>
       <dt>Pressure</dt><dd id="footPres">1,086.4 bar</dd>
       <dt>Water</dt><dd id="footTemp">1.21 °C</dd>
       <dt>Archive time</dt><dd id="footTime">--:--:--</dd>
@@ -882,11 +877,11 @@
   <p class="foot__word" id="footWord" aria-hidden="true">Hadal House</p>
   <canvas class="foot__snow" id="footSnow" aria-hidden="true"></canvas>
   <div class="foot__base">
-    <span>© 2026 Hadal House — a fictional archive. Every creature, place and story here is invented.</span>
+    <span>© 2026 Hadal House — a field guide to the deep. Illustrations are AI-generated with Kling.</span>
     <nav aria-label="Footer">
-      <a href="#" data-manifesto>Manifesto</a>
-      <a href="#">Submit a sighting</a>
-      <a href="#">Legal</a>
+      <a href="#" data-manifesto>About this guide</a>
+      <a href="#giants">The giants</a>
+      <a href="#who">Deepest dives</a>
     </nav>
   </div>
 </footer>
@@ -897,103 +892,181 @@
 </dialog>
 
 <script>
-// Hadal House — the archive. Every creature, place and story here is invented.
+// Hadal House — a field guide to the water column. Real animals, with the myths sailors told about the sea.
+// Depths and sizes are typical published figures, rounded; "~" marks an estimate or a range that varies by source.
 const LORE = {
   zones: [
     {
-      id: "twilight", num: "01", name: "Twilight Zone", range: "200 – 1,000 m", top: 200, state: "jelly",
-      title: "Where the last blue light gives out.",
-      intro: "Creatures here still remember the sun, and most of their legends are about the people above who forgot them.",
+      id: "sunlight", num: "01", name: "Sunlight Zone", range: "0 – 200 m", top: 0, state: "shallows", surface: true,
+      title: "Where the light reaches.",
+      intro: "The top 200 metres hold nearly all of the ocean's sunlight, most of its plankton and its biggest animals. Whales and sharks the size of buses come here to feed on swarms of tiny life.",
       creatures: [
-        { name: "The Lantern Widow", depth: 640, status: "sighted",
-          legend: "Lights one lamp in the water for every sailor who never came home. The boats of Skerholm still sail dark past the ninth reef." },
-        { name: "Glasshearts", depth: 410, status: "recorded",
-          legend: "A shoal of clear fish whose hearts glow only when someone in the boat above is lying. Old net-menders call it the honest tide." },
-        { name: "The Vespertine Choir", depth: 880, status: "recorded",
-          legend: "Squid that rise every dusk singing at a pitch only whales and widows can hear. Hydrophones have caught the chorus twice." },
-        { name: "Old Salt Moth", depth: 300, status: "sighted",
-          legend: "A moth-winged ray that eats logbooks dropped overboard and remembers every entry. Ask it nicely and it will tell you where a ship went down." },
-        { name: "Captain Halfmoon", depth: 520, status: "unconfirmed",
-          legend: "A grey giant as long as a chapel, with the lantern of a drowned lighthouse grown into its back. The lamp still burns; the keeper was never found." },
-        { name: "The Ninefold Mirror", depth: 760, status: "lost",
-          legend: "Hatchetfish that school into a mirror and show you your face as it will look in thirty years. Nobody who looked ever fished again." }
+        { id: "blue-whale", name: "Blue whale", sci: "Balaenoptera musculus", kind: "common", depth: 100, range: "0 – 300 m", size: "Up to ~30 m, ~150 t", len: 30, video: true,
+          legend: "The largest animal that has ever lived, bigger than any dinosaur. It eats krill, shrimp-like animals a few centimetres long, by gulping a mouthful of water larger than its own body and straining it through baleen plates. On a good day it can eat around four tonnes.",
+          fact: "A blue whale's heart weighs about 180 kg." },
+        { id: "whale-shark", name: "Whale shark", sci: "Rhincodon typus", kind: "common", depth: 50, range: "0 – 200 m, dives past 1,900 m", size: "Up to ~18 m", len: 18, video: true,
+          legend: "The largest fish in the sea is a gentle filter feeder that swims with its huge mouth open, sieving out plankton and fish eggs. Every whale shark's pattern of pale spots is unique, so researchers identify individuals from photographs, like fingerprints.",
+          fact: "Whale sharks have been tracked diving below 1,900 m." },
+        { id: "basking-shark", name: "Basking shark", sci: "Cetorhinus maximus", kind: "common", depth: 30, range: "0 – 200 m", size: "Up to ~10 m", len: 10,
+          legend: "The second-largest fish cruises slowly near the surface with its mouth gaping a metre wide. Despite its size it eats only plankton, filtering about 2,000 tonnes of water every hour.",
+          fact: "A basking shark filters about 2,000 tonnes of water an hour." },
+        { id: "giant-manta", name: "Giant oceanic manta ray", sci: "Mobula birostris", kind: "common", depth: 40, range: "0 – 200 m, dives past 1,000 m", size: "Wingspan up to ~7 m",
+          legend: "The largest ray glides through open water filtering plankton. Mantas have one of the largest brains for their body size of any fish, and in experiments some have reacted to mirrors in ways that suggest they recognise themselves.",
+          fact: "Manta rays have one of the largest brain-to-body ratios of any fish." },
+        { id: "ocean-sunfish", name: "Ocean sunfish", sci: "Mola mola", kind: "common", depth: 100, range: "0 – 600 m", size: "Up to ~3 m tall, over 2 t",
+          legend: "The heaviest bony fish looks like a swimming head. Sunfish dive into cold, deep water to hunt jellyfish, then bask flat at the surface to warm up. A single female can carry around 300 million eggs, more than any other known vertebrate.",
+          fact: "An ocean sunfish can carry around 300 million eggs." },
+        { id: "lions-mane", name: "Lion's mane jellyfish", sci: "Cyanea capillata", kind: "common", depth: 20, range: "0 – 50 m", size: "Bell to ~2 m, tentacles over 30 m",
+          legend: "One of the longest animals known. Its bell can reach about 2 m across and trails hundreds of fine stinging tentacles. One that washed ashore in Massachusetts in 1870 was reported to have tentacles about 36 m long, longer than a blue whale.",
+          fact: "A lion's mane jellyfish found in 1870 had tentacles about 36 m long.", video: true },
+        { id: "great-white", name: "Great white shark", sci: "Carcharodon carcharias", kind: "common", depth: 50, range: "0 – 250 m, dives to ~1,200 m", size: "Up to ~6 m",
+          legend: "The largest predatory fish keeps its body warmer than the water around it, which lets it hunt fast in cold seas. It can sense the tiny electric fields made by the muscles of hidden prey.",
+          fact: "Great white sharks have been tracked diving to about 1,200 m." },
+        { id: "leatherback", name: "Leatherback sea turtle", sci: "Dermochelys coriacea", kind: "common", depth: 80, range: "0 – 250 m, dives past 1,200 m", size: "Up to ~2 m, ~500 kg",
+          legend: "The largest turtle has no hard shell: its back is leathery skin over a mosaic of small bones. It crosses whole oceans to eat jellyfish and dives deeper than any other reptile.",
+          fact: "Leatherback turtles dive deeper than any other reptile, past 1,200 m." },
+        { id: "mermaids", name: "Mermaids & sirens", kind: "myth", depth: 5, range: "At the surface", origin: "Worldwide", inspired: "Manatees and dugongs",
+          legend: "Half-human sea folk appear in stories almost everywhere. Many sailors' mermaids were really manatees or dugongs, which rest upright in the water and hold their young with their flippers. In 1493 Christopher Columbus wrote that he had seen three sirens near Hispaniola, and that they were not as beautiful as they are painted.",
+          fact: "In 1493 Columbus reported three sirens near Hispaniola: almost certainly manatees." },
+        { id: "cetus", name: "Cetus", kind: "myth", depth: 30, range: "Off ancient Aethiopia", origin: "Ancient Greece", inspired: "Whales, large sharks and fossil bones",
+          legend: "In Greek myth the sea god Poseidon sent the monster Cetus to ravage the coast until Princess Andromeda was chained to a rock as its sacrifice. The hero Perseus killed it. Its Greek name, ketos, gave us 'cetacean', the scientific word for whales and dolphins.",
+          fact: "The word 'cetacean' comes from ketos, the sea monster of Greek myth." },
+        { id: "umibozu", name: "Umibōzu", kind: "myth", depth: 10, range: "Calm seas at night", origin: "Japan", inspired: "Sudden swells, surfacing whales, sea fog",
+          legend: "A huge, dark, bald spirit that rises from a calm sea at night and can capsize a boat. In some tellings it asks the crew for a barrel and uses it to fill their boat with water, so fishermen carried a bottomless barrel to hand over instead.",
+          fact: "Japanese fishermen once carried a bottomless barrel to outwit the sea spirit Umibōzu." }
       ]
     },
     {
-      id: "midnight", num: "02", name: "Midnight Zone", range: "1,000 – 4,000 m", top: 1000, state: "lights",
-      title: "Every light down here is alive.",
-      intro: "No sunlight reaches this far. Each glow is made by something living, and each one means something: a lure, a warning, a name.",
+      id: "twilight", num: "02", name: "Twilight Zone", range: "200 – 1,000 m", top: 200, state: "jelly",
+      title: "The last blue light.",
+      intro: "Sunlight fades to a dim blue and then to nothing. Many animals here make their own light, and every night vast numbers of them swim up towards the surface to feed: the largest migration on Earth.",
       creatures: [
-        { name: "The Bellringer of Karst Deep", depth: 1912, status: "recorded",
-          legend: "A siphonophore forty metres long. In 1962 a sonar crew logged it ringing on the hour, every hour, for nine days." },
-        { name: "Mother Coil", depth: 3300, status: "unconfirmed",
-          legend: "An eel so long that her slow turning drives the deep currents. When she sleeps, the tides stall and the harbours go quiet." },
-        { name: "The Unlit Bishop", depth: 2450, status: "sighted",
-          legend: "A cloaked squid that turns itself inside out over passing ships. Whether that is a blessing or a curse depends on who is telling it." },
-        { name: "The Ledger Crab", depth: 1480, status: "sighted",
-          legend: "Keeps a tally of every anchor dropped into its kingdom and sends the bill in storms. Some fishing villages still pay in iron." },
-        { name: "Inkwraith", depth: 2800, status: "recorded",
-          legend: "A cephalopod that writes in ink clouds. Three of its letters, caught in jars by a Lisbon whaler, have never been read." },
-        { name: "The Quiet Engine", depth: 3950, status: "lost",
-          legend: "A pulse heard under the Atlantic for eleven years, then never again. Most say it was machinery. The archive says it was a heart." }
+        { id: "giant-squid", name: "Giant squid", sci: "Architeuthis dux", kind: "rare", depth: 600, range: "~300 – 1,000 m", size: "Up to ~13 m", len: 13, video: true,
+          legend: "Its eyes, up to about 27 cm across, are among the largest in the animal kingdom, perhaps for spotting the glow stirred up by an approaching sperm whale. For centuries it was known only from carcasses; it was first photographed alive in 2004 and filmed in its own habitat in 2012.",
+          fact: "A giant squid's eye can be about 27 cm across." },
+        { id: "giant-oarfish", name: "Giant oarfish", sci: "Regalecus glesne", kind: "rare", depth: 250, range: "~0 – 1,000 m", size: "Up to ~8 m", len: 8, video: true,
+          legend: "The longest bony fish is a silver ribbon with a red crest. It hangs upright in the water, rippling its long dorsal fin. Because it is so rarely seen alive, washed-up oarfish fed many sea serpent stories. In Japan its name means 'messenger from the sea god's palace'.",
+          fact: "In Japan the oarfish is called the 'messenger from the sea god's palace'." },
+        { id: "swordfish", name: "Swordfish", sci: "Xiphias gladius", kind: "common", depth: 400, range: "0 – 600 m and deeper", size: "Up to ~4.5 m",
+          legend: "A fast hunter that slashes its prey with a flat bill. A special heater tissue warms its eyes and brain, so it can still see sharply in cold, dark water hundreds of metres down.",
+          fact: "Swordfish warm their eyes and brain to see in cold, deep water." },
+        { id: "humboldt-squid", name: "Humboldt squid", sci: "Dosidicus gigas", kind: "common", depth: 400, range: "~200 – 700 m", size: "Up to ~2 m",
+          legend: "A fast, aggressive squid that hunts in large groups and flashes from red to white and back, possibly to signal to the others. Mexican fishers call it diablo rojo, the red devil.",
+          fact: "Humboldt squid flash red and white, possibly to signal to each other." },
+        { id: "giant-siphonophore", name: "Giant siphonophore", sci: "Praya dubia", kind: "rare", depth: 700, range: "~300 – 1,000 m", size: "Colonies over 40 m", len: 40,
+          legend: "Not one animal but a colony of specialised clones strung together: some swim, some catch food, some reproduce. Stretched out it can be longer than a blue whale, which makes it one of the longest animals in the world.",
+          fact: "A giant siphonophore is a colony of clones that can be longer than a blue whale." },
+        { id: "vampire-squid", name: "Vampire squid", sci: "Vampyroteuthis infernalis", kind: "rare", depth: 800, range: "~600 – 1,200 m", size: "~30 cm",
+          legend: "Despite the name it is gentle. It lives where the water holds very little oxygen and feeds on marine snow, sinking scraps it gathers with sticky filaments. When threatened it turns its webbed cloak inside out and can release a cloud of glowing mucus instead of ink.",
+          fact: "The vampire squid eats marine snow, not blood." },
+        { id: "barreleye", name: "Barreleye", sci: "Macropinna microstoma", kind: "rare", depth: 700, range: "~600 – 800 m", size: "~15 cm",
+          legend: "Its head is a transparent dome full of fluid. Inside, two green tube-shaped eyes look upward for the silhouettes of prey against the faint light above, and can turn forward to follow it. The see-through shield was only described in 2008, because nets used to destroy it.",
+          fact: "The barreleye looks up through its own transparent head." },
+        { id: "kraken", name: "Kraken", kind: "myth", depth: 300, range: "Off Norway and Iceland", origin: "Norse", inspired: "Giant squid",
+          legend: "Norse sailors told of a monster so large it could be mistaken for an island, which dragged ships under with its arms. In 1752 the Norwegian bishop Erik Pontoppidan described it at length. Most historians now think giant squid, seen dead or dying at the surface, were behind the legend.",
+          fact: "In 1752 a Norwegian bishop wrote that the Kraken could be mistaken for an island." },
+        { id: "sea-serpent", name: "Sea serpent", kind: "myth", depth: 150, range: "Every ocean", origin: "Worldwide", inspired: "Oarfish, lines of porpoises, floating kelp",
+          legend: "Long, maned serpents coil across old maps such as the 1539 Carta Marina. Sightings went on into the 1800s, including one by the officers of HMS Daedalus in 1848. Oarfish, rows of porpoises breaking the surface and tangles of seaweed are the usual suspects.",
+          fact: "In 1848 the officers of HMS Daedalus reported a sea serpent in the South Atlantic." }
       ]
     },
     {
-      id: "abyss", num: "03", name: "Abyss", range: "4,000 – 6,000 m", top: 4000, state: "urchin",
-      title: "Patience is the only law.",
-      intro: "A cold plain the size of continents, fed by a slow snow of everything that dies above. The legends here are long, and nothing in them hurries.",
+      id: "midnight", num: "03", name: "Midnight Zone", range: "1,000 – 4,000 m", top: 1000, state: "lights",
+      title: "Every light here is alive.",
+      intro: "No sunlight reaches this deep. The water is near freezing and the pressure is a hundred to four hundred times that at the surface. The only light comes from animals themselves, and most creatures here can glow.",
       creatures: [
-        { name: "The Pale Shepherd", depth: 4700, status: "sighted",
-          legend: "A blind sea cucumber that herds lesser creatures across the plain toward food no one else can sense. It has never once been wrong." },
-        { name: "The Snow Gardener", depth: 5200, status: "recorded",
-          legend: "Gathers the falling marine snow and plants glass sponges in the shapes of constellations that will not rise for another thousand years." },
-        { name: "Gulper of Promises", depth: 4300, status: "sighted",
-          legend: "Swallows whole anything thrown into the sea with a wish. Divers say its stomach glows with coins, rings and unsent letters." },
-        { name: "The Abyssal Clockmaker", depth: 5600, status: "recorded",
-          legend: "A tripod fish that stands still on its stilts for a hundred years, keeping time for the drowned. When it moves, someone above is born." },
-        { name: "Saltglass Wyrm", depth: 5050, status: "unconfirmed",
-          legend: "Lives at the edge of a brine lake on the sea floor — a second sea beneath the sea — and guards whatever sank into it." }
+        { id: "sperm-whale", name: "Sperm whale", sci: "Physeter macrocephalus", kind: "common", depth: 1200, range: "Dives to 1,000 – 2,000 m", size: "Up to ~18 m", len: 18, video: true,
+          legend: "The largest toothed predator, with the largest brain of any animal. It hunts squid in total darkness using clicks that are the loudest sounds made by any animal. Many sperm whales carry round scars left by the suckers of giant squid.",
+          fact: "Sperm whale clicks are the loudest sounds made by any animal." },
+        { id: "colossal-squid", name: "Colossal squid", sci: "Mesonychoteuthis hamiltoni", kind: "rare", depth: 2000, range: "~1,000 – 2,200 m, Southern Ocean", size: "Up to ~10 m (est.), ~500 kg", len: 10,
+          legend: "The heaviest invertebrate known: one caught in 2007 weighed about 495 kg. As well as suckers, its arms carry swivelling hooks. It was first filmed alive in its habitat only in 2025, a young one about 30 cm long.",
+          fact: "The first video of a living colossal squid was filmed in 2025." },
+        { id: "cuviers-beaked-whale", name: "Cuvier's beaked whale", sci: "Ziphius cavirostris", kind: "rare", depth: 1500, range: "Dives to ~3,000 m", size: "Up to ~7 m",
+          legend: "The deepest-diving mammal known. One was recorded at 2,992 m, and another stayed underwater for 222 minutes. How it copes with that pressure and that long a breath-hold is still being studied.",
+          fact: "A Cuvier's beaked whale was recorded diving to 2,992 m." },
+        { id: "greenland-shark", name: "Greenland shark", sci: "Somniosus microcephalus", kind: "rare", depth: 1000, range: "0 – 2,200 m, Arctic", size: "Up to ~6.5 m",
+          legend: "Probably the longest-lived vertebrate. A 2016 study dated the eye lenses of Greenland sharks and estimated the oldest at around 400 years. It grows about a centimetre a year and may not breed until it is 150.",
+          fact: "Greenland sharks may live for around 400 years." },
+        { id: "giant-isopod", name: "Giant isopod", sci: "Bathynomus giganteus", kind: "common", depth: 1000, range: "~170 – 2,100 m", size: "Up to ~50 cm",
+          legend: "A relative of the woodlouse grown to the size of a cat. It scavenges on the sea floor and can go a very long time without eating: one in a Japanese aquarium refused food for more than five years.",
+          fact: "A captive giant isopod went more than five years without eating." },
+        { id: "anglerfish", name: "Deep-sea anglerfish", sci: "Ceratioidei", kind: "common", depth: 1500, range: "~1,000 – 4,000 m", size: "Most under 20 cm",
+          legend: "The female dangles a glowing lure, lit by bacteria, in front of her jaws. In some species the much smaller male bites onto the female and fuses with her for life, sharing her blood supply.",
+          fact: "In some anglerfish the male fuses with the female for life." },
+        { id: "gulper-eel", name: "Gulper eel", sci: "Eurypharynx pelecanoides", kind: "rare", depth: 1500, range: "~500 – 3,000 m", size: "Up to ~1 m",
+          legend: "Most of its body is mouth. The loose jaw opens like a pelican's pouch, though it mostly eats small crustaceans. The tip of its whip-like tail glows pink and red, perhaps as a lure.",
+          fact: "The gulper eel's tail tip glows, perhaps as a lure." },
+        { id: "leviathan", name: "Leviathan", kind: "myth", depth: 2000, range: "The depths of the sea", origin: "Hebrew Bible", inspired: "Whales; older sea-dragon myths",
+          legend: "A great sea monster of the Hebrew Bible, described in the Book of Job as beyond the reach of any human weapon. It echoes older Canaanite stories of Lotan, a many-headed sea dragon. Later its name came to mean any huge sea creature, especially a whale.",
+          fact: "In modern Hebrew, 'livyatan' simply means whale." }
       ]
     },
     {
-      id: "hadal", num: "04", name: "Hadal Trenches", range: "6,000 – 11,000 m", top: 6000, state: "eye",
-      title: "Named for the underworld.",
-      intro: "The pressure here would fold a submarine like paper. Very few have looked, and what they saw does not agree.",
+      id: "abyss", num: "04", name: "Abyss", range: "4,000 – 6,000 m", top: 4000, state: "urchin",
+      title: "Patience on the plain.",
+      intro: "The abyssal plains cover about half of Earth's surface. Food arrives as a slow snow of dead plankton from far above, so life here moves slowly, grows slowly and lives long.",
       creatures: [
-        { name: "The Last Hand", depth: 10900, status: "unconfirmed",
-          legend: "A pale shape like an open palm, photographed once at the bottom of a trench. The camera that took it was never recovered." },
-        { name: "Trenchmother", depth: 8100, status: "sighted",
-          legend: "A snailfish queen whose eggs glow like small moons. Every century, the old fishermen say, one of them floats all the way up." },
-        { name: "The Listener", depth: 10200, status: "recorded",
-          legend: "Something at the bottom answers sonar pings with the same ping, exactly one second late. It has never once missed." },
-        { name: "The Amphipod King", depth: 7400, status: "sighted",
-          legend: "A shrimp-like giant that crowns itself with the ribs of whales fallen from the world above, and wears a new crown each age." },
-        { name: "The Unnamed", depth: 11034, status: "lost",
-          legend: "No two people who have drawn it agree on its shape. Every map of the deepest trench leaves the same small patch blank." }
+        { id: "dumbo-octopus", name: "Dumbo octopus", sci: "Grimpoteuthis", kind: "common", depth: 4000, range: "~1,000 – 7,000 m", size: "~20 – 30 cm",
+          legend: "Named after the cartoon elephant for the fins on its head, which it flaps to hover and swim. It swallows its prey whole. One was filmed at about 6,957 m, the deepest any octopus has been seen.",
+          fact: "A dumbo octopus was filmed at about 6,957 m, the deepest octopus on record." },
+        { id: "tripod-fish", name: "Tripod fish", sci: "Bathypterois grallator", kind: "common", depth: 3000, range: "~900 – 4,700 m", size: "~35 cm, on 1 m stilts",
+          legend: "It stands on the sea floor on three long fin rays, facing into the current, and waits for small prey to drift into the feelers it holds out in front like antennae. Each fish has both male and female organs.",
+          fact: "The tripod fish stands on three fin rays up to a metre long." },
+        { id: "sea-pig", name: "Sea pig", sci: "Scotoplanes", kind: "common", depth: 4500, range: "~1,000 – 6,000 m", size: "~10 – 15 cm",
+          legend: "A sea cucumber that walks across the mud on enlarged, water-filled tube feet. Herds of sea pigs graze the sea floor for the remains of dead plankton, and young crabs sometimes hitch a ride on them.",
+          fact: "Sea pigs are sea cucumbers that walk on water-filled legs." },
+        { id: "bigfin-squid", name: "Bigfin squid", sci: "Magnapinna", kind: "rare", depth: 4500, range: "Seen from ~1,900 to ~6,200 m", size: "Up to ~8 m with arms (est.)", len: 8,
+          legend: "Among the strangest animals ever filmed: its long thin arms bend at an 'elbow' and trail straight down for metres. No adult has ever been caught, so almost everything known about it comes from a handful of videos.",
+          fact: "No adult bigfin squid has ever been caught; it is known from videos." },
+        { id: "abyssal-grenadier", name: "Abyssal grenadier", sci: "Coryphaenoides armatus", kind: "common", depth: 4000, range: "~2,000 – 4,700 m", size: "Up to ~1 m",
+          legend: "Rattails are among the most common fish on the deep sea floor. They arrive quickly at anything edible, so scientists count their visits to baited cameras to measure how much life a site holds.",
+          fact: "Rattails are among the most common fish of the deep sea floor." },
+        { id: "xenophyophores", name: "Xenophyophores", sci: "Xenophyophorea", kind: "common", depth: 5000, range: "~500 – 10,600 m", size: "Up to ~20 cm, one cell",
+          legend: "Giant single cells, among the largest known, that build fragile shells from sand and sediment. In places they are so common that they shape the sea floor and shelter other small animals.",
+          fact: "A xenophyophore can be 20 cm across and still be a single cell." },
+        { id: "ryujin", name: "Ryūjin's Dragon Palace", kind: "myth", depth: 5000, range: "A palace on the sea floor", origin: "Japan", inspired: "Coral reefs, sea turtles, the unseen sea floor",
+          legend: "Ryūjin, the dragon king of the sea, rules from Ryūgū-jō, a palace on the sea floor. In the tale of Urashima Tarō, a fisherman rescues a turtle, is taken to the palace for what seems like three days, and comes home to find three hundred years have passed.",
+          fact: "In the tale of Urashima Tarō, three days at the Dragon Palace are three hundred years on land." }
+      ]
+    },
+    {
+      id: "hadal", num: "05", name: "Hadal Trenches", range: "6,000 – 10,935 m", top: 6000, state: "eye",
+      title: "Named after the underworld.",
+      intro: "'Hadal' comes from Hades, the Greek underworld. The trenches reach almost 11 km down, where the pressure is more than a thousand times that at the surface. Even so, they are full of life.",
+      creatures: [
+        { id: "mariana-snailfish", name: "Mariana snailfish", sci: "Pseudoliparis swirei", kind: "rare", depth: 7500, range: "~6,900 – 8,000 m", size: "Up to ~30 cm",
+          legend: "A soft, scaleless, almost see-through fish that is the top predator of its trench. Its skull is not fully closed and its body is jelly-like, adaptations to crushing pressure. A related snailfish filmed at 8,336 m in 2022 is the deepest fish ever recorded.",
+          fact: "A snailfish filmed at 8,336 m is the deepest fish ever recorded." },
+        { id: "supergiant-amphipod", name: "Supergiant amphipod", sci: "Alicella gigantea", kind: "rare", depth: 6500, range: "~4,800 – 7,000 m", size: "Up to ~34 cm",
+          legend: "Most amphipods are a few millimetres long, like the sand hoppers on a beach. This one grows to about 34 cm, a striking case of deep-sea gigantism.",
+          fact: "The supergiant amphipod is a sand-hopper relative about 34 cm long." },
+        { id: "hirondellea-gigas", name: "Hirondellea gigas", sci: "Hirondellea gigas", kind: "rare", depth: 10900, range: "~6,000 – 10,900 m", size: "~3 – 5 cm",
+          legend: "Swarms of these small amphipods live at the very bottom of the Challenger Deep. They can digest wood that sinks from the surface, and coat themselves in an aluminium-based gel that may stop their shells dissolving under the pressure.",
+          fact: "Hirondellea gigas coats itself in an aluminium gel at the bottom of the Challenger Deep." },
+        { id: "jormungandr", name: "Jörmungandr", kind: "myth", depth: 10900, range: "Coiled around the world", origin: "Norse", inspired: "The idea of a world-ocean",
+          legend: "In Norse myth the world serpent Jörmungandr grew so large that it lies on the bottom of the ocean, circling the whole world and biting its own tail. When it lets go, Ragnarök, the end of the world, begins; Thor and the serpent kill each other.",
+          fact: "In Norse myth the serpent Jörmungandr circles the world from the bottom of the sea." }
       ]
     }
   ],
-  told: ["The Bellringer of Karst Deep", "The Lantern Widow", "The Last Hand", "Mother Coil",
-         "The Listener", "Glasshearts", "Gulper of Promises", "Trenchmother"],
-  keepers: [["Ilse Marrow", "Head archivist"], ["Tobiah Quill", "Logbooks"], ["Odalys Venn", "Sonar library"],
-            ["Bram Holloway", "Charts"], ["Nnenna Saltmarsh", "Oral histories"], ["Reuben Ashgrove", "The ink jar"]],
-  crew: [["Mirela Fathom", "Saturation diver"], ["Kasimir Dune", "Hydrophones"], ["Wren Okonjo", "Submersible pilot"],
-         ["Halvard Brine", "Trawler liaison"], ["Sefa Tolland", "Night listener"], ["June Ravel", "Sightings desk"]],
-  ticker: ["Sonar station 7 hears ringing at 1,912 m — the Bellringer is awake again",
-           "Trawler Aud Marie reports a lamp lit below the ninth reef",
-           "New sighting submitted from 4,300 m: something glowing, full of coins"]
+  giants: ["Giant siphonophore", "Blue whale", "Whale shark", "Sperm whale", "Giant squid", "Colossal squid", "Basking shark", "Giant oarfish"],
+  animalDives: [["Cuvier's beaked whale", "2,992 m"], ["Southern elephant seal", "2,388 m"], ["Sperm whale", "over 2,000 m"],
+                ["Whale shark", "1,928 m"], ["Leatherback turtle", "1,280 m"], ["Emperor penguin", "564 m"]],
+  humanDives: [["Limiting Factor, Vescovo (2019)", "10,925 m"], ["Trieste, Piccard & Walsh (1960)", "10,916 m"], ["Deepsea Challenger, Cameron (2012)", "10,908 m"],
+               ["Bathysphere, Beebe & Barton (1934)", "923 m"], ["Scuba record, Ahmed Gabr (2014)", "332 m"], ["Free dive, no limits, Herbert Nitsch (2007)", "214 m"]]
 };
 
-const STATUS = { sighted: "Sighted", recorded: "Recorded", unconfirmed: "Unconfirmed", lost: "Lost" };
-// one drawn mark per status: an eye, a recorded trace, a query, a broken ring
+const STATUS = { common: "Often seen", rare: "Rarely seen", myth: "Myth" };
+// one drawn mark per kind: an eye (often seen), a recorded trace (rarely seen), a query (myth)
 const STATUS_ICON = {
-  sighted: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.4 8S3.8 3.6 8 3.6 14.6 8 14.6 8 12.2 12.4 8 12.4 1.4 8 1.4 8Z"/><g class="lid"><circle class="fill" cx="8" cy="8" r="2.2"/></g></svg>',
-  recorded: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 8h2.2l1.4-3.4 2 7 2.1-9.2 2 8.2 1.4-2.6H15"/></svg>',
-  unconfirmed: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.4"/><path d="M6.1 6.3a1.95 1.95 0 1 1 2.6 1.85c-.45.17-.7.55-.7 1v.45"/><circle class="fill" cx="8" cy="11.5" r=".75"/></svg>',
-  lost: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.4" stroke-dasharray="2.4 2.6"/><path d="M5.4 10.6l5.2-5.2"/></svg>'
-};
+  common: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.4 8S3.8 3.6 8 3.6 14.6 8 14.6 8 12.2 12.4 8 12.4 1.4 8 1.4 8Z"/><g class="lid"><circle class="fill" cx="8" cy="8" r="2.2"/></g></svg>',
+  rare: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 8h2.2l1.4-3.4 2 7 2.1-9.2 2 8.2 1.4-2.6H15"/></svg>',
+  myth: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.4"/><path d="M6.1 6.3a1.95 1.95 0 1 1 2.6 1.85c-.45.17-.7.55-.7 1v.45"/><circle class="fill" cx="8" cy="11.5" r=".75"/></svg>'
+}
 const flagHTML = (st) => `<span class="flag" data-s="${st}" title="${STATUS[st]}">${STATUS_ICON[st]}<span class="lbl">${STATUS[st]}</span></span>`;
-const slug = (n) => n.toLowerCase().replace(/^the /, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+const ID = {};
+LORE.zones.forEach((z) => z.creatures.forEach((c) => (ID[c.name] = c.id)));
+const slug = (n) => ID[n] || n.toLowerCase().replace(/^the /, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 const photo = (n) => `creatures/${slug(n)}.jpg`;
 const clip = (n) => `creatures/video/${slug(n)}`;   // + .webm / .mp4
 const fmt = (n) => n.toLocaleString("en-US");
@@ -1004,6 +1077,7 @@ function hashStr(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt
 function rng(seed) { return () => ((seed = Math.imul(seed ^ (seed >>> 15), 2246822507) ^ Math.imul(seed ^ (seed >>> 13), 3266489909), (seed ^= seed >>> 16) >>> 0) / 4294967296); }
 
 const ZONE_INK = {
+  sunlight: ["#1E5C78", "#BFF1FF", "#FFFFFF"],
   twilight: ["#0E3A52", "#7FD8FF", "#C9F3FF"],
   midnight: ["#071423", "#7CF5D6", "#E8FFF8"],
   abyss:    ["#07070F", "#B79CFF", "#EDE6FF"],
@@ -1102,20 +1176,26 @@ function drawSigil(canvas, creature, zoneId) {
 const byName = {};
 LORE.zones.forEach((z) => z.creatures.forEach((c) => (byName[c.name] = { ...c, zone: z })));
 
-function cardHTML(c, zone) {
-  return `<li><button class="card rv" data-name="${c.name}" aria-label="${c.name}: open the legend">
-    <span class="card__top"><span>${fmt(c.depth)} m</span>${flagHTML(c.status)}</span>
-    <span class="card__tile"><img src="${photo(c.name)}" alt="" loading="lazy" decoding="async" data-sigil="${c.name}" data-zone="${zone.id}"><video muted loop playsinline preload="none" data-clip="${clip(c.name)}" aria-hidden="true"></video><span class="card__legend">${c.legend}</span></span>
-    <span class="card__name">${c.name}</span>
-    <span class="button card__more"><span>Read the legend</span> →</span>
+// the longest giant sets the scale for every length bar
+const GIANT_MAX = Math.max(...LORE.giants.map((n) => byName[n].len || 0));
+function cardHTML(c, zone, giant) {
+  const myth = c.kind === "myth";
+  const top = myth ? c.origin : c.range;
+  const scale = giant && c.len ? `<span class="card__scale" style="--l:${(c.len / GIANT_MAX).toFixed(3)}"><i></i><em>${c.size}</em></span>` : "";
+  const video = c.video ? `<video muted loop playsinline preload="none" data-clip="${clip(c.name)}" aria-hidden="true"></video>` : "";
+  return `<li><button class="card rv${myth ? " card--myth" : ""}" data-name="${c.name}" aria-label="${c.name}: read more">
+    <span class="card__top"><span>${top}</span>${flagHTML(c.kind)}</span>
+    <span class="card__tile"><img src="${photo(c.name)}" alt="" loading="lazy" decoding="async" data-sigil="${c.name}" data-zone="${zone.id}">${video}<span class="card__legend">${c.fact}</span></span>
+    <span class="card__name">${c.name}</span>${c.sci ? `<span class="card__sci">${c.sci}</span>` : ""}
+    ${scale}<span class="button card__more"><span>${myth ? "Read the myth" : "Read more"}</span> →</span>
   </button></li>`;
 }
 
-document.getElementById("told-cards").innerHTML = LORE.told.map((n) => cardHTML(byName[n], byName[n].zone)).join("");
+document.getElementById("giant-cards").innerHTML = LORE.giants.map((n) => cardHTML(byName[n], byName[n].zone, true)).join("");
 document.getElementById("statusKey").innerHTML = Object.keys(STATUS).map((st) => `<li>${flagHTML(st)}${STATUS[st]}</li>`).join("");
 
 document.getElementById("zones").outerHTML = LORE.zones.map((z) => `
-  <section class="grid12 band is-deep" id="${z.id}" data-depth="${z.top}" data-state="${z.state}">
+  <section class="grid12 band ${z.surface ? "is-surface" : "is-deep"}" id="${z.id}" data-depth="${z.top}" data-state="${z.state}">
     <div class="band-head">
       <p class="kicker rv"><span>${z.num}</span><span>${z.name}</span><span>${z.range}</span></p>
       <h2 class="rv">${z.title}</h2>
@@ -1124,15 +1204,15 @@ document.getElementById("zones").outerHTML = LORE.zones.map((z) => `
     <ul class="cards">${[...z.creatures].sort((a, b) => a.depth - b.depth).map((c) => cardHTML(c, z)).join("")}</ul>
   </section>`).join("");
 
-document.getElementById("keepers").innerHTML = LORE.keepers.map(([n, r]) => `<li>${n}<span>${r}</span></li>`).join("");
-document.getElementById("crew").innerHTML = LORE.crew.map(([n, r]) => `<li>${n}<span>${r}</span></li>`).join("");
+document.getElementById("animalDives").innerHTML = LORE.animalDives.map(([n, d]) => `<li>${n}<span>${d}</span></li>`).join("");
+document.getElementById("humanDives").innerHTML = LORE.humanDives.map(([n, d]) => `<li>${n}<span>${d}</span></li>`).join("");
 
 
 // each entry carries the depth band it stands for and the footage that plays behind it
-const MENU_REEL = { twilight: "twilight", midnight: "midnight", abyss: "abyss", hadal: "eye", who: "surface" };
+const MENU_REEL = { sunlight: "surface", twilight: "twilight", midnight: "midnight", abyss: "abyss", hadal: "eye", who: "eye" };
 document.getElementById("menuList").innerHTML = LORE.zones.map((z, i) =>
-  `<li style="--i:${i}" data-reel="${MENU_REEL[z.id]}" data-from="${z.top}" data-to="${(LORE.zones[i + 1] || { top: 11000 }).top}"><a href="#${z.id}"><small>${z.num}</small><b>${z.name}</b><span>${z.range}</span></a></li>`).join("") +
-  `<li style="--i:${LORE.zones.length}" data-reel="${MENU_REEL.who}" data-from="0" data-to="11034"><a href="#who"><small>05</small><b>Who we are</b><span>11,034 m</span></a></li>`;
+  `<li style="--i:${i}" data-reel="${MENU_REEL[z.id]}" data-from="${z.top}" data-to="${(LORE.zones[i + 1] || { top: 10935 }).top}"><a href="#${z.id}"><small>${z.num}</small><b>${z.name}</b><span>${z.range}</span></a></li>`).join("") +
+  `<li style="--i:${LORE.zones.length}" data-reel="${MENU_REEL.who}" data-from="0" data-to="10935"><a href="#who"><small>06</small><b>Deepest dives</b><span>10,935 m</span></a></li>`;
 
 // a photograph that fails to load is replaced by the creature's generated sigil
 function sigilFallback(img) {
@@ -1161,8 +1241,9 @@ function playClip(v) {
 const clipIO = new IntersectionObserver((entries) => {
   for (const e of entries) {
     const v = e.target;
-    if (e.isIntersecting) { wireClip(v); playClip(v); }
-    else if (!v.paused) v.pause();
+    // off-screen clips are paused and taken off the compositor, so no stale video layer lingers
+    if (e.isIntersecting) { v.style.visibility = ""; wireClip(v); playClip(v); }
+    else { if (!v.paused) v.pause(); v.style.visibility = "hidden"; }
   }
 }, { rootMargin: "200px 0px" });
 document.querySelectorAll(".card__tile video").forEach((v) => clipIO.observe(v));
@@ -1187,33 +1268,33 @@ document.addEventListener("click", (e) => {
   const card = e.target.closest(".card, .ticker__hit");
   if (card) {
     const c = byName[card.dataset.name];
+    const myth = c.kind === "myth";
+    const rows = myth
+      ? `<dt>Origin</dt><dd>${c.origin}</dd><dt>Said to live</dt><dd>${c.range}</dd><dt>Probably inspired by</dt><dd>${c.inspired}</dd><dt>Status</dt><dd>${flagHTML(c.kind)}</dd>`
+      : `<dt>Scientific name</dt><dd><i>${c.sci}</i></dd><dt>Depth</dt><dd>${c.range}</dd><dt>Size</dt><dd>${c.size}</dd><dt>Status</dt><dd>${flagHTML(c.kind)}</dd>`;
     openSheet(`<div class="sheet__in">
-      <div class="sheet__art"><img id="sheetArt" src="${photo(c.name)}" alt="${c.name}, archive photograph" data-sigil="${c.name}" data-zone="${c.zone.id}"><video id="sheetClip" muted loop playsinline data-clip="${clip(c.name)}" aria-hidden="true"></video></div>
+      <div class="sheet__art"><img id="sheetArt" src="${photo(c.name)}" alt="${c.name}, AI-generated illustration" data-sigil="${c.name}" data-zone="${c.zone.id}">${c.video ? `<video id="sheetClip" muted loop playsinline data-clip="${clip(c.name)}" aria-hidden="true"></video>` : ""}</div>
       <div class="sheet__text">
-        <p class="kicker" style="color:var(--pale-soft)">${c.zone.num} · ${c.zone.name}</p>
+        <p class="kicker" style="color:var(--pale-soft)">${c.zone.num} · ${c.zone.name}${myth ? " · Myth" : ""}</p>
         <h2>${c.name}</h2>
         <p class="tale">${c.legend}</p>
-        <dl>
-          <dt>Depth</dt><dd>${fmt(c.depth)} m</dd>
-          <dt>Zone</dt><dd>${c.zone.range}</dd>
-          <dt>Status</dt><dd>${flagHTML(c.status)}</dd>
-        </dl>
+        <dl>${rows}</dl>
       </div></div>`);
     const art = document.getElementById("sheetArt");
     art.addEventListener("error", () => sigilFallback(art), { once: true });
     const sc = document.getElementById("sheetClip");
-    wireClip(sc); playClip(sc);
+    if (sc) { wireClip(sc); playClip(sc); }
     return;
   }
   if (e.target.closest("[data-manifesto]")) {
     e.preventDefault();
     setMenu(false);
     openSheet(`<div class="sheet__manifesto">
-      <h2>Manifesto</h2>
-      <p>Less than a quarter of the sea floor has been mapped in detail. The rest is known the way the oldest things are known: by people telling each other what they think they saw.</p>
-      <p>We don't decide which stories are true. We write down who told them, at what depth, and what the water was doing. Some legends are rising: more sightings every year, more boats changing course. Some are sinking back into sleep, and we think a few of them should be left there.</p>
-      <p>If you've heard something below the light, tell us. Every record starts with one voice.</p>
-      <p>— The keepers, Hadal House</p>
+      <h2>About this guide</h2>
+      <p>Hadal House is a field guide to who lives where in the ocean, from the sunlit surface to the bottom of the deepest trench. Each zone shows real animals, the giants first, alongside the myths that sailors told about the sea.</p>
+      <p>Real animals are marked as often seen or rarely seen. Myths are marked as myths, together with the animal or event that probably inspired them. Depths and sizes are typical published figures, rounded; they vary between individuals and between sources.</p>
+      <p>Every picture on this site is an AI-generated illustration made with Kling, not a photograph. We checked each one against the species' real anatomy, but they are not records of real animals.</p>
+      <p>— Hadal House</p>
     </div>`);
   }
 });
@@ -1225,7 +1306,7 @@ const menuList = document.getElementById("menuList");
 const menuItems = [...menuList.children];
 const reelBox = document.getElementById("menuReels");
 const soundBand = document.getElementById("soundBand"), soundPin = document.getElementById("soundPin"), soundOut = document.getElementById("soundOut");
-const SOUND_MAX = 11034;
+const SOUND_MAX = 10935;
 let sceneHold = false;          // the depth scene stops drawing while the menu covers it
 const reels = {};               // footage per depth, created the first time the menu opens
 let menuOn = -1, idleTimer = 0, hovering = false;
@@ -1364,7 +1445,7 @@ document.querySelectorAll(".rv").forEach((el, i) => {
 
 /* ======================= scroll model: depth, colour, scene state ======================= */
 const sections = [...document.querySelectorAll("main > section")];
-const COLORS = { pearl: "#EEF2F0", "pearl-rest": "#EEF2F0", jelly: "#1E4A61", lights: "#0A192A", urchin: "#060A13", eye: "#020306", "eye-rest": "#020306" };
+const COLORS = { pearl: "#EEF2F0", "pearl-rest": "#EEF2F0", shallows: "#D3E5EA", jelly: "#1E4A61", lights: "#0A192A", urchin: "#060A13", eye: "#020306", "eye-rest": "#020306" };
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 let marks = [];   // [{y, depth, color[], state}]
 function measure() {
@@ -1375,7 +1456,7 @@ function measure() {
     state: s.dataset.state
   }));
   // depth continues past the last section start down to the page bottom
-  marks.push({ y: document.documentElement.scrollHeight - innerHeight, depth: 11034, color: hex(COLORS.eye), state: "eye-rest" });
+  marks.push({ y: document.documentElement.scrollHeight - innerHeight, depth: 10935, color: hex(COLORS.eye), state: "eye-rest" });
 }
 addEventListener("resize", measure);
 addEventListener("load", measure);
@@ -1397,7 +1478,7 @@ const thumb = document.getElementById("railThumb");
 const rail = document.getElementById("rail"), railCable = document.getElementById("railCable");
 const railRead = document.getElementById("railRead"), railMarks = document.getElementById("railMarks");
 const logoEl = document.querySelector(".logo");
-const RAIL_NAME = { told: "Most told", who: "Who we are" };
+const RAIL_NAME = { giants: "The giants", who: "Deepest dives" };
 let railH = 0, railItems = [], railHere = -1, railY = -1, railVel = 0, railStill = 0, railBubbleAt = 0, railDepth = -1;
 function placeRail() {
   railH = rail.clientHeight;
@@ -1437,7 +1518,7 @@ function railMove(y, max, here, depth) {
   if (depth !== railDepth) {
     railDepth = depth;
     railRead.textContent = `${fmt(Math.max(0, depth))} m`;
-    logoEl.style.setProperty("--drop", (Math.max(0, depth) / 11034).toFixed(3));
+    logoEl.style.setProperty("--drop", (Math.max(0, depth) / 10935).toFixed(3));
   }
   if (here !== railHere && railItems.length) {
     railItems.forEach((li, j) => li.classList.toggle("here", j === here));
@@ -1499,6 +1580,7 @@ const MEDIA = {
 const SHOTS = {
   pearl:        { media: "surface",  ambient: 1.0,  spot: 0,    tintMix: .84, ripple: 1,  shade: 0,   drift: 0, show: 1 },
   "pearl-rest": { media: "surface",  ambient: 1.0,  spot: 0,    tintMix: .84, ripple: 1,  shade: 0,   drift: 0, show: 0 },
+  shallows:     { media: "surface",  ambient: 1.0,  spot: 0,    tintMix: .62, ripple: 1,  shade: 0,   drift: 0, show: .55 },
   jelly:        { media: "twilight", ambient: .40,  spot: 1.0,  tintMix: 0,   ripple: .7, shade: .7, drift: 0, show: 1 },
   lights:       { media: "midnight", ambient: .34,  spot: 1.1,  tintMix: 0,   ripple: .7, shade: .7, drift: 0, show: 1 },
   urchin:       { media: "abyss",    ambient: .16,  spot: 1.35, tintMix: 0,   ripple: .5, shade: .8, drift: 0, show: 1 },
@@ -1873,24 +1955,9 @@ if (!sceneOK) {
   const all = Object.values(byName);
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
-  const STATIONS = ["Sonar station 7", "Hydrophone array K-3", "Buoy 41", "ROV Petrel", "Bathyscaphe Lantern II", "Trawler Aud Marie", "Listening post Skerholm"];
-  const SOUNDS = ["ringing", "a slow knocking", "singing in two voices", "a ticking like a clock", "something breathing", "one bell, then nothing"];
-  const CREW = LORE.crew.map(([n]) => n);
-  const near = (d) => Math.max(10, Math.round((d * (0.9 + Math.random() * 0.2)) / 10) * 10);
-  const TEMPLATES = [
-    (c, d) => `${pick(STATIONS)} hears ${pick(SOUNDS)} at ${fmt(d)} m. ${c.name} again?`,
-    (c, d) => `New sighting submitted from ${fmt(d)} m: ${c.name}`,
-    (c, d) => `${pick(CREW)} logs ${c.name} near ${fmt(d)} m`,
-    (c, d) => `Lamp seen below ${fmt(d)} m. The desk thinks ${c.name}`,
-    (c, d) => `${pick(STATIONS)} lowers a camera to ${fmt(d)} m. ${c.name} looks back`,
-    (c, d) => `Night shift asks: has anyone heard ${c.name} since ${fmt(d)} m?`
-  ];
-  // the three standing reports from the archive come first
-  const queue = [
-    { c: byName["The Bellringer of Karst Deep"], text: LORE.ticker[0], d: 1912 },
-    { c: byName["The Lantern Widow"], text: LORE.ticker[1], d: 640 },
-    { c: byName["Gulper of Promises"] || pick(all), text: LORE.ticker[2], d: 4300 }
-  ].filter((m) => m.c);
+  // the wire reads out facts; the first three are about the biggest giants
+  const queue = LORE.giants.slice(0, 3).map((n) => byName[n]).map((c) => ({ c, d: c.depth, text: c.fact }));
+  let lastC = null;
 
   // where the reader is decides what the wire talks about, most of the time
   function hereZone() {
@@ -1903,8 +1970,10 @@ if (!sceneOK) {
     const z = hereZone();
     where.textContent = z ? z.name : "Surface";
     const pool = z && Math.random() < 0.7 ? z.creatures.map((c) => byName[c.name]) : all;
-    const c = pick(pool), d = near(c.depth);
-    return { c, d, text: pick(TEMPLATES)(c, d) };
+    let c = pick(pool);
+    if (c === lastC) c = pick(pool);
+    lastC = c;
+    return { c, d: c.depth, text: c.fact };
   }
 
   const clock = () => { const n = new Date(); return `${String(n.getUTCHours()).padStart(2, "0")}:${String(n.getUTCMinutes()).padStart(2, "0")}`; };
@@ -2154,21 +2223,33 @@ if (!sceneOK) {
     foot.appendChild(w);
     w.addEventListener("animationend", () => w.remove());
   }
-  const stamp = (d) => d.toISOString().slice(11, 23);
+  // sound travels at about 1,500 m/s in seawater: down to the floor and back up again
+  const SPEED = 1500, FLOOR = 10935, ONE_WAY = FLOOR / SPEED;
+  let busy = false;
   btn.addEventListener("click", () => {
+    if (busy) return;
+    busy = true; btn.disabled = true;
     const r = btn.getBoundingClientRect(), f = foot.getBoundingClientRect();
     const x = r.left - f.left + 19, y = r.top - f.top + r.height / 2;
-    const sent = new Date();
-    pings += 1;
-    btn.disabled = true;
     wave(x, y, ""); shock(x, y, 3); blip(0.06);
-    log.innerHTML = `Ping sent ${stamp(sent)} UTC. Listening…`;
-    setTimeout(() => {
-      const back = new Date(sent.getTime() + 1000);
-      wave(W / 2, floorY, "echo"); shock(W / 2, floorY, 2.4); blip(0.035);
-      log.innerHTML = `Ping sent ${stamp(sent)} · echo ${stamp(back)}. <b>Exactly one second late</b>, ${pings} of ${pings} answered. The Listener never misses.`;
-      btn.disabled = false;
-    }, 1000);
+    const t0 = performance.now();
+    let atFloor = false;
+    (function follow() {
+      const t = (performance.now() - t0) / 1000;
+      if (t < ONE_WAY) {
+        log.innerHTML = `Ping sent. The sound is going down at about 1,500 m/s: <b>${fmt(Math.round(t * SPEED))} m</b>…`;
+      } else if (t < ONE_WAY * 2) {
+        if (!atFloor) { atFloor = true; wave(W / 2, floorY, "echo"); shock(W / 2, floorY, 2.4); }
+        log.innerHTML = `It reached the floor at ${fmt(FLOOR)} m after ${ONE_WAY.toFixed(2)} s. The echo is on its way up: <b>${fmt(Math.max(0, Math.round(FLOOR - (t - ONE_WAY) * SPEED)))} m</b>…`;
+      } else {
+        blip(0.035);
+        const total = (ONE_WAY * 2).toFixed(2);
+        log.innerHTML = `Echo heard after <b>${total} s</b>. Depth = 1,500 m/s × ${total} s ÷ 2 = ${fmt(FLOOR)} m. Ships' echo sounders measure the sea this way.`;
+        busy = false; btn.disabled = false;
+        return;
+      }
+      requestAnimationFrame(follow);
+    })();
   });
 })();
 
@@ -2178,12 +2259,12 @@ if (!sceneOK) {
   const el = document.getElementById("loader");
   if (reduceMotion) { el.classList.add("done"); return; }
   const count = document.getElementById("count"), zoneEl = document.getElementById("ldZone"), depthEl = document.getElementById("ldDepth");
-  const MAX = 11034, DUR = 2800;
+  const MAX = 10935, DUR = 2800;
   const ZONES = [[6000, "Hadal Trenches"], [4000, "Abyss"], [1000, "Midnight Zone"], [200, "Twilight Zone"], [0, "Sunlight Zone"]];
   const DEEP = [2, 3, 6], SURF = [238, 242, 240], PALE = [230, 238, 240], INK = [10, 17, 20];
 
   // through the porthole: one of the archive's creatures, then another as we rise
-  const WINDOWS = ["lantern-widow", "mother-coil", "listener", "vespertine-choir", "captain-halfmoon", "inkwraith"];
+  const WINDOWS = ["blue-whale", "whale-shark", "giant-squid", "sperm-whale", "giant-oarfish", "lions-mane"];
   const picks = WINDOWS.slice().sort(() => Math.random() - 0.5).slice(0, 2);
   const port = document.getElementById("spherePort"), seen = document.getElementById("sphereSeen");
   const portVids = picks.map((s) => {
