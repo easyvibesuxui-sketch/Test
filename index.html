@@ -615,15 +615,63 @@
   .who li { padding: 12px 0; border-bottom: 1px solid var(--pale-line); font-size: 18px; display: flex; justify-content: space-between; gap: 16px; }
   .who li span { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--pale-soft); }
 
+  /* ================= footer: the trench floor at 11,034 m ================= */
+  /* marine snow settles into a drift you can stir with the pointer; the name rests half-sunk
+     in it; the instruments tick; and a ping sent from here comes back exactly one second late */
   footer {
-    position: relative; z-index: 2; color: var(--pale-soft);
-    padding: 64px var(--pad) 110px;
-    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px 32px;
+    position: relative; z-index: 2; color: var(--pale-soft); overflow: hidden;
+    padding: 110px var(--pad) 110px;
+    background: linear-gradient(180deg, transparent, rgba(2,3,6,.85) 28%, var(--hadal) 60%);
     font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
   }
+  .foot__snow { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .foot__top, .foot__base { position: relative; z-index: 1; }
+  .foot__top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 32px; }
+  .foot__ping { display: grid; gap: 14px; max-width: 30em; }
+  .foot__sonar {
+    justify-self: start; display: inline-flex; align-items: center; gap: 12px;
+    padding: 12px 18px 12px 14px; border-radius: 99px; color: var(--pale);
+    box-shadow: inset 0 0 0 1px var(--pale-line);
+    font: inherit; letter-spacing: .1em; text-transform: uppercase;
+    transition: box-shadow .3s, color .3s, opacity .3s;
+  }
+  .foot__sonar:hover { box-shadow: inset 0 0 0 1px var(--lume); color: var(--lume); }
+  .foot__sonar:disabled { opacity: .55; cursor: progress; }
+  .foot__sonar i { position: relative; width: 10px; height: 10px; border-radius: 50%; background: var(--lume); box-shadow: 0 0 12px var(--lume); }
+  .foot__sonar i::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 1px solid var(--lume); animation: idlePing 2.6s var(--ease) infinite; }
+  @keyframes idlePing { from { transform: scale(.6); opacity: .7; } to { transform: scale(2.2); opacity: 0; } }
+  .foot__log { text-transform: none; letter-spacing: .02em; font-size: 12px; line-height: 1.6; min-height: 3.2em; }
+  .foot__log b { color: var(--lume); font-weight: 500; }
+  .foot__inst { display: grid; grid-template-columns: auto auto; gap: 6px 22px; font-variant-numeric: tabular-nums; }
+  .foot__inst dt { opacity: .75; }
+  .foot__inst dd { color: var(--pale); text-align: right; }
+  .foot__wave {
+    position: absolute; z-index: 1; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%;
+    border: 1px solid var(--lume); pointer-events: none; animation: footWave 2.2s cubic-bezier(.2,.7,.3,1) forwards;
+  }
+  .foot__wave.echo { border-color: var(--pale); }
+  @keyframes footWave { from { transform: scale(.3); opacity: .9; } to { transform: scale(var(--s, 30)); opacity: 0; } }
+  .foot__word {
+    position: relative; margin: 64px 0 0; text-align: center; white-space: nowrap; pointer-events: none;
+    font-family: var(--display); font-style: italic; font-weight: 500; text-transform: none; letter-spacing: 0;
+    font-size: clamp(64px, 17vw, 280px); line-height: .9; color: var(--pale);
+    -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,.6) 25%, rgba(0,0,0,.08) 88%);
+    mask-image: linear-gradient(180deg, rgba(0,0,0,.6) 25%, rgba(0,0,0,.08) 88%);
+  }
+  .foot__word span { display: inline-block; transform: translateY(60%); opacity: 0; transition: transform 1.6s var(--ease) calc(var(--i) * 70ms), opacity 1.2s var(--ease) calc(var(--i) * 70ms); }
+  .foot__word b { display: inline-block; font-weight: inherit; }
+  footer.in .foot__word span { transform: none; opacity: 1; }
+  footer.in .foot__word b { animation: letterBob 6s ease-in-out calc(var(--i) * -0.55s) infinite; }
+  @keyframes letterBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-0.035em); } }
+  .foot__base { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px 32px; margin-top: 18px; padding-top: 22px; border-top: 1px solid var(--pale-line); }
   footer nav { display: flex; flex-wrap: wrap; gap: 8px 24px; }
-  footer a { text-decoration: none; }
+  footer a { position: relative; text-decoration: none; }
+  footer a::before {
+    content: ""; position: absolute; left: -12px; top: 50%; width: 5px; height: 5px; margin-top: -2.5px; border-radius: 50%;
+    background: var(--lume); opacity: 0; transform: scale(.2); transition: opacity .3s, transform .4s var(--ease);
+  }
   footer a:hover { color: var(--pale); }
+  footer a:hover::before { opacity: 1; transform: none; box-shadow: 0 0 8px var(--lume); }
 
   /* ================= legend sheet ================= */
   dialog.sheet {
@@ -693,8 +741,8 @@
     .cards { grid-template-columns: 1fr; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .rv { opacity: 1; transform: none; transition: none; }
-    .sphere__rig, .sphere__ping, .logo__sway, .logo__ping, .ticker .live::before, .ticker .live.ping::after, .ticker__line .caret, .ticker__line.in { animation: none; }
+    .rv, .foot__word span { opacity: 1; transform: none; transition: none; }
+    .sphere__rig, .sphere__ping, .logo__sway, .logo__ping, .foot__sonar i::after, footer.in .foot__word b, .ticker .live::before, .ticker .live.ping::after, .ticker__line .caret, .ticker__line.in { animation: none; }
     .menu, body.menu-open .menu, .menu li a, body.menu-open .menu li a, .menu .sub, body.menu-open .menu .sub { transition: none; }
     body.menu-open .menu__ping { animation: none; }
   }
@@ -818,13 +866,29 @@
   </section>
 </main>
 
-<footer>
-  <span>© 2026 Hadal House — a fictional archive. Every creature, place and story here is invented.</span>
-  <nav aria-label="Footer">
-    <a href="#" data-manifesto>Manifesto</a>
-    <a href="#">Submit a sighting</a>
-    <a href="#">Legal</a>
-  </nav>
+<footer id="foot">
+  <div class="foot__top">
+    <div class="foot__ping">
+      <button class="foot__sonar" id="footPing" type="button"><i></i>Send a ping</button>
+      <p class="foot__log" id="footLog" aria-live="polite">Something on the trench floor answers every ping, exactly one second late. Try it.</p>
+    </div>
+    <dl class="foot__inst" aria-label="Instruments on the trench floor">
+      <dt>Depth</dt><dd>11,034 m</dd>
+      <dt>Pressure</dt><dd id="footPres">1,086.4 bar</dd>
+      <dt>Water</dt><dd id="footTemp">1.21 °C</dd>
+      <dt>Archive time</dt><dd id="footTime">--:--:--</dd>
+    </dl>
+  </div>
+  <p class="foot__word" id="footWord" aria-hidden="true">Hadal House</p>
+  <canvas class="foot__snow" id="footSnow" aria-hidden="true"></canvas>
+  <div class="foot__base">
+    <span>© 2026 Hadal House — a fictional archive. Every creature, place and story here is invented.</span>
+    <nav aria-label="Footer">
+      <a href="#" data-manifesto>Manifesto</a>
+      <a href="#">Submit a sighting</a>
+      <a href="#">Legal</a>
+    </nav>
+  </div>
 </footer>
 
 <dialog class="sheet" id="sheet" aria-label="Legend record">
@@ -1941,6 +2005,171 @@ if (!sceneOK) {
   }
   // the first report lands as the loader surfaces
   setTimeout(next, reduceMotion ? 0 : 3200);
+})();
+
+/* ======================= footer: the trench floor ======================= */
+(function trenchFloor() {
+  const foot = document.getElementById("foot"), cv = document.getElementById("footSnow"), word = document.getElementById("footWord");
+  const btn = document.getElementById("footPing"), log = document.getElementById("footLog");
+  const presEl = document.getElementById("footPres"), tempEl = document.getElementById("footTemp"), timeEl = document.getElementById("footTime");
+  let visible = false, running = false;
+
+  word.innerHTML = [..."Hadal House"].map((ch, i) => `<span style="--i:${i}"><b>${ch === " " ? "&nbsp;" : ch}</b></span>`).join("");
+
+  // ---- instruments: the archive keeps North Atlantic time (UTC-1); pressure and water drift a little ----
+  let pres = 1086.4, temp = 1.21;
+  function readInstruments() {
+    timeEl.textContent = new Date(Date.now() - 3600e3).toISOString().slice(11, 19);
+    pres = Math.min(1087.2, Math.max(1085.6, pres + (Math.random() - 0.5) * 0.2));
+    temp = Math.min(1.35, Math.max(1.1, temp + (Math.random() - 0.5) * 0.02));
+    presEl.textContent = `${pres.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} bar`;
+    tempEl.textContent = `${temp.toFixed(2)} °C`;
+  }
+  readInstruments();
+  setInterval(() => { if (visible) readInstruments(); }, 1000);
+
+  // ---- marine snow and the drift it builds ----
+  const ctx = cv.getContext("2d");
+  const BIN = 6;
+  let W = 0, H = 0, floorY = 0, bins = [], flakes = [];
+  function size() {
+    const dpr = Math.min(devicePixelRatio || 1, 1.5);
+    W = foot.clientWidth; H = foot.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    floorY = word.offsetTop + word.offsetHeight * 0.78;
+    const n = Math.ceil(W / BIN) + 1;
+    if (bins.length !== n) bins = Array.from({ length: n }, (_, i) => 8 + 5 * Math.sin(i * 0.21) + 3 * Math.sin(i * 0.05 + 1));
+    if (!flakes.length) flakes = Array.from({ length: 150 }, () => ({ x: Math.random() * W, y: Math.random() * floorY, vx: 0, vy: 0, r: 0.6 + Math.random() * 1.5, s: 0.3 + Math.random() * 0.7, ph: Math.random() * 6.28 }));
+  }
+  addEventListener("resize", size);
+
+  let mx = -999, my = -999, pmx = -999;
+  foot.addEventListener("pointermove", (e) => { const r = foot.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; }, { passive: true });
+  foot.addEventListener("pointerleave", () => { mx = my = -999; });
+
+  // a pressure wave pushes the snow outward
+  function shock(x, y, strength) {
+    for (const f of flakes) {
+      const dx = f.x - x, dy = f.y - y, d = Math.hypot(dx, dy) || 1;
+      if (d < 420) { const k = (1 - d / 420) * strength; f.vx += (dx / d) * k; f.vy += (dy / d) * k; }
+    }
+  }
+
+  function draw(now, dt) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "rgb(230,238,240)";
+    for (const f of flakes) {
+      const dx = f.x - mx, dy = f.y - my, d2 = dx * dx + dy * dy;
+      if (d2 < 8100) { const d = Math.sqrt(d2) || 1, k = (1 - d / 90) * 9 * dt * 60; f.vx += (dx / d) * k * 0.1; f.vy += (dy / d) * k * 0.1; }
+      f.vx *= 0.95; f.vy *= 0.95;
+      f.x += f.vx + Math.sin(now / 1600 + f.ph) * 0.12;
+      f.y += f.s * 16 * dt + f.vy;
+      if (f.x < 0) f.x += W; else if (f.x > W) f.x -= W;
+      const bi = Math.max(0, Math.min(bins.length - 1, Math.round(f.x / BIN)));
+      if (f.y >= floorY - bins[bi]) {
+        // it settles: the drift grows where it lands
+        if (bins[bi] < 70) { bins[bi] += 0.45; if (bi > 0) bins[bi - 1] += 0.15; if (bi < bins.length - 1) bins[bi + 1] += 0.15; }
+        f.y = -8 - Math.random() * 120; f.x = Math.random() * W; f.vx = f.vy = 0;
+      }
+      if (f.y < -10 && f.vy < 0) f.vy = 0;
+      ctx.globalAlpha = 0.3 + 0.45 * f.s;
+      ctx.fillRect(f.x, f.y, f.r, f.r);
+    }
+
+    // the pointer near the floor stirs the drift and lifts it as a little cloud
+    if (mx > 0 && my > floorY - 90 && my < floorY + 40) {
+      const bi = Math.round(mx / BIN), speed = Math.abs(mx - pmx);
+      for (let k = -5; k <= 5; k++) {
+        const j = bi + k;
+        if (j >= 0 && j < bins.length && bins[j] > 3) bins[j] -= Math.min(0.9, 0.05 + speed * 0.02) * (1 - Math.abs(k) / 6);
+      }
+      if (speed > 2 && Math.random() < 0.6) {
+        const f = flakes[Math.floor(Math.random() * flakes.length)];
+        f.x = mx + (Math.random() - 0.5) * 30; f.y = floorY - (bins[Math.max(0, Math.min(bins.length - 1, bi))] || 0);
+        f.vx = (Math.random() - 0.5) * 1.6; f.vy = -1.2 - Math.random() * 1.6;
+      }
+    }
+    pmx = mx;
+
+    // sediment slumps until it lies at its angle of repose
+    for (let i = 1; i < bins.length; i++) {
+      const d = bins[i] - bins[i - 1];
+      if (Math.abs(d) > 1.4) { bins[i] -= d * 0.22; bins[i - 1] += d * 0.22; }
+    }
+
+    ctx.globalAlpha = 1;
+    const g = ctx.createLinearGradient(0, floorY - 70, 0, floorY + 36);
+    g.addColorStop(0, "rgba(205,216,220,.34)");
+    g.addColorStop(0.55, "rgba(95,110,116,.30)");
+    g.addColorStop(1, "rgba(2,3,6,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(0, floorY + 36);
+    for (let i = 0; i < bins.length; i++) ctx.lineTo(i * BIN, floorY - bins[i]);
+    ctx.lineTo(W, floorY + 36);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(230,238,240,.32)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i < bins.length; i++) (i ? ctx.lineTo : ctx.moveTo).call(ctx, i * BIN, floorY - bins[i]);
+    ctx.stroke();
+  }
+
+  let last = 0;
+  function loop(now) {
+    if (!visible) { running = false; return; }
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    draw(now, dt);
+    requestAnimationFrame(loop);
+  }
+  function start() {
+    size();
+    if (reduceMotion) { draw(0, 0); return; }
+    if (!running) { running = true; last = performance.now(); requestAnimationFrame(loop); }
+  }
+  new IntersectionObserver((es) => es.forEach((e) => {
+    visible = e.isIntersecting;
+    if (visible) { foot.classList.add("in"); start(); }
+  }), { threshold: 0.05 }).observe(foot);
+
+  // ---- the ping, and the answer one second later ----
+  let pings = 0, ac = null;
+  function blip(vol) {
+    try {
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
+      o.type = "sine"; o.frequency.setValueAtTime(1320, t); o.frequency.exponentialRampToValueAtTime(1180, t + 0.8);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+      o.connect(g).connect(ac.destination); o.start(t); o.stop(t + 1);
+    } catch (err) { /* no sound is fine */ }
+  }
+  function wave(x, y, cls) {
+    if (reduceMotion) return;
+    const w = document.createElement("i");
+    w.className = `foot__wave ${cls}`;
+    w.style.left = `${x}px`; w.style.top = `${y}px`;
+    w.style.setProperty("--s", String(Math.ceil((Math.max(W, H) * 2) / 60)));
+    foot.appendChild(w);
+    w.addEventListener("animationend", () => w.remove());
+  }
+  const stamp = (d) => d.toISOString().slice(11, 23);
+  btn.addEventListener("click", () => {
+    const r = btn.getBoundingClientRect(), f = foot.getBoundingClientRect();
+    const x = r.left - f.left + 19, y = r.top - f.top + r.height / 2;
+    const sent = new Date();
+    pings += 1;
+    btn.disabled = true;
+    wave(x, y, ""); shock(x, y, 3); blip(0.06);
+    log.innerHTML = `Ping sent ${stamp(sent)} UTC. Listening…`;
+    setTimeout(() => {
+      const back = new Date(sent.getTime() + 1000);
+      wave(W / 2, floorY, "echo"); shock(W / 2, floorY, 2.4); blip(0.035);
+      log.innerHTML = `Ping sent ${stamp(sent)} · echo ${stamp(back)}. <b>Exactly one second late</b>, ${pings} of ${pings} answered. The Listener never misses.`;
+      btn.disabled = false;
+    }, 1000);
+  });
 })();
 
 /* ======================= loader: an ascent from the trench ======================= */
