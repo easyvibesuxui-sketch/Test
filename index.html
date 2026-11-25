@@ -752,6 +752,172 @@
   .who li { padding: 12px 0; border-bottom: 1px solid var(--pale-line); font-size: 18px; display: flex; justify-content: space-between; gap: 16px; }
   .who li span { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--pale-soft); }
 
+  /* ================= the infographic descent =================
+     one dotted depth line down the middle of the page, labelled in metres and feet; every animal sits at
+     its depth, left and right in turn, tied to the line by a dotted leader; its picture is a magnifier
+     (a big circle joined to a small one that carries its status); zones are dashed coral rules */
+  :root { --coral: #F2766B; --lab-l: #1E5C78; --lab-d: #A9D4EA; --sp: 170px; }
+  main { color: var(--ink); transition: color .6s var(--ease); --lab: var(--lab-l); }
+  body.deep main { color: var(--pale); --lab: var(--lab-d); }
+  body.deep main .kicker, body.deep main .band-head p, body.deep .hero .lede { color: var(--pale-soft); }
+  .tape { display: none; }
+  .hero h1 em { color: var(--coral); }
+  .who .body strong { color: var(--coral); }
+
+  .zone { padding-top: 0; padding-bottom: 0; }
+  main { --spx: 50%; }
+  .dive, .zonebar { grid-column: 1 / -1; position: relative; z-index: 1; margin-inline: calc(var(--gut) * -0.45); }
+  .dive { list-style: none; padding-bottom: clamp(60px, 10vh, 120px); --ov: 140px; }
+
+  /* depth labels on the line */
+  .dmark { font-family: var(--mono); color: var(--lab); text-align: center; font-variant-numeric: tabular-nums; line-height: 1.1; transition: color .6s var(--ease); }
+  .dmark b { display: block; font-weight: 600; font-size: 19px; letter-spacing: .02em; }
+  .dmark small { display: block; margin-top: 3px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; opacity: .75; }
+  .dmark i { display: block; width: 0; height: 0; margin: 8px auto 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid currentColor; }
+
+  .dive__row { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) var(--sp) minmax(0, 1fr); pointer-events: none; }
+  .dive__row + .dive__row { margin-top: calc(-1 * var(--ov)); }
+  .dive__row > * { pointer-events: auto; }
+  .dive__mark { grid-column: 2; grid-row: 1; align-self: stretch; position: relative; padding-top: 4px; }
+  /* the line from this label down to the next */
+  .dive__mark::after {
+    content: ""; position: absolute; left: 50%; top: 76px; bottom: calc(var(--ov) + 6px); width: 0; margin-left: -1px;
+    border-left: 2px dotted currentColor; opacity: .55; transform-origin: top; scale: 1 0; transition: scale 1.6s var(--ease) .15s;
+  }
+  .dive__mark.in::after { scale: 1 1; }
+  .dive__row:last-child .dive__mark::after { bottom: 0; }
+
+  .dive__card { grid-row: 1; display: block; text-align: left; padding: 0 0 56px; border: 0; }
+  .dive__row--L .dive__card { grid-column: 1; }
+  .dive__row--R .dive__card { grid-column: 3; }
+  .dive__head { display: flex; align-items: center; gap: 16px; }
+  .dive__row--L .dive__head { flex-direction: row; }
+  .dive__row--R .dive__head { flex-direction: row-reverse; justify-content: flex-end; }
+  .dive__lead { flex: 1 1 40px; min-width: 24px; height: 0; border-top: 2px dotted currentColor; opacity: .45; transform-origin: var(--lo, right); scale: 0 1; transition: scale 1.2s var(--ease) calc(var(--d, 0s) + .2s); }
+  .dive__row--R .dive__lead { --lo: left; }
+  .card.in .dive__lead { scale: 1 1; }
+  .dive__head .card__name { margin: 0; font-size: clamp(26px, 2.3vw, 36px); line-height: 1.05; }
+  .dive__body { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 22px; margin-top: 10px; align-items: start; }
+  .dive__text { display: grid; gap: 12px; justify-items: start; }
+  .card__sci { color: inherit; opacity: .65; }
+  .dive__stats { display: grid; gap: 7px; font-family: var(--mono); font-size: 11px; letter-spacing: .03em; line-height: 1.35; }
+  .dive__stats span { display: flex; gap: 9px; align-items: flex-start; }
+  .dive__stats svg { flex: none; width: 13px; height: 13px; margin-top: 1px; fill: none; stroke: var(--coral); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .dive__fact { font-family: var(--serif); font-size: 16px; line-height: 1.45; opacity: .82; max-width: 22em; }
+  .dive__card .card__more { margin-top: 2px; }
+
+  /* the magnifier: a big circle (the picture) joined by tangents to a small one (the status) */
+  .lens { position: relative; display: block; flex: none; width: var(--lw, clamp(190px, 17vw, 250px)); aspect-ratio: 120 / 100; }
+  .lens--big { --lw: clamp(220px, 20vw, 300px); }
+  .lens .card__tile { position: absolute; left: 21.667%; top: 6%; width: 73.333%; height: 88%; aspect-ratio: auto; border-radius: 50%; background: #0B1626; }
+  .card .lens .card__tile { clip-path: circle(0% at 50% 50%); transition: clip-path 1.5s var(--ease) calc(var(--d, 0s) + .12s), transform .7s var(--ease); }
+  .card.in .lens .card__tile { clip-path: circle(50% at 50% 50%); }
+  .card:hover .lens .card__tile :is(canvas, img, video) { opacity: 1; }
+  .lens svg.lens__lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; fill: none; stroke: currentColor; stroke-width: 1.2; opacity: .5; }
+  .lens svg.lens__lines .ring { stroke-dasharray: 280; stroke-dashoffset: 280; transition: stroke-dashoffset 1.8s var(--ease) calc(var(--d, 0s) + .2s); }
+  .card.in .lens svg.lens__lines .ring { stroke-dashoffset: 0; }
+  .card--myth .lens svg.lens__lines { stroke: var(--coral); opacity: .8; }
+  .card--myth .lens svg.lens__lines .ring { stroke-dasharray: 3 4; stroke-dashoffset: 0; }
+  .lens__dot { position: absolute; left: 2.5%; top: 76%; width: 18.333%; height: 22%; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 70%, transparent); }
+  .lens__dot svg { width: 46%; height: 46%; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+  .lens__dot svg .fill { fill: currentColor; stroke: none; }
+  .lens__dot[data-s="common"] { color: var(--st-sighted); }
+  .lens__dot[data-s="rare"] { color: var(--st-recorded); }
+  .lens__dot[data-s="myth"] { color: var(--coral); }
+  body:not(.deep) .lens__dot[data-s="common"] { color: #13856C; }
+  body:not(.deep) .lens__dot[data-s="rare"] { color: #2D6FC2; }
+  .card:hover .lens__dot[data-s="common"] .lid { animation: blink .5s ease-in-out; transform-box: fill-box; transform-origin: center; }
+  .card:hover .lens__dot[data-s="rare"] path { stroke-dasharray: 40; animation: trace 1.4s linear infinite; }
+  .card:hover .lens__dot[data-s="myth"] svg { animation: query .9s var(--ease); }
+  .dive__card::before, .giant::before { display: none; }
+  .dive__card, .giant { padding-top: 0; }
+
+  /* zone rules: a dashed coral line with markers, the depth on the line, the zone named in coral */
+  .zonebar { display: grid; grid-template-columns: minmax(0, 1fr) var(--sp) minmax(0, 1fr); --zt: clamp(150px, 24vh, 260px); --zb: clamp(110px, 16vh, 180px); padding: var(--zt) 0 var(--zb); }
+  .zonebar__rule { grid-row: 1; align-self: start; margin-top: 11px; height: 2px; position: relative;
+    background: repeating-linear-gradient(90deg, var(--coral) 0 12px, transparent 12px 22px); display: flex; justify-content: space-around;
+    transform-origin: var(--ro); scale: 0 1; transition: scale 1.6s var(--ease); }
+  .zonebar__rule--l { grid-column: 1; --ro: right; }
+  .zonebar__rule--r { grid-column: 3; --ro: left; }
+  .zonebar.in .zonebar__rule { scale: 1 1; }
+  .zonebar__rule i { width: 0; height: 0; margin-top: 9px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 9px solid var(--coral); }
+  .zonebar__depth { grid-column: 2; grid-row: 1 / span 2; position: relative; }
+  .zonebar__depth::before, .zonebar__depth::after { content: ""; position: absolute; left: 50%; width: 0; margin-left: -1px; border-left: 2px dotted currentColor; opacity: .55; }
+  .zonebar__depth::before { bottom: calc(100% + 8px); height: calc(var(--zt) - 8px); }
+  .zonebar__depth::after { top: 76px; bottom: calc(-1 * var(--zb)); }
+  .zonebar__depth .dmark { padding-top: 0; }
+  .zonebar__title { grid-column: 1; grid-row: 2; justify-self: end; text-align: right; margin: 44px 28px 0 0; max-width: 11em;
+    font-size: clamp(40px, 4.6vw, 84px); line-height: .95; letter-spacing: -0.02em; font-weight: 700; text-wrap: balance; }
+  .zonebar__text { grid-column: 3; grid-row: 2; margin: 44px 0 0 28px; display: grid; gap: 14px; max-width: 30em; }
+  .zonebar__name { font-family: var(--display); font-weight: 700; color: var(--coral); font-size: clamp(30px, 2.8vw, 46px); line-height: 1; }
+  .zonebar__text .kicker { display: flex; gap: 18px; flex-wrap: wrap; }
+  .zonebar__text p:last-child { font-size: clamp(17px, 1.3vw, 20px); line-height: 1.55; opacity: .8; }
+
+  /* the giants, drawn as magnifiers in a row */
+  .cards--giants { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .giant .lens { --lw: 100%; }
+  .giant .card__name { margin-top: 10px; }
+
+  /* the trench walls: angular rock closing in on both sides */
+  .walls { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  .walls .w1 { fill: #0E2830; }
+  .walls .w2 { fill: #0A1C22; }
+
+  /* marine snow below the light */
+  .zone.is-deep, .who {
+    background-image:
+      radial-gradient(1.2px 1.2px at 12% 18%, rgba(230,238,240,.35), transparent 60%),
+      radial-gradient(1px 1px at 63% 7%, rgba(230,238,240,.28), transparent 60%),
+      radial-gradient(1.4px 1.4px at 38% 64%, rgba(230,238,240,.3), transparent 60%),
+      radial-gradient(1px 1px at 84% 41%, rgba(230,238,240,.25), transparent 60%),
+      radial-gradient(1.1px 1.1px at 27% 89%, rgba(230,238,240,.3), transparent 60%),
+      radial-gradient(1px 1px at 92% 82%, rgba(230,238,240,.22), transparent 60%);
+    background-size: 340px 290px;
+  }
+
+  /* the deepest dives, read off like the infographic: name, a dotted leader, the depth */
+  .who .teams { margin-top: 0; }
+  .who li { align-items: baseline; border-bottom: 0; padding: 9px 0; }
+  .who li i { flex: 1; border-bottom: 2px dotted currentColor; opacity: .3; transform: translateY(-4px); }
+  .who li span { color: var(--lab); font-size: 13px; font-weight: 600; }
+
+  @media (max-width: 1080px) {
+    main { --spx: 60px; }
+    .dive__row, .zonebar { grid-template-columns: 120px minmax(0, 1fr); }
+    .dive__row + .dive__row { margin-top: 0; }
+    .dive { --ov: 0px; }
+    .dive__mark { grid-column: 1; }
+    .dive__row--L .dive__card, .dive__row--R .dive__card { grid-column: 2; padding-bottom: 90px; }
+    .dive__row--L .dive__head { flex-direction: row-reverse; justify-content: flex-end; }
+    .dive__row--L .dive__lead { --lo: left; }
+    .dive__lead { flex: 0 0 40px; }
+    .zonebar__rule--l { display: none; }
+    .zonebar__rule--r { grid-column: 2; }
+    .zonebar__depth { grid-column: 1; }
+    .zonebar__title { grid-column: 2; justify-self: start; text-align: left; margin: 40px 0 0 0; }
+    .zonebar__text { grid-column: 2; grid-row: 3; margin: 22px 0 0 0; }
+    .zonebar__depth { grid-row: 1 / span 3; }
+    .cards--giants { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    main { --spx: 30px; }
+    .dive, .zonebar { margin-inline: calc(var(--gut) * -0.6); }
+    .dive__row, .zonebar { grid-template-columns: 60px minmax(0, 1fr); }
+    .dmark b { font-size: 12px; }
+    .dmark small { display: none; }
+    .dive__mark::after, .zonebar__depth::after { top: 34px; }
+    .dive__lead { display: none; }
+    .dive__body { grid-template-columns: 1fr; }
+    .dive__body .lens { order: -1; --lw: min(100%, 300px); }
+    .lens--big { --lw: min(100%, 320px); }
+    .cards--giants { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dive__mark::after, .dive__lead, .zonebar__rule { scale: 1 1; transition: none; }
+    .card .lens .card__tile { clip-path: none; transition: none; }
+    .lens svg.lens__lines .ring { stroke-dashoffset: 0; transition: none; }
+  }
+
   /* ================= footer: the trench floor at 10,935 m ================= */
   /* marine snow settles into a drift you can stir with the pointer; the name rests half-sunk
      in it; the instruments tick; and a ping sent from here comes back exactly one second late */
@@ -989,7 +1155,7 @@
       <p class="rv">Eight record holders, longest first. The bar on each card is to scale against the longest, a 40 m siphonophore, and the yellow notch marks a 1.8 m person. Hover a card for a fact; open it for more.</p>
       <ul class="key rv" id="statusKey" aria-label="Key"></ul>
     </div>
-    <ul class="cards" id="giant-cards"></ul>
+    <ul class="cards cards--giants" id="giant-cards"></ul>
     <div class="after rv">
       <p>39 entries from the surface to the bottom of the Challenger Deep: 31 real animals and 8 myths.</p>
       <a class="button" href="#sunlight"><span>Begin the descent</span> ↓</a>
@@ -998,17 +1164,8 @@
 
   <div id="zones"></div>
 
-  <section class="grid12 band who is-deep zone--gated" id="who" data-depth="10935" data-state="trench-rest">
-    <div class="gate" aria-hidden="true"><div class="gate__in">
-      <span class="gate__line"><em>10,935 m</em></span>
-      <p class="gate__meta"><span>06</span><span>The bottom</span></p>
-      <b class="gate__depth"><span class="gate__n">10,935</span><small>m</small></b>
-      <p class="gate__name">Challenger Deep</p>
-    </div></div>
-    <div class="band-head">
-      <p class="kicker rv"><span>06</span><span>Deepest dives</span><span>10,935 m</span></p>
-      <h2 class="rv">How deep is deep?</h2>
-    </div>
+  <section class="grid12 band who is-deep" id="who" data-depth="10935" data-state="trench-rest">
+    <div id="whoBar"></div>
     <p class="body rv">The deepest known point in the ocean, the Challenger Deep in the Mariana Trench, lies about <strong>10,935 m</strong> down: Mount Everest would fit inside with two kilometres of water to spare. Roughly three quarters of the sea floor has still not been mapped in high resolution, and most of what we know about the animals here comes from robot submersibles, baited cameras dropped to the floor and tags that ride on whales and sharks.</p>
     <div class="teams">
       <div class="rv"><h3>Deepest recorded dives: animals</h3><ul id="animalDives"></ul></div>
@@ -1121,7 +1278,7 @@ const LORE = {
         { id: "kraken", name: "Kraken", kind: "myth", depth: 300, range: "Off Norway and Iceland", origin: "Norse", inspired: "Giant squid",
           legend: "Norse sailors told of a monster so large it could be mistaken for an island, which dragged ships under with its arms. In 1752 the Norwegian bishop Erik Pontoppidan described it at length. Most historians now think giant squid, seen dead or dying at the surface, were behind the legend.",
           fact: "In 1752 a Norwegian bishop wrote that the Kraken could be mistaken for an island." },
-        { id: "sea-serpent", name: "Sea serpent", kind: "myth", depth: 150, range: "Every ocean", origin: "Worldwide", inspired: "Oarfish, lines of porpoises, floating kelp",
+        { id: "sea-serpent", name: "Sea serpent", kind: "myth", depth: 200, range: "Every ocean", origin: "Worldwide", inspired: "Oarfish, lines of porpoises, floating kelp",
           legend: "Long, maned serpents coil across old maps such as the 1539 Carta Marina. Sightings went on into the 1800s, including one by the officers of HMS Daedalus in 1848. Oarfish, rows of porpoises breaking the surface and tangles of seaweed are the usual suspects.",
           fact: "In 1848 the officers of HMS Daedalus reported a sea serpent in the South Atlantic." }
       ]
@@ -1165,7 +1322,7 @@ const LORE = {
         { id: "dumbo-octopus", name: "Dumbo octopus", sci: "Grimpoteuthis", kind: "common", depth: 4000, range: "~1,000 – 7,000 m", size: "~20 – 30 cm",
           legend: "Named after the cartoon elephant for the fins on its head, which it flaps to hover and swim. It swallows its prey whole. One was filmed at about 6,957 m, the deepest any octopus has been seen.",
           fact: "A dumbo octopus was filmed at about 6,957 m, the deepest octopus on record." },
-        { id: "tripod-fish", name: "Tripod fish", sci: "Bathypterois grallator", kind: "common", depth: 3000, range: "~900 – 4,700 m", size: "~35 cm, on 1 m stilts",
+        { id: "tripod-fish", name: "Tripod fish", sci: "Bathypterois grallator", kind: "common", depth: 4000, range: "~900 – 4,700 m", size: "~35 cm, on 1 m stilts",
           legend: "It stands on the sea floor on three long fin rays, facing into the current, and waits for small prey to drift into the feelers it holds out in front like antennae. Each fish has both male and female organs.",
           fact: "The tripod fish stands on three fin rays up to a metre long." },
         { id: "sea-pig", name: "Sea pig", sci: "Scotoplanes", kind: "common", depth: 4500, range: "~1,000 – 6,000 m", size: "~10 – 15 cm",
@@ -1334,14 +1491,69 @@ LORE.zones.forEach((z) => z.creatures.forEach((c) => (byName[c.name] = { ...c, z
 
 // the longest giant sets the scale for every length bar
 const GIANT_MAX = Math.max(...LORE.giants.map((n) => byName[n].len || 0));
+const ft = (m) => fmt(Math.round(m * 3.28084));
+const ICON = {
+  size: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13 13 3M8.5 3H13v4.5M7.5 13H3V8.5"/></svg>',
+  range: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5v13M5 4.5l3-3 3 3M5 11.5l3 3 3-3"/></svg>',
+  origin: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.3"/><path d="M1.7 8h12.6M8 1.7c2 2 2.6 4 2.6 6.3S10 12.3 8 14.3C6 12.3 5.4 10.3 5.4 8S6 3.7 8 1.7Z"/></svg>',
+  inspired: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3M3.4 3.4l2.1 2.1M10.5 10.5l2.1 2.1M12.6 3.4l-2.1 2.1M5.5 10.5l-2.1 2.1"/></svg>'
+};
+// the magnifier in a 120 x 100 box: a big circle at (70, 50) r 44 joined by its outer tangents to a small one at (14, 87) r 11
+const LENS = (() => {
+  const [x1, y1, r1, x2, y2, r2] = [70, 50, 44, 14, 87, 11];
+  const d = Math.hypot(x2 - x1, y2 - y1), th = Math.atan2(y2 - y1, x2 - x1), al = Math.acos((r1 - r2) / d);
+  const seg = (a) => `<line x1="${(x1 + r1 * Math.cos(a)).toFixed(2)}" y1="${(y1 + r1 * Math.sin(a)).toFixed(2)}" x2="${(x2 + r2 * Math.cos(a)).toFixed(2)}" y2="${(y2 + r2 * Math.sin(a)).toFixed(2)}"/>`;
+  return `<svg class="lens__lines" viewBox="0 0 120 100" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="${x1}" cy="${y1}" r="${r1}" pathLength="280" vector-effect="non-scaling-stroke"/><circle cx="${x2}" cy="${y2}" r="${r2}" vector-effect="non-scaling-stroke"/>${seg(th + al)}${seg(th - al)}</svg>`;
+})();
+function lensHTML(c, zone, big) {
+  const video = c.video ? `<video muted loop playsinline preload="none" data-clip="${clip(c.name)}" aria-hidden="true"></video>` : "";
+  return `<span class="lens${big ? " lens--big" : ""}"><span class="card__tile"><img src="${photo(c.name)}" alt="" loading="lazy" decoding="async" data-sigil="${c.name}" data-zone="${zone.id}">${video}</span>${LENS}<span class="lens__dot" data-s="${c.kind}" title="${STATUS[c.kind]}">${STATUS_ICON[c.kind]}</span></span>`;
+}
+// one animal on the depth line, on the left or the right of it
+function rowHTML(c, zone, side) {
+  const myth = c.kind === "myth";
+  const stats = myth
+    ? `<span>${ICON.origin}${c.origin}</span><span>${ICON.range}${c.range}</span><span>${ICON.inspired}Inspired by: ${c.inspired}</span>`
+    : `<span>${ICON.size}${c.size}</span><span>${ICON.range}${c.range}</span>`;
+  return `<li class="dive__row dive__row--${side}" data-depth="${c.depth}">
+    <p class="dive__mark dmark rv"><b>${fmt(c.depth)} m</b><small>${ft(c.depth)} ft</small><i></i></p>
+    <button class="card dive__card rv${myth ? " card--myth" : ""}" data-name="${c.name}" aria-label="${c.name}, about ${fmt(c.depth)} m: read more">
+      <span class="dive__head"><span class="card__name">${c.name}</span><i class="dive__lead"></i></span>
+      <span class="dive__body">
+        <span class="dive__text">${c.sci ? `<span class="card__sci">${c.sci}</span>` : `<span class="card__sci">${STATUS.myth} · ${c.origin}</span>`}
+          <span class="dive__stats">${stats}</span>
+          <span class="dive__fact">${c.fact}</span>
+          <span class="button card__more"><span>${myth ? "Read the myth" : "Read more"}</span> →</span></span>
+        ${lensHTML(c, zone, (c.len || 0) >= 10)}
+      </span>
+    </button>
+  </li>`;
+}
+// a zone rule across the page: dashed coral line, the depth on the depth line, the zone in coral
+function zonebarHTML(num, name, range, top, title, intro) {
+  const tri = "<i></i>".repeat(4);
+  return `<header class="zonebar rv">
+    <span class="zonebar__rule zonebar__rule--l" aria-hidden="true">${tri}</span>
+    <div class="zonebar__depth"><p class="dmark"><b>${fmt(top)} m</b><small>${ft(top)} ft</small><i></i></p></div>
+    <span class="zonebar__rule zonebar__rule--r" aria-hidden="true">${tri}</span>
+    <h2 class="zonebar__title">${title}</h2>
+    <div class="zonebar__text"><p class="zonebar__name">${name}</p><p class="kicker"><span>${num}</span><span>${range}</span></p>${intro ? `<p>${intro}</p>` : ""}</div>
+  </header>`;
+}
+// angular rock on both sides of the trench, from a fixed seed so it never changes
+function wallsSVG(seed) {
+  const r = rng(seed);
+  const side = (w) => { const pts = [[0, 0]]; for (let y = 0; y <= 100; y += 5 + r() * 6) pts.push([w * (0.35 + r() * 0.65), Math.min(100, y)]); pts.push([w * (0.5 + r() * 0.5), 100], [0, 100]); return pts; };
+  const poly = (pts, mirror, cls) => `<polygon class="${cls}" points="${pts.map(([x, y]) => `${(mirror ? 100 - x : x).toFixed(2)},${y.toFixed(2)}`).join(" ")}"/>`;
+  return `<svg class="walls" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${poly(side(9), false, "w1")}${poly(side(5.5), false, "w2")}${poly(side(9), true, "w1")}${poly(side(5.5), true, "w2")}</svg>`;
+}
 function cardHTML(c, zone, giant) {
   const myth = c.kind === "myth";
   const top = myth ? c.origin : c.range;
   const scale = giant && c.len ? `<span class="card__scale" style="--l:${(c.len / GIANT_MAX).toFixed(3)}"><i></i><em>${c.size}</em></span>` : "";
   const video = c.video ? `<video muted loop playsinline preload="none" data-clip="${clip(c.name)}" aria-hidden="true"></video>` : "";
-  return `<li><button class="card rv${myth ? " card--myth" : ""}" data-name="${c.name}" aria-label="${c.name}: read more">
-    <span class="card__top"><span>${top}</span>${flagHTML(c.kind)}</span>
-    <span class="card__tile"><img src="${photo(c.name)}" alt="" loading="lazy" decoding="async" data-sigil="${c.name}" data-zone="${zone.id}">${video}<span class="card__legend">${c.fact}</span></span>
+  return `<li><button class="card giant rv${myth ? " card--myth" : ""}" data-name="${c.name}" aria-label="${c.name}: read more">
+    ${lensHTML(c, zone, false)}
     <span class="card__name">${c.name}</span>${c.sci ? `<span class="card__sci">${c.sci}</span>` : ""}
     ${scale}<span class="button card__more"><span>${myth ? "Read the myth" : "Read more"}</span> →</span>
   </button></li>`;
@@ -1360,18 +1572,15 @@ function gateHTML(num, name, range, top) {
     </div></div>`;
 }
 document.getElementById("zones").outerHTML = LORE.zones.map((z) => `
-  <section class="grid12 band zone ${z.surface ? "is-surface" : "is-deep zone--gated"}" id="${z.id}" data-depth="${z.top}" data-state="${z.state}">
-    ${z.surface ? "" : gateHTML(z.num, z.name, z.range, z.top)}
-    <div class="band-head">
-      <p class="kicker rv"><span>${z.num}</span><span>${z.name}</span><span>${z.range}</span></p>
-      <h2 class="rv">${z.title}</h2>
-      <p class="rv">${z.intro}</p>
-    </div>
-    <ul class="cards">${[...z.creatures].sort((a, b) => a.depth - b.depth).map((c) => cardHTML(c, z)).join("")}</ul>
+  <section class="grid12 band zone ${z.surface ? "is-surface" : "is-deep"}" id="${z.id}" data-depth="${z.top}" data-state="${z.state}">
+    ${z.id === "hadal" ? wallsSVG(7) : ""}
+    ${zonebarHTML(z.num, z.name, z.range, z.top, z.title, z.intro)}
+    <ol class="dive">${[...z.creatures].sort((a, b) => a.depth - b.depth).map((c, i) => rowHTML(c, z, i % 2 ? "L" : "R")).join("")}</ol>
   </section>`).join("");
+document.getElementById("whoBar").outerHTML = wallsSVG(11) + zonebarHTML("06", "Challenger Deep", "The bottom of the Mariana Trench", 10935, "How deep is deep?", "");
 
-document.getElementById("animalDives").innerHTML = LORE.animalDives.map(([n, d]) => `<li>${n}<span>${d}</span></li>`).join("");
-document.getElementById("humanDives").innerHTML = LORE.humanDives.map(([n, d]) => `<li>${n}<span>${d}</span></li>`).join("");
+document.getElementById("animalDives").innerHTML = LORE.animalDives.map(([n, d]) => `<li>${n}<i></i><span>${d}</span></li>`).join("");
+document.getElementById("humanDives").innerHTML = LORE.humanDives.map(([n, d]) => `<li>${n}<i></i><span>${d}</span></li>`).join("");
 
 
 // each entry carries the depth band it stands for and the footage that plays behind it
@@ -1666,19 +1875,20 @@ function measure() {
   for (const g of gates) { g.top = g.el.getBoundingClientRect().top + scrollY; g.h = g.el.offsetHeight; }
   // each section is a mark; a gated zone also gets a mark where its gate begins, so that most of the
   // climb to the zone's depth (and the change of water colour) happens while you pass through the gate
+  // each section is a mark, and so is every animal on the depth line: the reading matches its label
+  // when the label is a little above the middle of the screen
   marks = [];
   sections.forEach((s, sec) => {
-    const gate = s.querySelector(":scope > .gate");
-    const mark = { y: s.offsetTop, depth: +s.dataset.depth, color: hex(COLORS[s.dataset.state]), state: s.dataset.state, sec };
-    if (gate && marks.length) {
-      const prev = marks[marks.length - 1];
-      marks.push({ y: s.offsetTop, depth: prev.depth + (mark.depth - prev.depth) * 0.5, color: prev.color, state: prev.state, sec: prev.sec });
-      mark.y = s.offsetTop + Math.max(1, gate.offsetHeight - innerHeight) * 0.92;
-    }
-    marks.push(mark);
+    const color = hex(COLORS[s.dataset.state]);
+    marks.push({ y: s.getBoundingClientRect().top + scrollY, depth: +s.dataset.depth, color, state: s.dataset.state, sec });
+    s.querySelectorAll(".dive__row[data-depth]").forEach((r) => {
+      marks.push({ y: r.getBoundingClientRect().top + scrollY - innerHeight * 0.45, depth: +r.dataset.depth, color, state: s.dataset.state, sec });
+    });
   });
   // depth continues past the last section start down to the page bottom
   marks.push({ y: document.documentElement.scrollHeight - innerHeight, depth: 10935, color: hex(COLORS.trench), state: "trench-rest", sec: sections.length - 1 });
+  marks.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < marks.length; i++) marks[i].depth = Math.max(marks[i].depth, marks[i - 1].depth);
 }
 addEventListener("resize", measure);
 addEventListener("load", measure);
@@ -2249,7 +2459,7 @@ function initScene() {
       gl.uniform1f(main.u.uAmbient, cur.ambient); gl.uniform1f(main.u.uSpot, cur.spot);
       gl.uniform1f(main.u.uTintMix, cur.tintMix); gl.uniform1f(main.u.uRipple, reduceMotion ? 0 : cur.ripple);
       gl.uniform1f(main.u.uShade, cur.shade); gl.uniform1f(main.u.uDrift, reduceMotion ? 0 : cur.drift);
-      gl.uniform1f(main.u.uShow, cur.show);
+      gl.uniform1f(main.u.uShow, cur.show * 0.4);
       gl.uniform1f(main.u.uLampR, innerWidth < 760 ? 0.32 : 0.26);
       gl.uniform3f(main.u.uTint, waterRGB[0] / 255, waterRGB[1] / 255, waterRGB[2] / 255);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
