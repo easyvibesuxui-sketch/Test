@@ -159,6 +159,7 @@
   @keyframes diveBeat { from { scale: .6; opacity: .9; } to { scale: 3; opacity: 0; } }
   body.scrolled .diveline { opacity: .5; transform: none; }
   @media (max-width: 760px) { .diveline { top: calc(var(--pad) + 58px); } }
+  @media (max-width: 480px) { .logo__word small { display: none; } }
 
   .topright {
     top: var(--pad); right: var(--pad);
@@ -320,105 +321,125 @@
   .fade--bottom { bottom: 0; height: 96px; --dir: 0deg; }
 
   /* ================= menu ================= */
-  /* opens as a sonar bloom from the button; behind the list, each depth's footage
-     plays under a lamp that follows the pointer, and a sounding line reads the depth */
+  /* a depth chart: each zone is a band of its own water, pale at the top to black at the bottom,
+     cut by dashed coral rules, with the depth on a dotted axis down the middle */
   .menu {
     position: fixed; inset: 0; z-index: 25;
-    background: var(--hadal);
-    color: var(--pale);
-    padding: calc(var(--pad) + 90px) var(--pad) var(--pad);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-content: start;
-    gap: 40px;
+    background: var(--hadal); color: var(--pale);
+    display: flex; flex-direction: column;
+    padding-top: calc(var(--pad) + 84px);
     clip-path: circle(0px at var(--ox, 100%) var(--oy, 0px));
     transition: clip-path .55s cubic-bezier(.6, 0, .8, .4);
-    overflow-y: auto;
+    overflow-y: auto; overscroll-behavior: contain;
   }
   .menu[hidden] { display: none; }
   body.menu-open .menu { clip-path: circle(150vmax at var(--ox, 100%) var(--oy, 0px)); transition: clip-path 1.1s var(--ease); }
   body.menu-open .chrome { color: var(--pale); }
   body.menu-open .menu-btn { background: rgba(230,238,240,.08); color: var(--pale); }
-  .menu > ol, .menu > .sub { position: relative; z-index: 1; }
-  @media (min-width: 761px) { .menu { padding-right: calc(var(--pad) + 150px); } }
-
-  .menu__stage { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-  .menu__reels video {
-    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-    opacity: 0; transform: scale(1.08);
-    transition: opacity 1.2s var(--ease), transform 6s var(--ease);
-  }
-  .menu__reels video.on.ready { opacity: 1; transform: scale(1); }
-  .menu__lamp {
-    position: absolute; inset: 0;
-    background:
-      radial-gradient(circle at var(--mx, 72%) var(--my, 46%), rgba(2,3,6,0) 0, rgba(2,3,6,.28) 160px, rgba(2,3,6,.8) 460px, rgba(2,3,6,.9) 900px),
-      linear-gradient(90deg, rgba(2,3,6,.72), rgba(2,3,6,.1) 62%);
-  }
+  body.menu-open :is(.ticker, .totop) { opacity: 0 !important; pointer-events: none; transition: opacity .3s; }
   .menu__ping {
-    position: fixed; left: var(--ox, 100%); top: var(--oy, 0px); z-index: 0;
+    position: fixed; left: var(--ox, 100%); top: var(--oy, 0px); z-index: 2;
     width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%;
-    border: 1px solid var(--lume); opacity: 0; pointer-events: none;
+    border: 1px solid var(--coral); opacity: 0; pointer-events: none;
   }
   body.menu-open .menu__ping { animation: ping 1.6s var(--ease) .1s 2 both; }
   .menu__ping + .menu__ping { animation-delay: .45s !important; }
   @keyframes ping { from { transform: scale(.4); opacity: .7; } to { transform: scale(26); opacity: 0; } }
 
-  .menu ol { list-style: none; }
-  .menu li { position: relative; overflow: hidden; }
-  .menu li::before, .menu li::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
-    transform-origin: left; transform: scaleX(0);
-  }
-  .menu li::before { background: var(--pale-line); transition: transform .4s var(--ease); }
-  .menu li::after { background: var(--lume); box-shadow: 0 0 12px var(--lume); transition: transform .7s var(--ease); }
-  .menu li:first-child { border-top: 1px solid transparent; }
-  body.menu-open .menu li::before { transform: scaleX(1); transition: transform 1.2s var(--ease) calc(.25s + var(--i) * .08s); }
-  .menu li.on::after { transform: scaleX(1); }
-  .menu li a {
-    display: grid; grid-template-columns: 56px 1fr auto; align-items: baseline; gap: 16px;
-    padding: 18px 0; text-decoration: none;
-    font-size: clamp(28px, 4.6vw, 58px); font-weight: 600; letter-spacing: 0; line-height: 1.05;
-    transform: translateY(110%);
-    transition: transform .35s var(--ease), color .4s var(--ease);
-  }
-  body.menu-open .menu li a { transform: none; transition: transform 1s var(--ease) calc(.2s + var(--i) * .08s), color .4s var(--ease); }
-  .menu li a b { font-weight: inherit; display: inline-block; transition: transform .6s var(--ease); }
-  .menu li a small, .menu li a span {
-    font-family: var(--mono); font-size: 12px; font-weight: 400; letter-spacing: .06em; color: var(--pale-soft);
-    transition: color .4s var(--ease);
-  }
-  .menu ol.has-on li:not(.on) a { color: rgba(230,238,240,.36); }
-  .menu li.on a { color: var(--lume); }
-  .menu li.on a b { transform: translateX(22px); }
-  .menu li.on a small, .menu li.on a span { color: var(--pale); }
-  .menu .sub { display: flex; flex-wrap: wrap; gap: 8px 28px; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
-    opacity: 0; transform: translateY(12px); transition: opacity .3s, transform .3s; }
-  body.menu-open .menu .sub { opacity: 1; transform: none; transition: opacity .8s var(--ease) .75s, transform .8s var(--ease) .75s; }
-  .menu .sub a { text-decoration: none; color: var(--pale-soft); }
-  .menu .sub a:hover { color: var(--pale); }
+  .menu__cap { display: flex; justify-content: space-between; gap: 16px; padding: 0 var(--pad) 12px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--pale-soft);
+    opacity: 0; transition: opacity .3s; }
+  body.menu-open .menu__cap { opacity: 1; transition: opacity .8s var(--ease) .35s; }
+  .menu__cap b { font-weight: 500; color: var(--coral); }
 
-  /* sounding line: 0 to 10,935 m, with the hovered band lit and a pin that counts */
-  .menu__sounding {
-    position: fixed; z-index: 1; pointer-events: none;
-    right: calc(var(--pad) + 34px); top: calc(var(--pad) + 110px); bottom: calc(var(--pad) + 40px); width: 1px;
-    background: var(--pale-line);
-    font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: var(--pale-soft); font-variant-numeric: tabular-nums;
-    opacity: 0; transition: opacity .4s;
+  .mchart { list-style: none; flex: 1 0 auto; display: flex; flex-direction: column; min-height: 520px; }
+  .mz { position: relative; flex: 1 1 0; min-height: 82px; color: var(--fg); --lab: var(--lab-d);
+    background: linear-gradient(var(--a), var(--b));
+    transition: flex-grow .8s var(--ease); }
+  .mz--light { --lab: var(--lab-l); }
+  .mz--snow { background: radial-gradient(circle at 20% 30%, rgba(230,238,240,.22) 0 1px, transparent 1.5px) 0 0 / 90px 70px,
+    radial-gradient(circle at 70% 60%, rgba(230,238,240,.16) 0 1px, transparent 1.5px) 0 0 / 130px 110px, linear-gradient(var(--a), var(--b)); }
+  .mz.on { flex-grow: 2.1; }
+  .mz > a { position: relative; height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) var(--sp) minmax(0, 1fr); grid-template-rows: auto 1fr;
+    padding: 0 var(--pad); text-decoration: none; color: inherit; outline: none; }
+
+  /* the zone's top: a dashed coral rule with markers either side of the axis */
+  .mz__rule { grid-row: 1; height: 2px; margin-top: 0; display: flex; justify-content: space-around;
+    background: repeating-linear-gradient(90deg, var(--coral) 0 12px, transparent 12px 22px);
+    transform-origin: var(--ro); scale: 0 1; transition: scale .4s var(--ease); }
+  .mz__rule--l { grid-column: 1; --ro: right; }
+  .mz__rule--r { grid-column: 3; --ro: left; }
+  .mz__rule i { width: 0; height: 0; margin-top: 2px; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 8px solid var(--coral); }
+  body.menu-open .mz__rule { scale: 1 1; transition: scale 1.3s var(--ease) calc(.3s + var(--i) * .09s); }
+  .mz.on .mz__rule { background: var(--coral); }
+
+  /* the depth on the axis, and the dotted axis running down to the next zone */
+  .mz__depth { grid-column: 2; grid-row: 1 / span 2; position: relative; padding-top: 10px; }
+  .mz__depth::after { content: ""; position: absolute; left: 50%; top: 66px; bottom: 0; width: 0; margin-left: -1px;
+    border-left: 2px dotted currentColor; opacity: .5; transform-origin: top; scale: 1 0; transition: scale .3s; }
+  body.menu-open .mz__depth::after { scale: 1 1; transition: scale 1.2s var(--ease) calc(.45s + var(--i) * .09s); }
+  .mz__depth b { font-size: 17px; }
+  .mz .dmark { opacity: 0; translate: 0 -8px; transition: opacity .3s, translate .3s, color .4s; }
+  body.menu-open .mz .dmark { opacity: 1; translate: 0 0; transition: opacity .9s var(--ease) calc(.35s + var(--i) * .09s), translate .9s var(--ease) calc(.35s + var(--i) * .09s), color .4s; }
+  .mz.on .dmark { color: var(--coral); }
+
+  .mz__name { grid-column: 1; grid-row: 2; align-self: center; justify-self: end; text-align: right; padding: 12px 28px 12px 0; display: grid; gap: 4px; }
+  .mz__name small { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--coral); }
+  .mz__name b { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 3.3vw, 52px); line-height: 1; letter-spacing: -0.01em;
+    display: inline-flex; align-items: center; gap: 14px; transition: translate .6s var(--ease); }
+  .mz__name b::before { content: ""; width: 0; height: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-left: 10px solid var(--coral);
+    opacity: 0; translate: -10px 0; transition: opacity .4s, translate .6s var(--ease); }
+  .mz.on .mz__name b::before { opacity: 1; translate: 0 0; }
+  .mz__name, .mz__info { opacity: 0; translate: 0 14px; transition: opacity .3s, translate .3s; }
+  body.menu-open .mz__name, body.menu-open .mz__info { opacity: 1; translate: 0 0; transition: opacity 1s var(--ease) calc(.3s + var(--i) * .09s), translate 1s var(--ease) calc(.3s + var(--i) * .09s); }
+  .mchart.has-on .mz:not(.on) .mz__name b { opacity: .55; }
+  .mz__name b { transition: opacity .4s; }
+
+  .mz__info { grid-column: 3; grid-row: 2; align-self: center; padding: 12px 0 12px 28px; display: grid; gap: 6px; justify-items: start; max-width: 25em; }
+  .mz__range { font-family: var(--mono); font-size: 12px; letter-spacing: .04em; display: flex; gap: 8px; align-items: center; opacity: .85; }
+  .mz__range svg { width: 13px; height: 13px; fill: none; stroke: var(--coral); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .mz__title { font-family: var(--serif); font-size: 18px; line-height: 1.3; opacity: .8; max-height: 0; overflow: hidden; transition: max-height .7s var(--ease), opacity .5s; }
+  .mz.on .mz__title { max-height: 3em; }
+  .mz__count { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; opacity: .6; }
+  .mz__here { display: none; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--coral); align-items: center; gap: 8px; }
+  .mz__here::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 0 currentColor; animation: here 2s ease-out infinite; }
+  .mz.here .mz__here { display: inline-flex; }
+  .mz--light .mz__here, .mz--light.on .dmark { color: #C4483E; }
+  @keyframes here { 0% { box-shadow: 0 0 0 0 rgba(242,118,107,.6); } 100% { box-shadow: 0 0 0 9px rgba(242,118,107,0); } }
+
+  /* the zone's magnifier, opened on the lit band */
+  .mz .mz__lens { position: absolute; right: var(--pad); top: 14px; bottom: 14px; width: auto; aspect-ratio: 120 / 100; pointer-events: none; }
+  .mz__lens .card__tile { clip-path: circle(0% at 50% 50%); transition: clip-path .5s var(--ease); }
+  .mz__lens .card__tile img { width: 100%; height: 100%; object-fit: cover; }
+  .mz .mz__lens svg.lens__lines { opacity: 0; transition: opacity .4s; }
+  .mz .mz__lens svg.lens__lines .ring { stroke-dashoffset: 280; transition: stroke-dashoffset .4s; }
+  .mz.on .mz__lens svg.lens__lines .ring { stroke-dashoffset: 0; transition: stroke-dashoffset 1.6s var(--ease) .2s; }
+  .mz.on .mz__lens .card__tile { clip-path: circle(50% at 50% 50%); transition: clip-path 1.2s var(--ease) .15s; }
+  .mz.on .mz__lens svg.lens__lines { opacity: .6; transition: opacity .8s var(--ease) .3s; }
+
+  .menu .sub { display: flex; flex-wrap: wrap; gap: 8px 28px; padding: 18px var(--pad) calc(var(--pad) * .8); font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
+    border-top: 1px solid var(--pale-line); opacity: 0; transition: opacity .3s; }
+  body.menu-open .menu .sub { opacity: 1; transition: opacity .8s var(--ease) .8s; }
+  .menu .sub a { text-decoration: none; color: var(--pale-soft); }
+  .menu .sub a:hover, .menu .sub a:focus-visible { color: var(--coral); }
+
+  @media (max-width: 1180px) { .mz .mz__lens { display: none; } }
+  @media (max-width: 760px) {
+    .mz > a { grid-template-columns: 76px minmax(0, 1fr); padding: 0 var(--pad) 0 4px; }
+    .mz__ft { display: none; }
+    .mz__rule--l { display: none; }
+    .mz__rule--r { grid-column: 2; }
+    .mz__depth { grid-column: 1; }
+    .mz__depth b { font-size: 13px; white-space: nowrap; }
+    .mz__depth::after { top: 56px; }
+    .mz__name { grid-column: 2; grid-row: 2; justify-self: start; text-align: left; padding: 8px 0 0 14px; align-self: end; }
+    .mz__name b { font-size: clamp(24px, 7vw, 32px); }
+    .mz__name b::before { display: none; }
+    .mz__info { grid-column: 2; grid-row: 3; padding: 4px 0 10px 14px; align-self: start; }
+    .mz > a { grid-template-rows: auto auto auto; }
+    .mz__count { display: none; }
+    .mz.on { flex-grow: 1.5; }
+    .mchart { min-height: 600px; }
   }
-  body.menu-open .menu__sounding { opacity: 1; transition: opacity 1s var(--ease) .6s; }
-  .menu__sounding em { position: absolute; left: 12px; transform: translateY(-50%); font-style: normal; white-space: nowrap; opacity: .7; }
-  .menu__sounding em::before { content: ""; position: absolute; left: -12px; top: 50%; width: 7px; height: 1px; background: currentColor; }
-  .menu__band {
-    position: absolute; left: -2px; width: 5px; top: 0; height: 0;
-    background: var(--lume); box-shadow: 0 0 14px var(--lume); opacity: .8;
-    transition: top .9s var(--ease), height .9s var(--ease);
-  }
-  .menu__pin {
-    position: absolute; left: -26px; top: 0; width: 34px; height: 1px; background: var(--lume);
-    transition: top .9s var(--ease);
-  }
-  .menu__pin output { position: absolute; right: 42px; top: -8px; color: var(--lume); white-space: nowrap; font-size: 12px; }
 
   /* ================= loader ================= */
   /* an ascent: the loader starts in the trench at 10,935 m and surfaces as it loads,
@@ -1029,7 +1050,6 @@
     .who .teams { grid-template-columns: 1fr; }
     .hud__r { display: none; }
     .hud__d { font-size: 22px; }
-    .menu__sounding { display: none; }
     .sheet__in { grid-template-columns: 1fr; }
     .sheet__art { aspect-ratio: 16 / 10; }
     .card__legend { padding: 12px; font-size: 14px; }
@@ -1054,8 +1074,8 @@
     .card::before { transform: none; transition: none; }
     .card .card__tile :is(img, video, canvas) { scale: 1; animation: none; transition: none; }
     .sphere__rig, .sphere__ping, .logo__mark, .foot__sonar i::after, footer.in .foot__word b, .ticker .live::before, .ticker .live.ping::after, .ticker__line .caret, .ticker__line.in { animation: none; }
-    .menu, body.menu-open .menu, .menu li a, body.menu-open .menu li a, .menu .sub, body.menu-open .menu .sub { transition: none; }
-    body.menu-open .menu__ping { animation: none; }
+    .menu, body.menu-open .menu, .menu *, body.menu-open .menu * { transition: none !important; }
+    body.menu-open .menu__ping, .mz__here::before { animation: none; }
   }
 </style>
 </head>
@@ -1126,10 +1146,9 @@
 <a class="chrome totop" href="#top"><small>Back to the surface</small><em>↑</em></a>
 
 <nav class="menu" id="menu" aria-label="Site navigation" hidden>
-  <div class="menu__stage" aria-hidden="true"><div class="menu__reels" id="menuReels"></div><div class="menu__lamp"></div></div>
   <i class="menu__ping" aria-hidden="true"></i><i class="menu__ping" aria-hidden="true"></i>
-  <div class="menu__sounding" id="sounding" aria-hidden="true"><span class="menu__band" id="soundBand"></span><span class="menu__pin" id="soundPin"><output id="soundOut">0 m</output></span></div>
-  <ol id="menuList"></ol>
+  <p class="menu__cap" aria-hidden="true"><span>Depth chart · <b>0 – 10,935 m</b></span><span>Choose a zone</span></p>
+  <ol class="mchart" id="menuList"></ol>
   <div class="sub">
     <a href="#" data-manifesto>About this guide</a>
     <a href="#giants">The giants</a>
@@ -1583,11 +1602,40 @@ document.getElementById("animalDives").innerHTML = LORE.animalDives.map(([n, d])
 document.getElementById("humanDives").innerHTML = LORE.humanDives.map(([n, d]) => `<li>${n}<i></i><span>${d}</span></li>`).join("");
 
 
-// each entry carries the depth band it stands for and the footage that plays behind it
-const MENU_REEL = { sunlight: "surface", twilight: "twilight", midnight: "midnight", abyss: "abyss", hadal: "trench", who: "trench" };
-document.getElementById("menuList").innerHTML = LORE.zones.map((z, i) =>
-  `<li style="--i:${i}" data-reel="${MENU_REEL[z.id]}" data-from="${z.top}" data-to="${(LORE.zones[i + 1] || { top: 10935 }).top}"><a href="#${z.id}"><small>${z.num}</small><b>${z.name}</b><span>${z.range}</span></a></li>`).join("") +
-  `<li style="--i:${LORE.zones.length}" data-reel="${MENU_REEL.who}" data-from="0" data-to="10935"><a href="#who"><small>06</small><b>Deepest dives</b><span>10,935 m</span></a></li>`;
+// the menu is a depth chart: one band per zone, painted in that zone's water
+const MENU_WATER = {
+  sunlight: ["#EEF2F0", "#76A8BC", "var(--ink)", "mz--light"],
+  twilight: ["#386B85", "#0A192A", "var(--pale)", ""],
+  midnight: ["#0A192A", "#060A13", "var(--pale)", "mz--snow"],
+  abyss:    ["#060A13", "#03050A", "var(--pale)", "mz--snow"],
+  hadal:    ["#03050A", "#020306", "var(--pale)", "mz--snow"],
+  who:      ["#020306", "#020306", "var(--pale)", "mz--snow"]
+};
+const RANGE_FT = (txt) => txt.replace(/[\d,]+(?= m|$| –)/g, (n) => ft(+n.replace(/,/g, ""))).replace(/ m$/, " ft");
+function menuBand(i, id, num, name, top, to, range, title, count, img, alt) {
+  const [a, b, fg, cls] = MENU_WATER[id];
+  return `<li class="mz ${cls}" style="--i:${i};--a:${a};--b:${b};--fg:${fg}" data-from="${top}" data-to="${to}">
+    <a href="#${id}">
+      <span class="mz__rule mz__rule--l" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="mz__depth dmark" aria-hidden="true"><b>${fmt(top)} m</b><small>${ft(top)} ft</small><i></i></span>
+      <span class="mz__rule mz__rule--r" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="mz__name"><small>${num}</small><b>${name}</b></span>
+      <span class="mz__info">
+        <span class="mz__range">${ICON.range}${range}<span class="mz__ft"> · ${RANGE_FT(range)}</span></span>
+        <span class="mz__title">${title}</span>
+        <span class="mz__count">${count}</span>
+        <span class="mz__here">You are here · <output>0 m</output></span>
+      </span>
+      <span class="lens mz__lens" aria-hidden="true"><span class="card__tile"><img src="${img}" alt="" loading="lazy" decoding="async"></span>${LENS}</span>
+    </a>
+  </li>`;
+}
+{
+  const Z = LORE.zones, last = Z[Z.length - 1].creatures;
+  document.getElementById("menuList").innerHTML = Z.map((z, i) =>
+    menuBand(i, z.id, z.num, z.name, z.top, (Z[i + 1] || { top: 10935 }).top, z.range, z.title, `${z.creatures.length} animals and myths`, photo(z.creatures[0].name))).join("") +
+    menuBand(Z.length, "who", "06", "Deepest dives", 10935, 10935, "10,935 m", "How deep is deep?", `${LORE.animalDives.length + LORE.humanDives.length} record dives`, photo(last[last.length - 1].name));
+}
 
 // a photograph that fails to load is replaced by the creature's generated sigil
 function sigilFallback(img) {
@@ -1681,103 +1729,30 @@ const menu = document.getElementById("menu");
 const menuBtn = document.getElementById("menuBtn");
 const menuList = document.getElementById("menuList");
 const menuItems = [...menuList.children];
-const reelBox = document.getElementById("menuReels");
-const soundBand = document.getElementById("soundBand"), soundPin = document.getElementById("soundPin"), soundOut = document.getElementById("soundOut");
-const SOUND_MAX = 10935;
 let sceneHold = false;          // the depth scene stops drawing while the menu covers it
-const reels = {};               // footage per depth, created the first time the menu opens
-let menuOn = -1, idleTimer = 0, hovering = false;
-
-// the sounding line's scale: a tick every 2,000 m
-for (let m = 0; m <= 10000; m += 2000) {
-  const e = document.createElement("em");
-  e.style.top = `${(m / SOUND_MAX) * 100}%`;
-  e.textContent = m ? `${(m / 1000).toFixed(0)},000` : "0";
-  document.getElementById("sounding").appendChild(e);
-}
-
-function reel(name) {
-  if (reels[name]) return reels[name];
-  const v = document.createElement("video");
-  v.muted = true; v.loop = true; v.playsInline = true; v.preload = "auto";
-  v.setAttribute("aria-hidden", "true");
-  for (const src of MEDIA_SRC[name]) {
-    const s = document.createElement("source");
-    s.src = src; s.type = `video/${src.split(".").pop()}`;
-    v.appendChild(s);
-  }
-  v.addEventListener("loadeddata", () => v.classList.add("ready"));
-  reelBox.appendChild(v);
-  return (reels[name] = v);
-}
-const MEDIA_SRC = {
-  twilight: ["depths/twilight.webm", "depths/twilight.mp4"],
-  midnight: ["depths/midnight.webm", "depths/midnight.mp4"],
-  abyss:    ["depths/abyss.webm", "depths/abyss.mp4"],
-  trench:   ["depths/trench-loop.webm", "depths/trench-loop.mp4"],
-  surface:  ["depths/surface.webm", "depths/surface.mp4"]
-};
-
-// count the pin's readout from where it is to where it is going
-let soundNow = 0, soundRaf = 0;
-function soundTo(target) {
-  cancelAnimationFrame(soundRaf);
-  const from = soundNow, t0 = performance.now(), dur = reduceMotion ? 0 : 900;
-  const step = (now) => {
-    const k = dur ? Math.min(1, (now - t0) / dur) : 1;
-    soundNow = from + (target - from) * (1 - Math.pow(1 - k, 3));
-    soundOut.textContent = `${Math.round(soundNow).toLocaleString("en-US")} m`;
-    if (k < 1) soundRaf = requestAnimationFrame(step);
-  };
-  soundRaf = requestAnimationFrame(step);
-}
+let menuOn = -1, menuHere = 0;
 
 function lightItem(i) {
   if (i === menuOn) return;
   menuOn = i;
   menuItems.forEach((li, j) => li.classList.toggle("on", j === i));
   menuList.classList.add("has-on");
-  const li = menuItems[i];
-  const name = li.dataset.reel;
-  for (const k in reels) if (k !== name) { reels[k].classList.remove("on"); if (!reels[k].paused) setTimeout(() => { if (!reels[k].classList.contains("on")) reels[k].pause(); }, 1200); }
-  const v = reel(name);
-  v.classList.add("on");
-  if (!reduceMotion) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
-  const from = +li.dataset.from, to = +li.dataset.to;
-  const isWho = li.querySelector("a").hash === "#who";
-  soundBand.style.top = `${(from / SOUND_MAX) * 100}%`;
-  soundBand.style.height = `${((to - from) / SOUND_MAX) * 100}%`;
-  soundPin.style.top = `${(to / SOUND_MAX) * 100}%`;
-  soundTo(isWho ? SOUND_MAX : to);
 }
-
-// left alone, the menu drifts down through the depths by itself (this is all a touch screen sees)
-function idleDrift() {
-  clearTimeout(idleTimer);
-  if (reduceMotion) return;
-  idleTimer = setTimeout(() => {
-    if (!document.body.classList.contains("menu-open")) return;
-    if (!hovering) lightItem((menuOn + 1) % menuItems.length);
-    idleDrift();
-  }, 4200);
-}
-
 menuItems.forEach((li, i) => {
-  li.addEventListener("pointerenter", () => { hovering = true; lightItem(i); });
-  li.addEventListener("pointerleave", () => { hovering = false; idleDrift(); });
+  li.addEventListener("pointerenter", () => lightItem(i));
   li.querySelector("a").addEventListener("focus", () => lightItem(i));
 });
-menu.addEventListener("pointermove", (e) => {
-  menu.style.setProperty("--mx", `${e.clientX}px`);
-  menu.style.setProperty("--my", `${e.clientY}px`);
-}, { passive: true });
+// leaving the chart lights the zone you are in again
+menuList.addEventListener("pointerleave", () => lightItem(menuHere));
 
 // the item for the band you are in now
 function currentItem() {
   const depth = parseInt((document.getElementById("depth").textContent || "0").replace(/\D/g, ""), 10) || 0;
   let i = 0;
   LORE.zones.forEach((z, j) => { if (depth >= z.top) i = j; });
-  return depth >= 11000 ? menuItems.length - 1 : i;
+  const at = document.getElementById("who").getBoundingClientRect().top < innerHeight * 0.5;
+  menuItems.forEach((li, j) => li.querySelector(".mz__here output").textContent = `${fmt(depth)} m`);
+  return at ? menuItems.length - 1 : i;
 }
 
 function setMenu(open) {
@@ -1787,18 +1762,17 @@ function setMenu(open) {
   if (open) {
     menu.hidden = false;
     menuOn = -1;
-    lightItem(currentItem());
-    idleDrift();
+    menuHere = currentItem();
+    menuItems.forEach((li, j) => li.classList.toggle("here", j === menuHere));
+    lightItem(menuHere);
     requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.add("menu-open")));
     setTimeout(() => { if (document.body.classList.contains("menu-open")) sceneHold = true; }, 1100);
   } else {
-    sceneHold = false; hovering = false;
-    clearTimeout(idleTimer);
+    sceneHold = false;
     document.body.classList.remove("menu-open");
     setTimeout(() => {
       if (document.body.classList.contains("menu-open")) return;
       menu.hidden = true;
-      for (const k in reels) { reels[k].pause(); reels[k].classList.remove("on"); }
       menuItems.forEach((li) => li.classList.remove("on"));
       menuList.classList.remove("has-on");
     }, 600);
